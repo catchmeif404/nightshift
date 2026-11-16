@@ -1,0 +1,27 @@
+{
+  "name": "nightshift",
+  "version": "0.1.0",
+  "description": "An unattended dev queue: tickets go in, one model builds, another reviews, and only human calls are left for you.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "nightshift": "dist/src/cli.js"
+  },
+  "files": [
+    "dist/src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/test/",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}
