@@ -4,11 +4,16 @@
 
 [English](README.md) | [한국어](README.ko.md)
 
-nightshift is an unattended dev queue that runs on your own machine. Put tickets on a board (GitHub Issues
-or a folder of markdown files) and walk away. For each ticket a developer run (Claude Code `sonnet` by default, or Codex) builds it
-on its own branch, then a separate reviewer run (`opus` by default) checks it like a CTO would: it fixes small things,
-sends bigger ones back for one more round, and stops anything that needs a human (money, legal text, destructive data
-changes, public actions) instead of merging it.
+nightshift is an unattended dev queue that runs on your own machine. Put tickets on a board (a folder of markdown
+files, GitHub Issues or Notion) and walk away. For each ticket nightshift starts a developer run of a coding agent
+(Claude Code `sonnet` by default, or Codex) that builds it on its own branch, then a separate reviewer run (`opus` by
+default) that checks it like a CTO would: it fixes small things, sends bigger ones back for one more round, and stops
+anything that needs a human (money, legal text, destructive data changes, public actions) instead of merging it.
+
+**nightshift writes no code itself.** The coding agents do the building and reviewing; nightshift is the part around
+them that is easy to get wrong when nobody is watching: it picks the next ticket, gives each one its own worktree,
+starts and resumes the agent runs, accepts a result only from the file the run must write, sends work back for rework,
+merges what passed (if you let it), and keeps the ticket up to date.
 
 It grew out of the runner that builds our own products, and it now runs them. Its bash predecessor took
 **225 tickets** through build and review in its first 12 days; **84%** passed review on the first round
