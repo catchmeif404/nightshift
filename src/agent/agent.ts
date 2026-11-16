@@ -6,6 +6,8 @@ export interface AgentRequest {
   cwd: string;
   sessionId: string;
   mode: SessionMode;
+  // Folders outside cwd the run must write to (the runner's result files).
+  writableDirs: string[];
 }
 
 export interface AgentResult {

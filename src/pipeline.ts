@@ -260,6 +260,7 @@ export class TicketPipeline {
       cwd: tree.path,
       sessionId,
       mode: resume ? SessionMode.Resume : SessionMode.New,
+      writableDirs: [this.r.paths.results],
     });
     clearInterval(heartbeat);
     this.log(`${stage} r${round}: exit ${result.exitCode}: ${tail(result.output, 600)}`);

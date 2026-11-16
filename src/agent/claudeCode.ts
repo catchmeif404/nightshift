@@ -33,6 +33,7 @@ export class ClaudeCodeAgent implements Agent {
       "--permission-mode", this.permissionMode,
       "--disallowedTools", "Agent",
       "--output-format", "text",
+      ...request.writableDirs.flatMap((dir) => ["--add-dir", dir]),
       ...session,
     ];
     const result = await exec(this.bin, args, { cwd: request.cwd, env: agentEnv({}), input: "" });
