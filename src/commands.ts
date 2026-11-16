@@ -188,7 +188,7 @@ export async function status(config: Config): Promise<void> {
   }
 }
 
-interface Check {
+export interface Check {
   level: CheckLevel;
   what: string;
 }
@@ -198,6 +198,11 @@ async function tool(cmd: string, args: string[], cwd: string): Promise<boolean> 
 }
 
 export async function doctor(root: string): Promise<boolean> {
+  return report(await doctorChecks(root));
+}
+
+// Everything "doctor" looks at, for the saved config in root.
+export async function doctorChecks(root: string): Promise<Check[]> {
   const checks: Check[] = [];
   const major = Number.parseInt(process.versions.node.split(".")[0] ?? "0", 10);
   checks.push({ level: major >= 20 ? CheckLevel.Ok : CheckLevel.Fail, what: `node ${process.versions.node} (need 20+)` });
@@ -207,8 +212,14 @@ export async function doctor(root: string): Promise<boolean> {
     checks.push({ level: CheckLevel.Ok, what: `${Brand.configFile} is valid` });
   } catch (error) {
     checks.push({ level: CheckLevel.Fail, what: error instanceof Error ? error.message : String(error) });
-    return report(checks);
+    return checks;
   }
+  return [...checks, ...(await configChecks(config, root))];
+}
+
+// The tool, sign-in and path checks for a parsed config. Used by "doctor" and by the console's check before saving.
+export async function configChecks(config: Config, root: string): Promise<Check[]> {
+  const checks: Check[] = [];
   statePaths(config.stateDir);
   checks.push({ level: CheckLevel.Ok, what: `state folder ${config.stateDir}` });
   checks.push({ level: (await tool(config.tools.git, ["--version"], root)) ? CheckLevel.Ok : CheckLevel.Fail, what: "git" });
@@ -248,7 +259,7 @@ export async function doctor(root: string): Promise<boolean> {
     }
   }
   if (config.autoMerge) checks.push({ level: CheckLevel.Warn, what: "autoMerge is on: passed pull requests merge without you" });
-  return report(checks);
+  return checks;
 }
 
 function report(checks: Check[]): boolean {

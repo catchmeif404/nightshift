@@ -93,6 +93,37 @@ Only one dispatch runs at a time (a lock in `.nightshift/`), so a manual `run` w
 Prefer to keep it in a terminal? `nightshift daemon` does the same until you stop it. Prefer cron? Call
 `nightshift run --root <queue>` from it, with a PATH that includes your tools.
 
+## The local console (`nightshift ui`)
+
+```bash
+nightshift ui --root ~/my-queue          # prints http://127.0.0.1:4404/ ; --port 0 picks a free port
+```
+
+A small web page for the things you otherwise do with `status`, `logs`, `doctor` and by editing `nightshift.json`.
+It ships inside the package (no extra install) and is for **this computer only**.
+
+- **Status**: running workers with their stage, tickets by status, why a ready ticket has not started (usage limit, the
+  project already has a worker, all slots busy, a release waiting for idle, unknown project), the recent log.
+  It refreshes every 5 seconds and only reads.
+- **Settings**: project repository paths, the board (local-md or github: folder, repositories, trusted logins), the
+  developer and reviewer executor (claude-code or codex) and model, and the number of concurrent workers.
+  **Check before saving** runs the same validation as the CLI plus the `doctor` checks against the edited values, and
+  writes nothing. **Save** copies the old file to `nightshift.json.bak-<time>` and swaps the new one in atomically.
+- **Doctor**: the same checks as `nightshift doctor` for the saved file.
+
+What it does not do, on purpose: start, stop or merge tickets; install or remove the service; turn `autoMerge` on;
+accept a command line or a token. Saving only writes `nightshift.json`. Workers that are running keep the settings they
+started with; new settings apply the next time work is dispatched (at most one poll interval later, if the service or
+`daemon` runs).
+
+Everything else in the file (fields it does not edit, even misspelled or wrong ones, and every secret) is kept exactly as
+it was on each save. Secret-looking values are shown as `•••••• (kept)`: that means "unchanged", it is not a value you
+can edit. A `command` board or agent is shown as locked; change those in the file.
+
+Safety: it binds `127.0.0.1` only; a request must carry the right `Host`, a same-origin `Origin` and the page's one-time
+CSRF token; the page has a strict Content-Security-Policy; the server has no file or shell access beyond the config
+root's own files, and a board folder must stay inside the config root.
+
 ## House rules, human gates and release tickets
 
 **`nightshift.rules.md`** is added to every prompt of a project (`projects.<name>.rulesFile`). Put what the

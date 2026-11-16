@@ -190,13 +190,22 @@ export class Slots {
     rmSync(join(this.dir, key), { recursive: true, force: true });
   }
 
+  // Like live(), but changes nothing: a dead worker's folder is left for the runner to clean up.
+  peek(): SlotInfo[] {
+    return this.list(false);
+  }
+
   live(): SlotInfo[] {
+    return this.list(true);
+  }
+
+  private list(clean: boolean): SlotInfo[] {
     if (!existsSync(this.dir)) return [];
     const result: SlotInfo[] = [];
     for (const key of readdirSync(this.dir)) {
       const pid = this.owner(key);
       if (!processAlive(pid)) {
-        this.remove(key);
+        if (clean) this.remove(key);
         continue;
       }
       result.push({
@@ -255,13 +264,22 @@ export class UsageLimits {
 
   // Limits still in force; expired ones are removed.
   active(now: number): ActiveLimit[] {
+    return this.list(now, true);
+  }
+
+  // Limits still in force, touching nothing.
+  peek(now: number): ActiveLimit[] {
+    return this.list(now, false);
+  }
+
+  private list(now: number, clean: boolean): ActiveLimit[] {
     if (!existsSync(this.dir)) return [];
     const out: ActiveLimit[] = [];
     for (const agent of readdirSync(this.dir)) {
       const [untilText, ...rest] = readText(join(this.dir, agent)).split("\t");
       const until = Number.parseInt(untilText ?? "", 10);
       if (!Number.isFinite(until) || until <= now) {
-        rmSync(join(this.dir, agent), { force: true });
+        if (clean) rmSync(join(this.dir, agent), { force: true });
         continue;
       }
       out.push({ agent, until, message: rest.join("\t") });
