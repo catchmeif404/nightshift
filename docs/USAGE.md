@@ -9,7 +9,9 @@
 - [Running continuously](#running-continuously)
 - [House rules, human gates and release tickets](#house-rules-human-gates-and-release-tickets)
 - [Models, cost and your Claude Code settings](#models-cost-and-your-claude-code-settings)
-- [Other agents and trackers](#other-agents-and-trackers)
+- [Codex instead of (or with) Claude Code](#codex-instead-of-or-with-claude-code)
+- [Notion as the board](#notion-as-the-board)
+- [Any other agent or tracker](#any-other-agent-or-tracker)
 - [Troubleshooting](#troubleshooting)
 
 ## The daily loop
@@ -126,15 +128,73 @@ or `BLOCKED`.
   `~/.claude/CLAUDE.md` (if it says "answer in Korean", the run summaries will be in Korean).
 - Check that unattended use fits the terms of the service you use.
 
-## Other agents and trackers
+## Codex instead of (or with) Claude Code
 
-Built in today: the **Claude Code** agent; the **local markdown**, **GitHub Issues** and **command** boards.
+The defaults are Claude Code `sonnet` for building and `opus` for reviewing. Either role can be the
+[Codex CLI](https://github.com/openai/codex) instead (signed in with `codex login`):
 
-- **Another agent CLI** (Codex, Gemini CLI, ...): not built in yet. Set `builder` / `reviewer` to
+```json
+"builder":  { "type": "codex" },
+"reviewer": { "type": "claude-code", "model": "opus" }
+```
+
+Mixing is the point: the model that wrote the code is not the one that approves it. `model` is optional for Codex
+(it uses the model in your `~/.codex/config.toml`); set it to pick another.
+
+`sandbox` sets how much a Codex run may do unattended:
+
+| `sandbox` | what it does |
+|---|---|
+| `auto` (default) | Codex's "approve for me": a workspace-write sandbox, and anything that needs more (committing into the repository's `.git`, pushing) goes to Codex's automatic reviewer. The counterpart of Claude Code's auto mode |
+| `workspace-write` | writes only in the worktree, never escalates. Codex cannot commit from a worktree in this mode, so builds end `BLOCKED` |
+| `danger-full-access` | no sandbox, no approvals. Only on a machine set aside for this |
+| `read-only` | for a reviewer that should never change the branch |
+
+A cut-off Codex run resumes like a Claude Code one (`codex exec resume` on the same thread).
+
+## Notion as the board
+
+1. Create an integration at [notion.so/profile/integrations](https://www.notion.so/profile/integrations) and copy its
+   secret. Give it "Read content", "Update content" and "Read/Insert comments".
+2. Open your tasks database, **⋯ → Connections → add the integration**.
+3. Copy the database id from its URL (`notion.so/<workspace>/<database id>?v=...`).
+4. Put the secret in an environment variable (`NOTION_TOKEN`) or a file only you can read (`tokenFile`).
+
+```json
+"board": {
+  "type": "notion",
+  "notion": {
+    "databaseId": "0123456789abcdef0123456789abcdef",
+    "tokenEnv": "NOTION_TOKEN",
+    "properties": { "title": "Name", "status": "Status", "project": "Project", "kind": "Type", "id": "ID", "notes": "" },
+    "statuses": { "ready": "Ready", "working": "In progress", "review": "In review", "blocked": "Blocked", "done": "Done" },
+    "releaseKind": "Release",
+    "filter": { "property": "Assignee", "equals": "nightshift" }
+  }
+},
+"projects": { "my-app": { "repoPath": "~/code/my-app" } }
+```
+
+| key | meaning |
+|---|---|
+| `properties.title`, `status`, `project` | required. `status` may be a Status or a Select property; `project` a Select, Multi-select, Text or Relation (the related page's title) |
+| `properties.kind` | optional. Pages whose kind equals `releaseKind` are release tickets |
+| `properties.id` | optional. A Unique ID property (`TK-12`) gives short ticket ids and branch names; otherwise the page id is used |
+| `properties.body` | optional. A text property with the ask; by default the page's own text is used |
+| `properties.notes` | optional. A text property the runner appends to; by default notes become page comments |
+| `statuses` | the option names in your status property for each runner status. They must exist in the database |
+| `filter` | optional. Only pages where this property equals this value are tickets (Select, Status, Text or Checkbox) |
+
+The value of the project property is the key in `projects` (`"my-app"` above). `nightshift doctor` reads the database
+once to check the token, the sharing and the property names.
+
+## Any other agent or tracker
+
+- **Another agent CLI** (Gemini CLI, opencode, ...): set `builder` / `reviewer` to
   `{"type": "command", "command": "/path/to/script"}`. The script gets the prompt on stdin and `NIGHTSHIFT_MODEL`,
   `NIGHTSHIFT_SESSION_ID`, `NIGHTSHIFT_SESSION_MODE` (`new` or `resume`) in its environment, runs in the ticket's
   worktree, and must exit 0 when the run finished. Resuming a cut-off session is up to the script.
-- **Another tracker** (Linear, Jira, Notion, a spreadsheet): not built in yet. Write a small script for the
+- **Another tracker** (Linear, Jira, a spreadsheet): write a small script for the
   [command board protocol](../README.md#any-tracker-the-command-board) and set `"board": {"type": "command", "command": "..."}`.
 
 ## Troubleshooting
@@ -143,6 +203,8 @@ Built in today: the **Claude Code** agent; the **local markdown**, **GitHub Issu
 |---|---|
 | `run` says "nothing to start: no ready tickets" | no ticket is `ready`. On GitHub: is the issue labelled `nightshift:ready`, open, and opened by a trusted author? |
 | `run` says ready tickets "wait for a project that is already being worked on" | one worker per project; the next batch is picked up by that worker when it finishes |
+| a Codex build ends `BLOCKED` because git could not write its index or lock file | the Codex `sandbox` is `workspace-write`; use `auto` (the default) |
+| `doctor`: "Notion: ... 404" or "no property" | the database is not shared with the integration, or a property name in `properties` / `statuses` does not match |
 | a ticket stays `working` and nothing runs | the run was cut off; the next `run` resumes it after `resumeCooldownMinutes` (15). `nightshift logs` shows the last exit |
 | `blocked`: "stage was cut off 3 times" | read the last log line in the note. Common causes: usage limit, `claude` not signed in, a permission prompt in an unattended run |
 | run summaries mention a permission rule or ask for approval | your Claude Code settings deny something the run needed. Allow it in `~/.claude/settings.json`, or change `permissionMode` |

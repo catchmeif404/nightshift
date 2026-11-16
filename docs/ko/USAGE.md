@@ -9,7 +9,9 @@
 - [계속 돌리기](#계속-돌리기)
 - [팀 규칙, 사람 결정 게이트, 출시 티켓](#팀-규칙-사람-결정-게이트-출시-티켓)
 - [모델, 비용, 내 Claude Code 설정](#모델-비용-내-claude-code-설정)
-- [다른 에이전트와 트래커](#다른-에이전트와-트래커)
+- [Claude Code 대신 (또는 함께) Codex](#claude-code-대신-또는-함께-codex)
+- [Notion을 보드로](#notion을-보드로)
+- [그 밖의 에이전트와 트래커](#그-밖의-에이전트와-트래커)
 - [문제 해결](#문제-해결)
 
 ## 하루 흐름
@@ -119,17 +121,74 @@ push할 수 있는 `origin` 원격이 있어야 합니다. (검토를 PR 댓글�
   ("한국어로 답해"라고 돼 있으면 실행 요약도 한국어).
 - 쓰는 서비스의 약관이 무인 실행을 허용하는지 확인하세요.
 
-## 다른 에이전트와 트래커
+## Claude Code 대신 (또는 함께) Codex
 
-지금 내장된 것: **Claude Code** 에이전트, **로컬 마크다운**·**GitHub Issues**·**command** 보드.
+기본은 Claude Code `sonnet`이 만들고 `opus`가 검토합니다. 두 역할 모두 [Codex CLI](https://github.com/openai/codex)로
+바꿀 수 있습니다(`codex login`으로 로그인).
 
-- **다른 에이전트 CLI**(Codex, Gemini CLI 등): 아직 내장되지 않았습니다. `builder` / `reviewer`를
+```json
+"builder":  { "type": "codex" },
+"reviewer": { "type": "claude-code", "model": "opus" }
+```
+
+섞어 쓰는 게 핵심입니다. 코드를 쓴 모델이 그 코드를 승인하지 않게요. Codex의 `model`은 생략하면
+`~/.codex/config.toml`의 모델을 쓰고, 다른 모델을 쓰려면 적으면 됩니다.
+
+`sandbox`는 Codex 실행이 사람 없이 어디까지 할 수 있는지 정합니다.
+
+| `sandbox` | 동작 |
+|---|---|
+| `auto` (기본) | Codex의 "approve for me". worktree 쓰기 샌드박스에서 돌고, 그 이상이 필요한 일(저장소 `.git`에 커밋, push)은 Codex 자동 검토자에게 넘깁니다. Claude Code auto 모드에 해당 |
+| `workspace-write` | worktree 안에만 쓰고 권한 상승을 하지 않습니다. 이 모드에선 worktree에서 커밋을 못 해 빌드가 `BLOCKED`로 끝납니다 |
+| `danger-full-access` | 샌드박스·승인 없음. 이 용도로 따로 둔 컴퓨터에서만 |
+| `read-only` | 브랜치를 절대 바꾸면 안 되는 검토자용 |
+
+끊긴 Codex 실행도 Claude Code처럼 이어 갑니다(같은 스레드로 `codex exec resume`).
+
+## Notion을 보드로
+
+1. [notion.so/profile/integrations](https://www.notion.so/profile/integrations)에서 통합(integration)을 만들고 시크릿을
+   복사합니다. "콘텐츠 읽기", "콘텐츠 업데이트", "댓글 읽기·쓰기" 권한을 줍니다.
+2. 작업 데이터베이스에서 **⋯ → 연결 → 그 통합 추가**.
+3. URL에서 데이터베이스 ID를 복사합니다(`notion.so/<워크스페이스>/<데이터베이스 ID>?v=...`).
+4. 시크릿은 환경 변수(`NOTION_TOKEN`)나 나만 읽을 수 있는 파일(`tokenFile`)에 둡니다.
+
+```json
+"board": {
+  "type": "notion",
+  "notion": {
+    "databaseId": "0123456789abcdef0123456789abcdef",
+    "tokenEnv": "NOTION_TOKEN",
+    "properties": { "title": "이름", "status": "상태", "project": "프로젝트", "kind": "종류", "id": "ID", "notes": "" },
+    "statuses": { "ready": "할 일", "working": "진행 중", "review": "리뷰", "blocked": "막힘", "done": "완료" },
+    "releaseKind": "출시",
+    "filter": { "property": "담당", "equals": "nightshift" }
+  }
+},
+"projects": { "my-app": { "repoPath": "~/code/my-app" } }
+```
+
+| 키 | 뜻 |
+|---|---|
+| `properties.title`, `status`, `project` | 필수. `status`는 상태(Status)나 선택(Select) 속성, `project`는 선택·다중 선택·텍스트·관계형(연결된 페이지 제목) |
+| `properties.kind` | 선택. 값이 `releaseKind`면 출시 티켓 |
+| `properties.id` | 선택. 고유 ID 속성(`TK-12`)이면 티켓 ID와 브랜치 이름이 짧아집니다. 없으면 페이지 ID |
+| `properties.body` | 선택. 요청이 담긴 텍스트 속성. 기본은 페이지 본문 |
+| `properties.notes` | 선택. 러너가 덧붙일 텍스트 속성. 기본은 페이지 댓글 |
+| `statuses` | 러너 상태마다 상태 속성의 옵션 이름. 데이터베이스에 실제로 있어야 합니다 |
+| `filter` | 선택. 이 속성이 이 값인 페이지만 티켓(선택·상태·텍스트·체크박스) |
+
+프로젝트 속성의 값이 `projects`의 키입니다(위에선 `"my-app"`). `nightshift doctor`가 데이터베이스를 한 번 읽어서 토큰,
+공유, 속성 이름을 확인합니다.
+
+## 그 밖의 에이전트와 트래커
+
+- **다른 에이전트 CLI**(Gemini CLI, opencode 등): `builder` / `reviewer`를
   `{"type": "command", "command": "/스크립트/경로"}`로 두면, 스크립트가 프롬프트를 stdin으로 받고 `NIGHTSHIFT_MODEL`,
   `NIGHTSHIFT_SESSION_ID`, `NIGHTSHIFT_SESSION_MODE`(`new` 또는 `resume`)를 환경 변수로 받아 티켓 worktree에서 돕니다.
   끝나면 exit 0이어야 하고, 끊긴 세션 이어가기는 스크립트가 맡습니다.
-- **다른 트래커**(Linear, Jira, Notion, 스프레드시트): 아직 내장되지 않았습니다.
-  [command 보드 프로토콜](../../README.ko.md#다른-트래커-command-보드)용 작은 스크립트를 쓰고
-  `"board": {"type": "command", "command": "..."}`로 두세요.
+- **다른 트래커**(Linear, Jira, 스프레드시트): [command 보드 프로토콜](../../README.ko.md#다른-트래커-command-보드)용 작은
+  스크립트를 쓰고 `"board": {"type": "command", "command": "..."}`로 두세요.
 
 ## 문제 해결
 
@@ -137,6 +196,8 @@ push할 수 있는 `origin` 원격이 있어야 합니다. (검토를 PR 댓글�
 |---|---|
 | `run`이 "nothing to start: no ready tickets" | `ready` 티켓이 없음. GitHub면: 이슈가 열려 있고 `nightshift:ready` 라벨이 있고 믿을 수 있는 작성자가 열었는지 |
 | `run`이 ready 티켓이 "wait for a project that is already being worked on" | 프로젝트당 작업자 1명. 그 작업자가 끝나면 다음 묶음을 이어서 가져감 |
+| Codex 빌드가 git index·lock 파일을 못 써서 `BLOCKED` | Codex `sandbox`가 `workspace-write`임. `auto`(기본)로 |
+| `doctor`: "Notion: ... 404" 또는 "no property" | 데이터베이스를 통합에 연결하지 않았거나, `properties` / `statuses`의 이름이 실제와 다름 |
 | 티켓이 `working`에 머물고 아무것도 안 돎 | 실행이 끊김. `resumeCooldownMinutes`(15분) 뒤 다음 `run`이 이어 감. `nightshift logs`로 마지막 종료 확인 |
 | `blocked`: "stage was cut off 3 times" | 메모의 마지막 로그 줄 확인. 흔한 원인: 사용량 한도, `claude` 로그아웃, 무인 실행 중 권한 확인 창 |
 | 실행 요약에 권한 규칙 얘기나 승인 요청이 나옴 | 내 Claude Code 설정이 실행에 필요한 걸 막음. `~/.claude/settings.json`에서 허용하거나 `permissionMode`를 바꾸세요 |

@@ -10,6 +10,8 @@
 | git | 티켓마다 자기 worktree와 브랜치를 만듭니다 | `git --version` |
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (로그인) | 만들고 검토하는 기본 에이전트 | `claude --version` 후 `claude`를 한 번 실행해 로그인 |
 | [GitHub CLI](https://cli.github.com/) (로그인) | GitHub Issues 보드나 PR을 쓸 때만 | `gh auth status` |
+| [Codex CLI](https://github.com/openai/codex) (로그인) | Codex가 만들거나 검토할 때만 | `codex --version`, `codex login` |
+| Notion 통합 시크릿 | Notion 보드를 쓸 때만 | [Notion을 보드로](USAGE.md#notion을-보드로) |
 
 nightshift는 Claude Code를 `--permission-mode auto`로 무인 실행합니다. 먼저 터미널에서 `claude`를 한 번 열어 혼자
 잘 동작하는지 확인하세요. 실행은 평소 Claude Code 로그인과 설정(전역 `~/.claude/CLAUDE.md` 포함)을 그대로 씁니다.

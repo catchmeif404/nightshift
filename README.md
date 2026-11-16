@@ -5,7 +5,7 @@
 [English](README.md) | [한국어](README.ko.md)
 
 nightshift is an unattended dev queue that runs on your own machine. Put tickets on a board (GitHub Issues
-or a folder of markdown files) and walk away. For each ticket a developer run (Claude Code, `sonnet` by default) builds it
+or a folder of markdown files) and walk away. For each ticket a developer run (Claude Code `sonnet` by default, or Codex) builds it
 on its own branch, then a separate reviewer run (`opus` by default) checks it like a CTO would: it fixes small things,
 sends bigger ones back for one more round, and stops anything that needs a human (money, legal text, destructive data
 changes, public actions) instead of merging it.
@@ -14,8 +14,8 @@ It grew out of the runner that builds our own products, and it now runs them. It
 **225 tickets** through build and review in its first 12 days; **84%** passed review on the first round
 (the pass is the AI reviewer's verdict, not a human's).
 
-> Status: early (0.1). Built in: the Claude Code agent; local markdown, GitHub Issues and command boards.
-> Other agents (Codex, ...) and trackers (Notion, Linear, ...) work through a small script of your own, not out of the box yet.
+> Status: early (0.1). Agents: **Claude Code** (default) and **Codex**, in either role, mixed as you like.
+> Boards: **local markdown** (default), **GitHub Issues**, **Notion**, and any other tracker through a small script.
 
 **Docs:** [Install](docs/INSTALL.md) · [Getting started (10 minutes)](docs/GETTING-STARTED.md) · [Usage and troubleshooting](docs/USAGE.md)
 
@@ -77,14 +77,15 @@ This writes the config, creates the `nightshift:*` labels and trusts the signed-
 
 | key | default | what it does |
 |---|---|---|
-| `board.type` | `local-md` | `local-md` (folder of tickets), `github`, or `command` (any tracker, see below) |
+| `board.type` | `local-md` | `local-md` (folder of tickets), `github`, `notion` ([setup](docs/USAGE.md#notion-as-the-board)), or `command` (any tracker, see below) |
+| `board.notion` | | database id, token, property and status names: see [Notion as the board](docs/USAGE.md#notion-as-the-board) |
 | `board.command` | none | for `command`: the executable that speaks the board protocol |
 | `board.repos`, `board.trustedAuthors` | `[]` | GitHub repos to read, and whose issues may run |
 | `projects.<name>.repoPath` | (required) | the repo a ticket of this project works in |
 | `projects.<name>.publish` | `pr` | `pr` pushes and opens a pull request; `branch` leaves a local branch |
 | `projects.<name>.rulesFile` | none | house rules added to every prompt for this project |
 | `projects.<name>.postMergeCommand` | none | runs after a merge; its result is noted on the ticket |
-| `builder`, `reviewer` | Claude Code `sonnet` / `opus` | `type` (`claude-code` or `command`), `model`, `permissionMode` |
+| `builder`, `reviewer` | Claude Code `sonnet` / `opus` | `type` (`claude-code`, `codex` or `command`), `model`, `permissionMode` (Claude Code), `sandbox` (Codex: `auto`, `workspace-write`, `read-only`, `danger-full-access`) |
 | `maxSlots` | 3 | projects worked at the same time |
 | `maxRework` | 1 | extra build-and-review rounds after a REWORK |
 | `maxStageTries` | 3 | cut-offs before a ticket is blocked |
@@ -99,7 +100,8 @@ A `command` agent is any executable: it gets the prompt on stdin and `NIGHTSHIFT
 
 ## Any tracker: the command board
 
-Linear, Jira, Notion, a spreadsheet: point `board.command` at a small script and nightshift uses it as the board.
+Linear, Jira, a spreadsheet, or a Notion setup the built-in board does not fit: point `board.command` at a small
+script and nightshift uses it as the board.
 
 ```
 <command> list <status>                      print a JSON array: [{"id","title","body","project","kind","createdAt"}]

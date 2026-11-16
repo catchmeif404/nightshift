@@ -10,6 +10,8 @@
 | git | every ticket gets its own worktree and branch | `git --version` |
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code), signed in | the built-in agent for building and reviewing | `claude --version`, then run `claude` once and sign in |
 | [GitHub CLI](https://cli.github.com/), signed in | only for the GitHub Issues board or pull requests | `gh auth status` |
+| [Codex CLI](https://github.com/openai/codex), signed in | only if Codex builds or reviews | `codex --version`, `codex login` |
+| a Notion integration secret | only for the Notion board | see [Notion as the board](USAGE.md#notion-as-the-board) |
 
 nightshift runs Claude Code unattended with `--permission-mode auto`. Open `claude` once in a terminal first and make
 sure it works on its own: the runs use your normal Claude Code sign-in and settings (including your global
