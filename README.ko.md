@@ -126,6 +126,7 @@ nightshift run                     # 작업자를 백그라운드로 띄우고 �
 nightshift logs -f                 # 지켜보기
 nightshift status                  # 상태별 티켓
 nightshift service install         # 이제부터 새 티켓을 알아서 가져감 (2분마다)
+nightshift ui                      # 로컬 웹 콘솔: 현황, 설정, doctor
 ```
 
 로컬 보드에서는 티켓이 `.tickets/` 안의 파일이고, 러너가 `ready → working → review | blocked → done` 으로 옮기며

@@ -143,7 +143,7 @@ function agent(o: JsonObject, where: string, claudeModel: string, root: string):
   };
 }
 
-function inside(root: string, path: string): string {
+export function inside(root: string, path: string): string {
   if (path === "~" || path.startsWith("~/")) return join(homedir(), path.slice(1));
   return path === "" || isAbsolute(path) ? path : resolve(root, path);
 }

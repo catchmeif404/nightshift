@@ -141,6 +141,7 @@ export enum CliCommand {
   Logs = "logs",
   Service = "service",
   Doctor = "doctor",
+  Ui = "ui",
   Version = "version",
   Help = "help",
 }
@@ -162,4 +163,14 @@ export enum CheckLevel {
   Ok = "ok",
   Warn = "warn",
   Fail = "fail",
+}
+
+// The local web console's routes.
+export enum UiRoute {
+  Page = "/",
+  Status = "/api/status",
+  Settings = "/api/settings",
+  Check = "/api/settings/check",
+  Save = "/api/settings/save",
+  Doctor = "/api/doctor",
 }

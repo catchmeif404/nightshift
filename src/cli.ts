@@ -6,6 +6,7 @@ import { Brand } from "./brand.js";
 import { add, daemon, doctor, init, logs, runOnce, status, workSlot } from "./commands.js";
 import { ConfigError, loadConfig } from "./config.js";
 import { BoardType, CliCommand, ServiceAction, TicketKind } from "./enums.js";
+import { DEFAULT_PORT, startUi } from "./ui/server.js";
 import { installService, serviceStatus, uninstallService } from "./service.js";
 
 const HELP = `${Brand.name}: tickets in, one model builds, another reviews, you decide only what a human must.
@@ -23,6 +24,7 @@ Usage: ${Brand.name} <command> [options]
   status              running workers and tickets by status
   logs [-f] [-n 40]   the runner's log (-f: keep following)
   doctor              check tools, sign-ins and the config
+  ui [--port 4404]    a local web console (127.0.0.1 only): status, settings, doctor
 
 Options: --root <dir>  folder that holds ${Brand.configFile} (default: current folder)
 `;
@@ -47,6 +49,7 @@ async function main(argv: string[]): Promise<number> {
       project: { type: "string", default: "" },
       body: { type: "string", default: "" },
       release: { type: "boolean", default: false },
+      port: { type: "string", default: String(DEFAULT_PORT) },
       help: { type: "boolean", short: "h", default: false },
     },
   });
@@ -106,6 +109,19 @@ async function main(argv: string[]): Promise<number> {
     }
     case CliCommand.Doctor:
       return (await doctor(root)) ? 0 : 1;
+    case CliCommand.Ui: {
+      const port = Number(values.port);
+      if (!Number.isInteger(port) || port < 0 || port > 65535) throw new ConfigError("--port must be a number from 0 to 65535");
+      const server = await startUi(root, port);
+      console.log(`${Brand.name} console: ${server.url}  (this computer only; Ctrl+C to stop)`);
+      console.log("It never starts work: saving settings only writes " + Brand.configFile + ".");
+      await new Promise<void>((done) => {
+        process.once("SIGINT", done);
+        process.once("SIGTERM", done);
+      });
+      await server.close();
+      return 0;
+    }
     case CliCommand.Version:
       console.log(version());
       return 0;

@@ -130,6 +130,7 @@ nightshift run                     # starts workers in the background and return
 nightshift logs -f                 # watch them
 nightshift status                  # tickets by status
 nightshift service install         # from now on, picks up new tickets on its own (every 2 minutes)
+nightshift ui                      # a local web console: status, settings, doctor
 ```
 
 With the local board, tickets are files in `.tickets/`; the runner moves them through
