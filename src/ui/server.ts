@@ -3,7 +3,7 @@ import { IncomingMessage, Server, ServerResponse, createServer } from "node:http
 import { AddressInfo } from "node:net";
 import { doctorChecks } from "../commands.js";
 import { ConfigError, loadConfig } from "../config.js";
-import { AgentType, BoardType, NoteLanguage, UiRoute } from "../enums.js";
+import { AgentType, BoardType, NoteLanguage, NotifyService, UiRoute } from "../enums.js";
 import { mask } from "../log.js";
 import { Slots, statePaths } from "../state.js";
 import { renderPage } from "./page.js";
@@ -90,6 +90,7 @@ function asAgent(value: unknown, where: string): SettingsForm["builder"] {
 export function parseForm(value: unknown): SettingsForm {
   const o = asRecord(value, "edit");
   const board = asRecord(o.board, "edit.board");
+  const notify = asRecord(o.notify, "edit.notify");
   if (!Array.isArray(o.projects)) throw new SettingsError("edit.projects must be a list", 400);
   if (typeof o.maxSlots !== "number") throw new SettingsError("edit.maxSlots must be a number", 400);
   return {
@@ -106,6 +107,9 @@ export function parseForm(value: unknown): SettingsForm {
     builder: asAgent(o.builder, "edit.builder"),
     reviewer: asAgent(o.reviewer, "edit.reviewer"),
     maxSlots: o.maxSlots,
+    ticketSections: asStrings(o.ticketSections, "edit.ticketSections"),
+    gatePaths: asStrings(o.gatePaths, "edit.gatePaths"),
+    notify: { service: asEnum(Object.values(NotifyService), notify.service, "edit.notify.service"), chatId: asString(notify.chatId, "edit.notify.chatId") },
   };
 }
 

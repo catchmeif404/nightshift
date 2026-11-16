@@ -8,7 +8,7 @@ import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { Ticket } from "../src/board/board.js";
 import { loadConfig } from "../src/config.js";
-import { AgentType, BoardType, CheckLevel, TicketKind, TicketStatus } from "../src/enums.js";
+import { AgentType, BoardType, CheckLevel, NotifyService, TicketKind, TicketStatus } from "../src/enums.js";
 import { SlotInfo, Slots, projectSlotKey } from "../src/state.js";
 import { UiServer, startUi } from "../src/ui/server.js";
 import { SettingsForm, readSettings } from "../src/ui/settings.js";
@@ -344,4 +344,53 @@ test("`nightshift ui` really starts, serves the page and stops", async () => {
   assert.match(await res.text(), /nightshift/);
   child.kill("SIGINT");
   await new Promise((r) => child.on("exit", r));
+});
+
+test("ticket form, gated paths and notifications are shown, saved and read back, and the rest of the file is kept", async () => {
+  const b = await box({ ...raw("/tmp"), notify: { service: NotifyService.Slack, webhookUrlEnv: "MY_HOOK", events: ["review"] } });
+  const first = await formOf(b);
+  assert.deepEqual(first.form.ticketSections, []);
+  assert.equal(first.form.notify.service, NotifyService.Slack);
+  const edit: SettingsForm = {
+    ...first.form,
+    ticketSections: ["Deliverable", "Check", "Out of scope"],
+    gatePaths: ["db/migration/**", "**/*.sql"],
+    notify: { service: NotifyService.Telegram, chatId: "-1001234567" },
+  };
+  const r = await post(b, "/api/settings/save", { edit, revision: first.revision });
+  assert.equal(r.status, 200, r.body);
+  assert.deepEqual((JSON.parse(r.body) as { changed: string[] }).changed, ["ticketSections", "gatePaths", "notify.service", "notify.chatId"]);
+  const config = loadConfig(b.root);
+  assert.deepEqual(config.ticketSections, edit.ticketSections);
+  assert.deepEqual(config.gatePaths, edit.gatePaths);
+  assert.deepEqual([config.notify.service, config.notify.chatId], [NotifyService.Telegram, "-1001234567"]);
+  const file = JSON.parse(readFileSync(b.configFile, "utf8")) as { notify: Record<string, unknown> };
+  assert.equal(file.notify.webhookUrlEnv, "MY_HOOK");
+  assert.deepEqual(file.notify.events, ["review"]);
+  const again = await formOf(b);
+  assert.deepEqual(again.form.ticketSections, edit.ticketSections);
+  assert.deepEqual(again.form.gatePaths, edit.gatePaths);
+  assert.deepEqual(again.form.notify, edit.notify);
+  const off = await post(b, "/api/settings/save", { edit: { ...again.form, ticketSections: [], gatePaths: [], notify: { service: NotifyService.None, chatId: "" } }, revision: again.revision });
+  assert.equal(off.status, 200, off.body);
+  assert.deepEqual(loadConfig(b.root).ticketSections, []);
+});
+
+test("a bad ticket label, glob or chat id is refused and nothing is written", async () => {
+  const b = await box();
+  const { form, revision } = await formOf(b);
+  const file = readFileSync(b.configFile, "utf8");
+  const bad: Array<[string, SettingsForm]> = [
+    ["config", { ...form, ticketSections: ["Check:"] }],
+    ["config", { ...form, ticketSections: ["A", "a"] }],
+    ["config", { ...form, gatePaths: [" "] }],
+    ["notify.chatId", { ...form, notify: { service: NotifyService.Telegram, chatId: "not a chat" } }],
+    ["config", { ...form, notify: { service: NotifyService.Telegram, chatId: "" } }],
+  ];
+  for (const [field, edit] of bad) {
+    const r = await post(b, "/api/settings/save", { edit, revision });
+    assert.equal(r.status, 422, r.body);
+    assert.ok((JSON.parse(r.body) as { issues: Array<{ field: string }> }).issues.some((i) => i.field === field), `${field}: ${r.body}`);
+  }
+  assert.equal(readFileSync(b.configFile, "utf8"), file);
 });

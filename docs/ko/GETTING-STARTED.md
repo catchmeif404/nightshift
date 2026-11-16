@@ -39,6 +39,22 @@ nightshift doctor
 프로젝트 이름은 폴더 이름(`demo-app`)이 됩니다. 로컬 보드에서는 결과가 로컬 브랜치로 남고(`"publish": "branch"`)
 어디에도 push하지 않습니다.
 
+## 선택: 설치할 때 더 켜 보기
+
+`init` 한 번으로 티켓 양식, 경로 승인, 채팅 알림을 켤 수 있습니다. 플래그를 주지 않으면 모두 꺼져 있고, 나중에
+콘솔(`nightshift ui`)에서 같은 세 설정을 보고 바꿀 수 있습니다.
+
+```sh
+nightshift init --repo-path ~/code/demo-app \
+  --sections deliverable,verify,out-of-scope \
+  --gate-paths default \
+  --notify telegram --notify-chat-id=-1001234567
+```
+
+- `--sections`: 모든 티켓에 `Deliverable:` / `Check:` / `Out of scope:` 줄을 요구합니다 (영문 항목 이름으로 쓰이며, 바꾸려면 `nightshift.json`의 `ticketSections`를 고치세요).
+- `--gate-paths`: `default`(`db/migration/**`, `**/*.sql`, `.github/workflows/**`) 또는 쉼표로 구분한 글롭. 하나라도 건드린 변경은 사람을 기다립니다.
+- `--notify telegram|slack|discord`: Telegram은 `--notify-chat-id`도 필요합니다 (음수 ID가 플래그로 읽히지 않게 `=`로 쓰세요). 파일에는 환경변수 **이름**만 들어가며, 값은 러너가 도는 곳에서 export 하세요.
+
 ## 3. 티켓 쓰기
 
 ```sh

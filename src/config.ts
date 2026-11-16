@@ -226,6 +226,9 @@ const DEFAULT_WEBHOOK_ENV: Record<NotifyService, string> = {
   [NotifyService.Discord]: "NIGHTSHIFT_DISCORD_WEBHOOK_URL",
 };
 
+// What a Telegram chat id looks like: a number (groups are negative) or @channelname.
+export const TELEGRAM_CHAT_ID_PATTERN = /^(-?\d{1,20}|@[A-Za-z0-9_]{5,32})$/;
+
 function notifyConfig(o: JsonObject): NotifyConfig {
   const where = "config.notify";
   const service = oneOf(o, "service", Object.values(NotifyService), NotifyService.None, where);

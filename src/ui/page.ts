@@ -57,6 +57,9 @@ var STR = {
     settings: "Settings", projects: "Projects: repository path", boardH: "Board", boardType: "Board type", boardDir: "Ticket folder (inside the config root)",
     repos: "GitHub repositories (owner/name, one per line)", trusted: "Trusted GitHub logins (one per line)",
     builder: "Developer", reviewer: "Reviewer", agentType: "Executor", model: "Model (empty: the executor's default)", maxSlots: "Concurrent workers (1-16)",
+    extras: "Ticket form, gated paths, notifications", sections: "Ticket form: required labels (one per line, empty = off)",
+    gates: "Gated paths: globs that always need a human (one per line, empty = off)", notifyService: "Chat notifications", notifyOff: "none (off)",
+    chatId: "Telegram chat id (Telegram only)", notifyHint: "The bot token or webhook URL is never set here: export the environment variable named in the file where the runner runs.",
     check: "Check before saving", save: "Save", reload: "Reload", saved: "Saved. A backup of the previous file: ", nothing: "Nothing changed.",
     nextDispatch: "Saving only writes nightshift.json. It does not start work, install the service or approve auto-merge. Workers that are running now keep the old settings; the new ones apply at the next dispatch (every poll interval).",
     runningNow: "Running now with the old settings: ", preserved: "Other fields in the file (not edited here, kept as they are on every save)", secretKept: "secret: kept, never shown",
@@ -72,6 +75,9 @@ var STR = {
     settings: "설정", projects: "프로젝트: 저장소 경로", boardH: "보드", boardType: "보드 종류", boardDir: "티켓 폴더 (설정 root 안)",
     repos: "GitHub 저장소 (owner/name, 한 줄에 하나)", trusted: "신뢰할 GitHub 로그인 (한 줄에 하나)",
     builder: "개발자", reviewer: "검토자", agentType: "실행기", model: "모델 (비우면 실행기 기본값)", maxSlots: "동시 작업 수 (1-16)",
+    extras: "티켓 양식, 경로 승인, 알림", sections: "티켓 양식: 필수 항목 이름 (한 줄에 하나, 비우면 꺼짐)",
+    gates: "경로 승인: 항상 사람이 봐야 하는 글롭 (한 줄에 하나, 비우면 꺼짐)", notifyService: "채팅 알림", notifyOff: "없음 (꺼짐)",
+    chatId: "Telegram 채팅 ID (Telegram만)", notifyHint: "봇 토큰이나 웹훅 URL은 여기서 정하지 않습니다. 파일에 적힌 환경변수를 러너가 도는 곳에서 export 하세요.",
     check: "저장 전 검사", save: "저장", reload: "다시 불러오기", saved: "저장했습니다. 이전 파일 백업: ", nothing: "바뀐 것이 없습니다.",
     nextDispatch: "저장은 nightshift.json만 씁니다. 작업을 시작하거나 서비스를 설치하거나 자동 머지를 승인하지 않습니다. 지금 실행 중인 워커는 예전 설정으로 계속 돌고, 새 설정은 다음 배차(확인 주기)부터 적용됩니다.",
     runningNow: "예전 설정으로 실행 중: ", preserved: "파일의 다른 필드 (여기서 편집하지 않고, 저장할 때마다 그대로 보존)", secretKept: "비밀값: 그대로 유지, 표시하지 않음",
@@ -141,6 +147,7 @@ function field(id, label, el, issueKey) { el.id = id; el.dataset.issue = issueKe
 function opts(sel, values, current) { values.forEach(function (v) { var o = h("option", { value: v }, v); if (v === current) o.selected = true; sel.append(o); }); return sel; }
 function lines(v) { return v.split("\n").map(function (x) { return x.trim(); }).filter(function (x) { return x !== ""; }); }
 
+var NOTIFY_SERVICES = ["none", "telegram", "slack", "discord"];
 var BOARD_TYPES = ["local-md", "github"], AGENT_TYPES = ["claude-code", "codex"];
 function typeOptions(allowed, current, locked) { return locked ? [current] : allowed; }
 
@@ -170,6 +177,15 @@ function renderSettings(v) {
     if (a[2]) box.append(h("div", { class: "mut" }, t("locked")));
   });
   box.append(h("div", { class: "grid" }, field("maxSlots", t("maxSlots"), h("input", { type: "number", min: "1", max: "16", value: f.maxSlots }), "maxSlots")));
+  box.append(h("h3", {}, t("extras")));
+  var sections = h("textarea", {}); sections.value = f.ticketSections.join("\n");
+  var gates = h("textarea", {}); gates.value = f.gatePaths.join("\n");
+  var svc = h("select", {});
+  NOTIFY_SERVICES.forEach(function (n) { var o = h("option", { value: n }, n === "none" ? t("notifyOff") : n); if (n === f.notify.service) o.selected = true; svc.append(o); });
+  var eg = h("div", { class: "grid" });
+  eg.append(field("ticketSections", t("sections"), sections, "ticketSections"), field("gatePaths", t("gates"), gates, "gatePaths"));
+  eg.append(field("notifyService", t("notifyService"), svc, "notify.service"), field("notifyChatId", t("chatId"), h("input", { value: f.notify.chatId }), "notify.chatId"));
+  box.append(eg, h("div", { class: "mut" }, t("notifyHint")));
   if (v.preserved.length) {
     var pt = h("table", {});
     v.preserved.forEach(function (p) { pt.append(h("tr", {}, h("td", {}, p.path), h("td", { class: p.secret ? "mut" : "" }, p.secret ? "•••••• (" + t("secretKept") + ")" : p.value))); });
@@ -185,6 +201,9 @@ function collect() {
     builder: { type: $("builderType").value, model: $("builderModel").value.trim() },
     reviewer: { type: $("reviewerType").value, model: $("reviewerModel").value.trim() },
     maxSlots: Number($("maxSlots").value),
+    ticketSections: lines($("ticketSections").value),
+    gatePaths: lines($("gatePaths").value),
+    notify: { service: $("notifyService").value, chatId: $("notifyChatId").value.trim() },
   };
 }
 
