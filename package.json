@@ -2,7 +2,19 @@
   "name": "nightshift",
   "version": "0.1.0",
   "description": "An unattended dev queue: tickets go in, one model builds, another reviews, and only human calls are left for you.",
+  "keywords": [
+    "claude-code",
+    "ai-agents",
+    "coding-agent",
+    "dev-queue",
+    "code-review",
+    "automation",
+    "github-issues",
+    "cli"
+  ],
+  "homepage": "https://www.npmjs.com/package/nightshift",
   "license": "MIT",
+  "author": "catchmeif404",
   "type": "module",
   "bin": {
     "nightshift": "dist/src/cli.js"
@@ -26,15 +38,5 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "typescript": "^5.7.0"
-  },
-  "keywords": [
-    "claude-code",
-    "ai-agents",
-    "coding-agent",
-    "dev-queue",
-    "code-review",
-    "automation",
-    "github-issues",
-    "cli"
-  ]
+  }
 }

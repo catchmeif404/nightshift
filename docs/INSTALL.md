@@ -19,14 +19,14 @@ sure it works on its own: the runs use your normal Claude Code sign-in and setti
 
 ## Install the CLI
 
-From npm (once 0.1 is published):
+From npm:
 
 ```sh
 npm install -g nightshift
 nightshift --help
 ```
 
-From source (works today):
+From source (once the GitHub repository is public):
 
 ```sh
 git clone <this repository> nightshift
