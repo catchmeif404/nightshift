@@ -75,3 +75,43 @@ export async function mergePullRequest(config: Config, url: string): Promise<str
   const result = await run(config.tools.gh, ["pr", "merge", url, "--merge", "--delete-branch"], tmpdir());
   return result.code === 0 ? "" : result.stderr.trim() || `gh pr merge exited ${result.code}`;
 }
+
+export interface GateHit {
+  glob: string;
+  files: string[];
+}
+
+// Glob over a repository-relative path with "/" separators: "**" crosses folders (a "**/" prefix also matches
+// no folder at all), "*" and "?" stay inside one folder name. The whole path must match; a leading "./" or "/" is ignored.
+export function globToRegExp(glob: string): RegExp {
+  const g = glob.replace(/^\.?\//, "");
+  let out = "";
+  for (let i = 0; i < g.length; i += 1) {
+    const c = g.charAt(i);
+    if (c === "*" && g.charAt(i + 1) === "*") {
+      const slash = g.charAt(i + 2) === "/";
+      out += slash ? "(?:.*/)?" : ".*";
+      i += slash ? 2 : 1;
+    } else if (c === "*") out += "[^/]*";
+    else if (c === "?") out += "[^/]";
+    else out += c.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+  }
+  return new RegExp(`^${out}$`);
+}
+
+export function gateHits(globs: string[], files: string[]): GateHit[] {
+  return globs
+    .map((glob) => ({ glob, files: files.filter((f) => globToRegExp(glob).test(f)) }))
+    .filter((hit) => hit.files.length > 0);
+}
+
+// Files the ticket's branch changed against the base branch (since the point it forked), committed or not.
+// Throws GitError when git cannot tell: the caller must not read that as "nothing changed".
+export async function changedFiles(config: Config, project: ProjectConfig, tree: Worktree): Promise<string[]> {
+  const hasOrigin = await succeeds(config, project.repoPath, ["remote", "get-url", "origin"]);
+  const base = hasOrigin ? `origin/${project.baseBranch}` : project.baseBranch;
+  const fork = await git(config, tree.path, ["merge-base", base, "HEAD"]);
+  const out = await run(config.tools.git, ["diff", "--name-only", "--no-renames", "-z", fork], tree.path);
+  if (out.code !== 0) throw new GitError(`git diff ${fork}: ${out.stderr.trim()}`);
+  return out.stdout.split("\0").filter((f) => f !== "");
+}

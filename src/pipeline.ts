@@ -19,7 +19,7 @@ import {
 } from "./enums.js";
 import { Brand } from "./brand.js";
 import { exec, run } from "./exec.js";
-import { Worktree, ensureWorktree, gitCommonDir, mergePullRequest, pullRequestState, removeWorktree, worktreeFor } from "./git.js";
+import { GitError, Worktree, changedFiles, ensureWorktree, gateHits, gitCommonDir, mergePullRequest, pullRequestState, removeWorktree, worktreeFor } from "./git.js";
 import { Logger, clip, mask, oneLine } from "./log.js";
 import { Messages, messagesFor } from "./messages.js";
 import { RESUME_PROMPT, StageContext, buildPrompt, releasePrompt, reviewPrompt } from "./prompts.js";
@@ -134,6 +134,7 @@ export class TicketPipeline {
       reviewFile: this.state.path(StateFile.Review),
       humanGates: this.r.config.humanGates,
       ticketSections: this.r.config.ticketSections,
+      gatePaths: this.r.config.gatePaths,
     };
   }
 
@@ -239,7 +240,26 @@ export class TicketPipeline {
     return this.settle(TicketStatus.Done, SettleReason.Released, this.say.released(line.value));
   }
 
+  // A passing review still goes to a human when the change touches a gated path. Fails closed: if the changed
+  // files cannot be listed, the ticket is held rather than waved through.
+  private async gatedByPaths(project: ProjectConfig, tree: Worktree, result: string, review: string): Promise<TicketOutcome | undefined> {
+    if (this.r.config.gatePaths.length === 0) return undefined;
+    let note: string;
+    try {
+      const hits = gateHits(this.r.config.gatePaths, await changedFiles(this.r.config, project, tree));
+      if (hits.length === 0) return undefined;
+      note = this.say.gatePaths(hits, result, review);
+    } catch (error) {
+      if (!(error instanceof GitError)) throw error;
+      note = this.say.gatePathsUnknown(clip(oneLine(error.message), 300), result);
+    }
+    await this.notify(`${this.ticket.id} needs a human decision (gated paths)`);
+    return this.settle(TicketStatus.Blocked, SettleReason.NeedsHuman, note);
+  }
+
   private async passed(project: ProjectConfig, tree: Worktree, kind: string, result: string, review: string): Promise<TicketOutcome> {
+    const gated = await this.gatedByPaths(project, tree, result, review);
+    if (gated !== undefined) return gated;
     if (kind === BuildResult.PullRequest && this.r.config.autoMerge) {
       const error = await mergePullRequest(this.r.config, result);
       if (error !== "") {

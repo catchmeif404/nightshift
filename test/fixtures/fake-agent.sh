@@ -1,6 +1,7 @@
 #!/bin/bash
 # A stand-in coding agent for tests. Each run takes the next line of $FAKE_PLAN_FILE:
 #   BUILD          commit a file and write "BRANCH <branch>"
+#   BUILD_PR       commit a file and write "PR https://example.com/pr/<n>"
 #   BUILD_BLOCKED  write "BLOCKED <reason>"
 #   REVIEW <word>  write <word> as the verdict (and a review note)
 #   EXIT <code>    exit with <code> without writing anything
@@ -36,6 +37,12 @@ case "$action" in
     git add work.txt
     git -c user.name=fake -c user.email=fake@example.com commit -q -m "fake change $n"
     echo "BRANCH $branch" > "$result"
+    ;;
+  BUILD_PR)
+    echo "change $n" >> work.txt
+    git add work.txt
+    git -c user.name=fake -c user.email=fake@example.com commit -q -m "fake change $n"
+    echo "PR https://example.com/pr/$n" > "$result"
     ;;
   BUILD_BLOCKED) echo "BLOCKED missing access to the staging database" > "$result" ;;
   RELEASE_DONE) echo "DONE v1.2.3 tagged, health check 200" > "$result" ;;

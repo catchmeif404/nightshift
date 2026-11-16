@@ -141,6 +141,14 @@ naming what is missing (all boards; release tickets are not checked). Build and 
 review grades by them and runs the check items itself. `add` pre-fills an empty form in the body. `doctor` reports an
 invalid list (empty or duplicate label, a colon in a label).
 
+**Gated paths** (`gatePaths`, default `[]` = off): a list of globs, for example `["db/migration/**", "**/*.sql", ".github/workflows/**"]`.
+Unlike `humanGates`, which only tell the review model what to look for, this is enforced in code: when the review says
+`PASS` but any file changed against the base branch matches a glob, the ticket moves to `blocked` as `needs-human`
+and is not merged (also with `autoMerge` on). The ticket note lists each matched glob and its files. The review prompt
+lists the globs too. Globs match the whole repository-relative path: `*` and `?` stay inside one folder name, `**`
+crosses folders (`dir/**` is everything below `dir`, `**/*.sql` any `.sql` file). If git cannot list the changed files,
+the ticket is held for a human rather than passed. `doctor` reports an empty glob.
+
 **Release tickets** (`--release` on `add`, or the `nightshift:release` label) run alone, as one reviewer run that
 follows your rules file. Write the release steps there (tag, deploy, how to check it is live). The run answers `DONE`
 or `BLOCKED`.
