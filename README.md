@@ -10,11 +10,14 @@ on its own branch, then a separate reviewer run (`opus` by default) checks it li
 sends bigger ones back for one more round, and stops anything that needs a human (money, legal text, destructive data
 changes, public actions) instead of merging it.
 
-It was pulled out of the runner that builds our own products. In its first 12 days there it took
-**225 tickets** through build and review; **84%** passed review on the first round
+It grew out of the runner that builds our own products, and it now runs them. Its bash predecessor took
+**225 tickets** through build and review in its first 12 days; **84%** passed review on the first round
 (the pass is the AI reviewer's verdict, not a human's).
 
-> Status: early (0.1). Claude Code is the only built-in agent so far; any CLI can be plugged in as a command agent.
+> Status: early (0.1). Built in: the Claude Code agent; local markdown, GitHub Issues and command boards.
+> Other agents (Codex, ...) and trackers (Notion, Linear, ...) work through a small script of your own, not out of the box yet.
+
+**Docs:** [Install](docs/INSTALL.md) · [Getting started (10 minutes)](docs/GETTING-STARTED.md) · [Usage and troubleshooting](docs/USAGE.md)
 
 ## How it works
 
@@ -43,19 +46,22 @@ What makes it hold up when nobody is watching:
 ## Quick start
 
 Needs Node 20+, git, and the [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI signed in.
+The full walk-through is [Getting started](docs/GETTING-STARTED.md).
 
 ```sh
-npm install -g nightshift          # not published yet: clone this repo, npm install && npm run build && npm link
-cd ~/work                          # a folder for the queue; your repos can live anywhere
-nightshift init --repo-path ./my-app
-nightshift add "Add a slugify helper" --project my-app --body "lowercase, dashes, tests next to the existing ones"
+npm install -g nightshift          # before 0.1 is on npm: see docs/INSTALL.md to install from source
+mkdir ~/nightshift-queue && cd ~/nightshift-queue
+nightshift init --repo-path ~/code/my-app
 nightshift doctor
-nightshift run                     # or: nightshift daemon
-nightshift status
+nightshift add "Add a slugify helper" --project my-app --body "lowercase, dashes, tests next to the existing ones"
+nightshift run                     # starts workers in the background and returns
+nightshift logs -f                 # watch them
+nightshift status                  # tickets by status
 ```
 
 With the local board, tickets are files in `.tickets/`; the runner moves them through
-`ready → working → review | blocked → done` and appends notes to each file.
+`ready → working → review | blocked → done` and appends notes to each file. Finished work waits on a local branch
+(`nightshift/t-1`) for you to merge. To keep it running on its own, see [running continuously](docs/USAGE.md#running-continuously).
 
 ### GitHub Issues
 
@@ -63,8 +69,8 @@ With the local board, tickets are files in `.tickets/`; the runner moves them th
 nightshift init --board github --repo you/my-app --repo-path ./my-app
 ```
 
-This writes the config and creates the `nightshift:*` labels. Add your login to `board.trustedAuthors`, then label an
-issue `nightshift:ready`. The worker opens a pull request, the reviewer reviews it, and the issue moves to
+This writes the config, creates the `nightshift:*` labels and trusts the signed-in `gh` user (more with
+`--trusted a,b`). Then label an issue `nightshift:ready`. The worker opens a pull request, the reviewer reviews it, and the issue moves to
 `nightshift:review` (or gets merged and closed with `autoMerge`). Add `nightshift:release` to make a ticket run alone.
 
 ## Config (`nightshift.json`)
