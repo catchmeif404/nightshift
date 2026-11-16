@@ -21,7 +21,7 @@ nightshift는 Claude Code를 `--permission-mode auto`로 무인 실행합니다.
 npm에서:
 
 ```sh
-npm install -g nightshift
+npm install -g @catchmeif404/nightshift
 nightshift --help
 ```
 
@@ -66,7 +66,7 @@ nightshift doctor
 ## 지우기
 
 ```sh
-npm uninstall -g nightshift      # 소스 설치는: npm unlink -g nightshift
+npm uninstall -g @catchmeif404/nightshift      # 소스 설치는: npm unlink -g @catchmeif404/nightshift
 rm -rf ~/nightshift-queue        # 큐 폴더: 설정, 티켓, 로그, worktree
 ```
 

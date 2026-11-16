@@ -2,7 +2,7 @@
 
 **티켓을 올려 두면 한 모델이 만들고, 다른 모델이 검토하고, 사람이 정할 일만 남겨 둡니다.**
 
-[English](https://unpkg.com/nightshift/README.md) | [한국어](https://unpkg.com/nightshift/README.ko.md)
+[English](https://unpkg.com/@catchmeif404/nightshift/README.md) | [한국어](https://unpkg.com/@catchmeif404/nightshift/README.ko.md)
 
 nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마크다운 파일 폴더, GitHub Issues, Notion)에 티켓을 올려
 두면, nightshift가 티켓마다 코딩 에이전트의 개발 실행(기본 Claude Code `sonnet`, 또는 Codex)을 띄워 자기 브랜치에서
@@ -20,11 +20,11 @@ nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마�
 > 상태: 초기(0.1). 에이전트: **Claude Code**(기본)와 **Codex**, 두 역할 어디에나, 섞어서도.
 > 보드: **로컬 마크다운**(기본), **GitHub Issues**, **Notion**, 그 밖의 트래커는 작은 스크립트로.
 
-**문서:** [설치](https://unpkg.com/nightshift/docs/ko/INSTALL.md) · [처음 시작하기 (10분)](https://unpkg.com/nightshift/docs/ko/GETTING-STARTED.md) · [사용법·문제 해결](https://unpkg.com/nightshift/docs/ko/USAGE.md)
+**문서:** [설치](https://unpkg.com/@catchmeif404/nightshift/docs/ko/INSTALL.md) · [처음 시작하기 (10분)](https://unpkg.com/@catchmeif404/nightshift/docs/ko/GETTING-STARTED.md) · [사용법·문제 해결](https://unpkg.com/@catchmeif404/nightshift/docs/ko/USAGE.md)
 
 ## 동작 방식
 
-![nightshift 내부 구조: 보드가 배차에 티켓을 주고, 배차는 프로젝트마다 슬롯 하나에 작업자를 띄우고, 작업자는 티켓마다 worktree를 만들고, 개발·검토 단계가 코딩 에이전트(Claude Code, Codex, 아무 CLI)를 실행하고, 검토는 재작업으로 돌려보낼 수 있고, 마지막 단계가 보드의 티켓을 옮기고 통과한 것을 머지합니다.](https://unpkg.com/nightshift/docs/images/internals.ko.svg)
+![nightshift 내부 구조: 보드가 배차에 티켓을 주고, 배차는 프로젝트마다 슬롯 하나에 작업자를 띄우고, 작업자는 티켓마다 worktree를 만들고, 개발·검토 단계가 코딩 에이전트(Claude Code, Codex, 아무 CLI)를 실행하고, 검토는 재작업으로 돌려보낼 수 있고, 마지막 단계가 보드의 티켓을 옮기고 통과한 것을 머지합니다.](https://unpkg.com/@catchmeif404/nightshift/docs/images/internals.ko.svg)
 
 ```
 할 일 티켓 ──► 그 프로젝트의 작업자 (프로젝트당 1명, 여러 프로젝트 동시)
@@ -59,16 +59,16 @@ catchmeif404의 제품은 nightshift로 만들고 있습니다. 대표가 텔레
 바로 깨웁니다. 작은 연결 스크립트(`notion_bridge.py`)로 Notion을 읽고 쓰며, Claude Code `sonnet`에게 개발을, `opus`에게 검토를 시키고, 통과한 것을 머지하고, 머지 뒤
 점검을 돌린 다음 PM 봇을 깨워 보고하게 합니다. 예전에 쓰던 bash 러너를 대신하고 있고, `nightshift service uninstall` 하나로 코드 작업 전체를 멈춥니다.
 
-![catchmeif404에서 nightshift를 쓰는 방식: 대표, Hermes 위의 PM 봇, Notion 티켓 DB, Notion 연결 스크립트, nightshift 서비스, nightshift, 개발하는 Claude Code sonnet과 검토하는 opus, 머지된 PR, 머지 뒤 훅.](https://unpkg.com/nightshift/docs/images/usage.ko.svg)
+![catchmeif404에서 nightshift를 쓰는 방식: 대표, Hermes 위의 PM 봇, Notion 티켓 DB, Notion 연결 스크립트, nightshift 서비스, nightshift, 개발하는 Claude Code sonnet과 검토하는 opus, 머지된 PR, 머지 뒤 훅.](https://unpkg.com/@catchmeif404/nightshift/docs/images/usage.ko.svg)
 
 ## 빠른 시작
 
 Node 20 이상, git, 로그인된 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI가 필요합니다.
 
-전체 따라 하기는 [처음 시작하기](https://unpkg.com/nightshift/docs/ko/GETTING-STARTED.md)에 있습니다.
+전체 따라 하기는 [처음 시작하기](https://unpkg.com/@catchmeif404/nightshift/docs/ko/GETTING-STARTED.md)에 있습니다.
 
 ```sh
-npm install -g nightshift
+npm install -g @catchmeif404/nightshift
 mkdir ~/nightshift-queue && cd ~/nightshift-queue
 nightshift init --repo-path ~/code/my-app
 nightshift doctor
@@ -94,13 +94,13 @@ nightshift init --board github --repo you/my-app --repo-path ./my-app
 
 ### 다른 트래커 (command 보드)
 
-Notion은 내장 보드가 있습니다([설정](https://unpkg.com/nightshift/docs/ko/USAGE.md#notion을-보드로)). Linear, Jira, 스프레드시트 등은
+Notion은 내장 보드가 있습니다([설정](https://unpkg.com/@catchmeif404/nightshift/docs/ko/USAGE.md#notion을-보드로)). Linear, Jira, 스프레드시트 등은
 `board.command`에 작은 스크립트를 지정하면 보드로 씁니다. 스크립트는
 `list <상태>`(티켓 JSON 배열 출력), `set-status <id> <상태> <사유>`, `note <id>`(메모는 stdin) 세 명령만 알면 됩니다.
 사유(`needs-human`, `merged`, `cut-off` 등)를 보고 결정 요청 페이지를 여는 식으로 트래커 쪽 동작을 붙일 수 있습니다.
 `language: "ko"`로 두면 러너가 티켓에 남기는 메모가 한국어가 됩니다.
 
-설정 키 전체는 [영어 README](https://unpkg.com/nightshift/README.md#config-nightshiftjson)에 있습니다.
+설정 키 전체는 [영어 README](https://unpkg.com/@catchmeif404/nightshift/README.md#config-nightshiftjson)에 있습니다.
 
 ## 안전
 
