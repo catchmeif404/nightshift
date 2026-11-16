@@ -47,8 +47,10 @@ What makes it hold up when nobody is watching:
 
 - **Runs are not trusted, files are.** A stage counts as done only when it writes its one-line result file in the
   expected format. A result it cannot read is set aside and the stage runs again.
-- **Cut-off runs resume.** Each stage gets a fixed session id; after a reboot, a usage limit or a killed process the
-  next dispatch resumes that same session. After 3 cut-offs the ticket is blocked with the last log line as the reason.
+- **Cut-off runs resume.** Each stage gets a fixed session id; after a reboot or a killed process the next dispatch
+  resumes that same session. After 3 cut-offs the ticket is blocked with the last log line as the reason.
+- **Usage limits wait instead of failing.** When the agent says "You've hit your limit · resets 3:30pm", nightshift
+  does not count it as a try: it starts nothing until the stated reset, then resumes the same session.
 - **No subagents, no waiting.** Every stage is its own CLI run, so nothing sits waiting on a child until it times out.
 - **Your checkout is never touched.** Every ticket works in its own worktree on its own branch.
 - **Two models, two roles.** The one that wrote the code is not the one that approves it.
@@ -131,7 +133,8 @@ This writes the config, creates the `nightshift:*` labels and trusts the signed-
 | `pollSeconds` | 120 | how often the service and `daemon` look for work (at least 30) |
 | `maxSlots` | 3 | projects worked at the same time |
 | `maxRework` | 1 | extra build-and-review rounds after a REWORK |
-| `maxStageTries` | 3 | cut-offs before a ticket is blocked |
+| `maxStageTries` | 3 | cut-offs before a ticket is blocked (usage limits are not counted) |
+| `usageLimitWaitMinutes` | 60 | how long to wait after a usage limit whose message gives no reset time |
 | `autoMerge` | `false` | merge pull requests that pass review |
 | `humanGates` | all five | `money`, `legal`, `destructive-data`, `outward-facing`, `product-direction` |
 | `notifyCommand` | none | gets one message as its last argument when a ticket is blocked |

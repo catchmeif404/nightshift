@@ -111,7 +111,8 @@ or `BLOCKED`.
 
 - Defaults: `sonnet` builds, `opus` reviews. Change `builder.model` / `reviewer.model` in `nightshift.json`.
 - Every ticket is at least two Claude Code runs, four with a rework round. On a subscription this counts against your
-  usage limits; when a run hits a limit it is cut off and resumed later (after `resumeCooldownMinutes`).
+  usage limits; when a run hits a limit, nightshift reads the reset time from the message, starts nothing until then
+  and resumes the same session (a limit is never counted as a try).
 - Runs use your own Claude Code: your sign-in, your `~/.claude/settings.json` permissions and your global
   `~/.claude/CLAUDE.md` (if it says "answer in Korean", the run summaries will be in Korean).
 - Check that unattended use fits the terms of the service you use.
@@ -194,7 +195,8 @@ once to check the token, the sharing and the property names.
 | a Codex build ends `BLOCKED` because git could not write its index or lock file | the Codex `sandbox` is `workspace-write`; use `auto` (the default) |
 | `doctor`: "Notion: ... 404" or "no property" | the database is not shared with the integration, or a property name in `properties` / `statuses` does not match |
 | a ticket stays `working` and nothing runs | the run was cut off; the next `run` resumes it after `resumeCooldownMinutes` (15). `nightshift logs` shows the last exit. Is the service installed (`nightshift service status`)? |
-| `blocked`: "stage was cut off 3 times" | read the last log line in the note. Common causes: usage limit, `claude` not signed in, a permission prompt in an unattended run |
+| `blocked`: "stage was cut off 3 times" | read the last log line in the note. Common causes: `claude` not signed in, a permission prompt in an unattended run (usage limits are waited out, not counted) |
+| nothing starts and `status` shows "usage limit: … until …" | the agent's account hit its usage limit; nightshift resumes on its own after that time. Nothing to do |
 | run summaries mention a permission rule or ask for approval | your Claude Code settings deny something the run needed. Allow it in `~/.claude/settings.json`, or change `permissionMode` |
 | `blocked`: "could not make a worktree" | the project path is not a git repository, or `baseBranch` does not exist (`main` by default) |
 | `review`: "the merge failed" | the pull request has a conflict or failing required checks; fix it on GitHub or set the ticket `ready` again |

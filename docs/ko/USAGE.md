@@ -105,7 +105,8 @@ nightshift service uninstall
 
 - 기본: `sonnet`이 만들고 `opus`가 검토합니다. `nightshift.json`의 `builder.model` / `reviewer.model`로 바꿉니다.
 - 티켓 하나는 Claude Code 실행 최소 2번, 재작업이 있으면 4번입니다. 구독 요금제면 사용량 한도에서 빠지고, 한도에
-  걸리면 실행이 끊겼다가 나중에(`resumeCooldownMinutes` 뒤) 이어집니다.
+  걸리면 메시지에서 풀리는 시각을 읽어 그때까지 아무것도 띄우지 않았다가 같은 세션으로 이어 갑니다(한도는 시도 횟수로 세지
+  않습니다).
 - 실행은 내 Claude Code를 그대로 씁니다: 로그인, `~/.claude/settings.json` 권한, 전역 `~/.claude/CLAUDE.md`
   ("한국어로 답해"라고 돼 있으면 실행 요약도 한국어).
 - 쓰는 서비스의 약관이 무인 실행을 허용하는지 확인하세요.
@@ -188,7 +189,8 @@ nightshift service uninstall
 | Codex 빌드가 git index·lock 파일을 못 써서 `BLOCKED` | Codex `sandbox`가 `workspace-write`임. `auto`(기본)로 |
 | `doctor`: "Notion: ... 404" 또는 "no property" | 데이터베이스를 통합에 연결하지 않았거나, `properties` / `statuses`의 이름이 실제와 다름 |
 | 티켓이 `working`에 머물고 아무것도 안 돎 | 실행이 끊김. `resumeCooldownMinutes`(15분) 뒤 다음 `run`이 이어 감. `nightshift logs`로 마지막 종료 확인. 서비스가 설치돼 있는지(`nightshift service status`) |
-| `blocked`: "stage was cut off 3 times" | 메모의 마지막 로그 줄 확인. 흔한 원인: 사용량 한도, `claude` 로그아웃, 무인 실행 중 권한 확인 창 |
+| `blocked`: "stage was cut off 3 times" | 메모의 마지막 로그 줄 확인. 흔한 원인: `claude` 로그아웃, 무인 실행 중 권한 확인 창 (사용량 한도는 기다렸다 이어 가고 횟수로 안 셈) |
+| 아무것도 안 돌고 `status`에 "usage limit: … until …" | 에이전트 계정이 사용량 한도에 걸림. 그 시각이 지나면 알아서 이어 감. 할 일 없음 |
 | 실행 요약에 권한 규칙 얘기나 승인 요청이 나옴 | 내 Claude Code 설정이 실행에 필요한 걸 막음. `~/.claude/settings.json`에서 허용하거나 `permissionMode`를 바꾸세요 |
 | `blocked`: "could not make a worktree" | 프로젝트 경로가 git 저장소가 아니거나 `baseBranch`(기본 `main`)가 없음 |
 | `review`: "the merge failed" | PR에 충돌이나 필수 검사 실패. GitHub에서 고치거나 티켓을 다시 `ready`로 |
