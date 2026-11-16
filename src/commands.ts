@@ -100,7 +100,7 @@ export async function init(root: string, given: InitOptions): Promise<void> {
     console.log(`\nNext: "${Brand.name} doctor", then label an issue ${Brand.labelPrefix}${TicketStatus.Ready} and "${Brand.name} run".`);
     return;
   }
-  console.log(`\nNext: "${Brand.name} doctor", then "${Brand.name} add \"<what to do>\" --project ${initProjectName(options)}" and "${Brand.name} run".`);
+  console.log(`\nNext:\n  ${Brand.name} doctor\n  ${Brand.name} add '<what to do>' --project ${initProjectName(options)}\n  ${Brand.name} run`);
 }
 
 export function add(config: Config, title: string, project: string, kind: TicketKind, body: string): string {
