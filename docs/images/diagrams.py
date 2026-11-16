@@ -60,7 +60,7 @@ def diagram_usage():
     pm = card("pm", 1, 0, ["PM bot · Hermes", "files tickets; woken", "when a worker ends"], ["한결 · Hermes PM 봇", "티켓 만들기, 작업자가", "끝나면 깨어나 보고"])
     notion = card("notion", 2, 0, ["Notion ticket DB", "assigned to", "Claude Code"], ["Notion 티켓 DB", "담당 = Claude Code"])
     board = card("board", 3, 0, ["notion_board.py", "command-board script", "Notion ↔ nightshift"], ["notion_board.py", "command 보드 스크립트", "Notion ↔ nightshift"])
-    cron = card("cron", 1, 1, ["Hermes cron", "every 15 minutes"], ["Hermes cron", "15분마다"])
+    service = card("service", 4, 1, ["nightshift service", "launchd, every", "2 minutes"], ["nightshift 서비스", "launchd,", "2분마다"])
     entry = card("entry", 2, 1, ["claude_dev_runner.sh", "entry point; switch", "nightshift.enabled"], ["claude_dev_runner.sh", "진입점 · 스위치 파일", "nightshift.enabled"])
     ns = card("ns", 3, 1, ["nightshift", "dispatch; one worker", "per project (max 5)"], ["nightshift", "배차, 프로젝트당", "작업자 1명 (최대 5)"], "accent")
     legacy = card("legacy", 2, 2, ["legacy bash runner", "only when the switch", "file is gone"], ["이전 bash 러너", "스위치 파일이", "없을 때만"], "dashed")
@@ -68,7 +68,7 @@ def diagram_usage():
     reviewer = card("reviewer", 4, 2, ["Claude Code · opus", "reviews as CTO,", "fixes small things"], ["Claude Code · opus", "CTO로 검토,", "작은 건 직접 고침"])
     pr = card("pr", 4, 3, ["GitHub pull request", "merged by nightshift", "after PASS"], ["GitHub PR", "PASS면 nightshift가", "머지"])
     post = card("post", 3, 3, ["post_merge.sh", "QA smoke on emulator,", "figdex release call"], ["post_merge.sh", "에뮬레이터 QA 스모크,", "figdex 출시 판단"])
-    cards = [owner, pm, notion, board, cron, entry, ns, legacy, builder, reviewer, pr, post]
+    cards = [owner, pm, notion, board, service, entry, ns, legacy, builder, reviewer, pr, post]
     t1, t2 = 32, 64  # thirds of a 96px-high edge
     v1, v2 = 67, 133  # thirds of a 200px-wide edge
     arrows = [
@@ -77,8 +77,8 @@ def diagram_usage():
         ("pm→notion", right_to_left(pm, notion, cy(pm)), ("files", "티켓", "above"), False, "From the PM bot to the Notion ticket DB: files a ticket"),
         ("board→notion", left_to_right_back(notion, board, notion["y"] + t1), ("writes", "쓰기", "above"), False, "From the board script to Notion: writes status and notes"),
         ("notion→board", right_to_left(notion, board, notion["y"] + t2), ("reads", "읽기", "below"), False, "From Notion to the board script: reads tickets"),
-        ("notion→entry", down(notion, entry, cx(notion)), ("hook", "훅", "beside"), False, "From the Notion ticket DB to the entry point: a ticket set ready starts it"),
-        ("cron→entry", right_to_left(cron, entry, cy(cron)), ("timer", "타이머", "above"), False, "From Hermes cron to the entry point: every 15 minutes"),
+        ("notion→entry", down(notion, entry, cx(notion)), ("hook: start now", "훅: 바로 시작", "beside"), False, "From the Notion ticket DB to the entry point: a ticket set ready starts it right away"),
+        ("service→ns", left_to_right_back(ns, service, cy(service)), ("run", "run", "above"), False, "From the nightshift service to nightshift: run every 2 minutes"),
         ("entry→ns", right_to_left(entry, ns, cy(entry)), ("run", "run", "above"), False, "From the entry point to nightshift: run"),
         ("entry→legacy", down(entry, legacy, cx(entry)), ("switch off", "스위치 끔", "beside"), True, "From the entry point to the legacy bash runner, only when the switch is off"),
         ("ns→board", up(board, ns, ns["x"] + v1), ("calls", "호출", "beside-left"), False, "From nightshift to the board script: list, set-status, note"),

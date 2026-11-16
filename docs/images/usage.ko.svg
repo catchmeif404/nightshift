@@ -18,9 +18,9 @@
 <path class="ln" d="M 808 224 L 875 224" marker-end="url(#h)"/>
 <text class="lb" x="844" y="248" text-anchor="middle">읽기</text>
 <path class="ln" d="M 708 256 L 708 331" marker-end="url(#h)"/>
-<text class="lb" x="720" y="299" text-anchor="start">훅</text>
-<path class="ln" d="M 536 384 L 603 384" marker-end="url(#h)"/>
-<text class="lb" x="572" y="368" text-anchor="middle">타이머</text>
+<text class="lb" x="720" y="299" text-anchor="start">훅: 바로 시작</text>
+<path class="ln" d="M 1152 384 L 1085 384" marker-end="url(#h)"/>
+<text class="lb" x="1116" y="368" text-anchor="middle">run</text>
 <path class="ln" d="M 808 384 L 875 384" marker-end="url(#h)"/>
 <text class="lb" x="844" y="368" text-anchor="middle">run</text>
 <path class="ln" d="M 708 432 L 708 507" stroke-dasharray="6 6" marker-end="url(#h)"/>
@@ -53,9 +53,10 @@
 <text class="t" x="980" y="193" font-size="15" text-anchor="middle" font-weight="600">notion_board.py</text>
 <text class="t m" x="980" y="213" font-size="14" text-anchor="middle">command 보드 스크립트</text>
 <text class="t m" x="980" y="233" font-size="14" text-anchor="middle">Notion ↔ nightshift</text>
-<rect class="card" x="336.5" y="336.5" width="199" height="95" rx="10"/>
-<text class="t" x="436" y="379" font-size="15" text-anchor="middle" font-weight="600">Hermes cron</text>
-<text class="t m" x="436" y="399" font-size="14" text-anchor="middle">15분마다</text>
+<rect class="card" x="1152.5" y="336.5" width="199" height="95" rx="10"/>
+<text class="t" x="1252" y="369" font-size="15" text-anchor="middle" font-weight="600">nightshift 서비스</text>
+<text class="t m" x="1252" y="389" font-size="14" text-anchor="middle">launchd,</text>
+<text class="t m" x="1252" y="409" font-size="14" text-anchor="middle">2분마다</text>
 <rect class="card" x="608.5" y="336.5" width="199" height="95" rx="10"/>
 <text class="t" x="708" y="369" font-size="15" text-anchor="middle" font-weight="600">claude_dev_runner.sh</text>
 <text class="t m" x="708" y="389" font-size="14" text-anchor="middle">진입점 · 스위치 파일</text>
