@@ -68,7 +68,7 @@ schedules, and nightshift is the development team.
 | Who | What they do | Runs on |
 |---|---|---|
 | The owner | asks for things in Telegram, answers decision pages in Notion | a phone |
-| PM bot | every 30 minutes (a cron job): reads the board, roadmap and error reports, turns requests into tickets, hands work to teammates, follows up, reports back | Hermes Agent |
+| PM bot | every 30 minutes (a cron job): reads the board, roadmap and error reports, turns requests into tickets, hands work to teammates, follows up; reports in Telegram, with a Notion link for anything the owner has to check | Hermes Agent |
 | Marketing, research, ops, release and policy, support, design bots | the cards the PM hands them: drafts, research, a 5-minute error watch, release checks, support replies, mockups | Hermes Agent |
 | Developer and CTO | every code ticket: `sonnet` builds it on its own branch, `opus` reviews and merges; after a merge, a QA smoke test and, for our app, the release call | nightshift + Claude Code |
 | The board | tickets, decision pages, meeting notes, releases, metrics | Notion |
@@ -77,7 +77,7 @@ A request goes like this. The owner writes "add sorting to the shelf" in Telegra
 ticket for the developers. A Notion hook kicks the nightshift service right away (it also checks every 2 minutes on its
 own); nightshift reads the ticket through a small bridge script (`notion_bridge.py`), the builder and the reviewer do
 their runs, the pull request is merged, and nightshift wakes the PM bot's cron job, which reads the result on the ticket
-and tells the owner. Anything only the owner can decide (money, legal text, anything public) becomes a decision page
+and tells the owner in Telegram, with a link to the Notion page. Anything only the owner can decide (money, legal text, anything public) becomes a decision page
 instead; the owner answers in a comment and the PM bot puts the ticket back in the queue. nightshift replaced the bash
 runner we used before; `nightshift service uninstall` stops all code work.
 
