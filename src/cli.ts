@@ -5,7 +5,8 @@ import { parseArgs } from "node:util";
 import { Brand } from "./brand.js";
 import { add, daemon, doctor, init, logs, runOnce, status, workSlot } from "./commands.js";
 import { ConfigError, loadConfig } from "./config.js";
-import { BoardType, CliCommand, TicketKind } from "./enums.js";
+import { BoardType, CliCommand, ServiceAction, TicketKind } from "./enums.js";
+import { installService, serviceStatus, uninstallService } from "./service.js";
 
 const HELP = `${Brand.name}: tickets in, one model builds, another reviews, you decide only what a human must.
 
@@ -16,7 +17,9 @@ Usage: ${Brand.name} <command> [options]
   add "<title>" --project <name> [--body "..."] [--release]
                       add a ticket to the local markdown board
   run                 start workers for ready and cut-off tickets, then exit
-  daemon              run every daemonIntervalMinutes until stopped
+  daemon              run every pollSeconds (default 120) until stopped
+  service install|status|uninstall
+                      run it on its own: launchd (macOS) or systemd (Linux), every pollSeconds
   status              running workers and tickets by status
   logs [-f] [-n 40]   the runner's log (-f: keep following)
   doctor              check tools, sign-ins and the config
@@ -84,6 +87,22 @@ async function main(argv: string[]): Promise<number> {
     case CliCommand.Logs:
       await logs(loadConfig(root), Math.max(1, Number.parseInt(values.lines, 10) || 40), values.follow);
       return 0;
+    case CliCommand.Service: {
+      const config = loadConfig(root);
+      switch (positionals[1] ?? "") {
+        case ServiceAction.Install:
+          await installService(config);
+          return 0;
+        case ServiceAction.Status:
+          await serviceStatus(config);
+          return 0;
+        case ServiceAction.Uninstall:
+          await uninstallService(config);
+          return 0;
+        default:
+          throw new ConfigError(`usage: ${Brand.name} service ${Object.values(ServiceAction).join("|")}`);
+      }
+    }
     case CliCommand.Doctor:
       return (await doctor(root)) ? 0 : 1;
     case CliCommand.Version:

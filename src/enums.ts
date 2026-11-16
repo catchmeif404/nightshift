@@ -137,9 +137,16 @@ export enum CliCommand {
   Daemon = "daemon",
   Status = "status",
   Logs = "logs",
+  Service = "service",
   Doctor = "doctor",
   Version = "version",
   Help = "help",
+}
+
+export enum ServiceAction {
+  Install = "install",
+  Status = "status",
+  Uninstall = "uninstall",
 }
 
 export enum GitHubState {
