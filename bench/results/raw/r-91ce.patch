@@ -1,0 +1,128 @@
+diff --git a/src/cli.js b/src/cli.js
+index dd8a7ac..9daa6ab 100644
+--- a/src/cli.js
++++ b/src/cli.js
+@@ -1,5 +1,5 @@
+ import { readFileSync } from "node:fs";
+-import { totalValue } from "./items.js";
++import { lowStock, totalValue } from "./items.js";
+ 
+ // run(argv) returns the text the command prints (no trailing newline). Bad usage throws Error.
+ export function run(argv) {
+@@ -9,6 +9,19 @@ export function run(argv) {
+     const items = JSON.parse(readFileSync(file, "utf8"));
+     return String(totalValue(items));
+   }
++  if (command === "low") {
++    const usage = "usage: low <file> [--threshold N]";
++    if (file === undefined || file === "--threshold") throw new Error(usage);
++    const items = JSON.parse(readFileSync(file, "utf8"));
++    let threshold = 5;
++    if (argv[2] !== undefined) {
++      if (argv[2] !== "--threshold" || !/^\d+$/.test(argv[3] ?? "")) throw new Error("invalid threshold");
++      threshold = Number(argv[3]);
++    }
++    return lowStock(items, threshold)
++      .map((item) => `${item.sku} ${item.name} ${item.qty}`)
++      .join("\n");
++  }
+   throw new Error(`unknown command: ${command}`);
+ }
+ 
+diff --git a/src/items.js b/src/items.js
+index 3c456b8..b371d46 100644
+--- a/src/items.js
++++ b/src/items.js
+@@ -6,3 +6,10 @@ export function totalValue(items) {
+ export function findByName(items, name) {
+   return items.find((item) => item.name === name);
+ }
++
++export function lowStock(items, threshold = 5) {
++  if (!Number.isInteger(threshold) || threshold < 0) throw new Error("invalid threshold");
++  return items
++    .filter((item) => item.qty <= threshold)
++    .sort((a, b) => a.qty - b.qty || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
++}
+diff --git a/test/cli.test.js b/test/cli.test.js
+index cfb0e15..a9d5d42 100644
+--- a/test/cli.test.js
++++ b/test/cli.test.js
+@@ -11,3 +11,32 @@ test("total command", () => {
+   writeFileSync(file, JSON.stringify([{ sku: "A1", name: "Bolt", qty: 2, price: 3 }]));
+   assert.equal(run(["total", file]), "6");
+ });
++
++function itemsFile() {
++  const dir = mkdtempSync(join(tmpdir(), "inv-"));
++  const file = join(dir, "items.json");
++  writeFileSync(
++    file,
++    JSON.stringify([
++      { sku: "A1", name: "Bolt", qty: 2, price: 3 },
++      { sku: "B2", name: "Nut", qty: 9, price: 1 },
++      { sku: "C3", name: "Screw", qty: 2, price: 1 },
++    ]),
++  );
++  return file;
++}
++
++test("low command", () => {
++  const file = itemsFile();
++  assert.equal(run(["low", file]), "A1 Bolt 2\nC3 Screw 2");
++  assert.equal(run(["low", file, "--threshold", "9"]), "A1 Bolt 2\nC3 Screw 2\nB2 Nut 9");
++  assert.equal(run(["low", file, "--threshold", "1"]), "");
++});
++
++test("low command errors", () => {
++  const file = itemsFile();
++  assert.throws(() => run(["low"]), { message: "usage: low <file> [--threshold N]" });
++  for (const args of [["--threshold"], ["--threshold", "x"], ["--threshold", "-1"], ["--threshold", "1.5"]]) {
++    assert.throws(() => run(["low", file, ...args]), { message: "invalid threshold" });
++  }
++});
+diff --git a/test/items.test.js b/test/items.test.js
+index 6700d67..6f563f0 100644
+--- a/test/items.test.js
++++ b/test/items.test.js
+@@ -1,6 +1,6 @@
+ import assert from "node:assert/strict";
+ import { test } from "node:test";
+-import { findByName, totalValue } from "../src/items.js";
++import { findByName, lowStock, totalValue } from "../src/items.js";
+ 
+ const items = [
+   { sku: "A1", name: "Bolt", qty: 10, price: 0.5 },
+@@ -9,3 +9,32 @@ const items = [
+ 
+ test("totalValue", () => assert.equal(totalValue(items), 6));
+ test("findByName", () => assert.equal(findByName(items, "Nut")?.sku, "B2"));
++
++test("lowStock sorts by qty then name and defaults to threshold 5", () => {
++  const input = [
++    { sku: "1", name: "b", qty: 5, price: 1 },
++    { sku: "2", name: "a", qty: 5, price: 1 },
++    { sku: "3", name: "z", qty: 0, price: 1 },
++    { sku: "4", name: "Q", qty: 6, price: 1 },
++  ];
++  const copy = structuredClone(input);
++  const result = lowStock(input);
++  assert.deepEqual(result.map((i) => i.sku), ["3", "2", "1"]);
++  assert.deepEqual(input, copy);
++  assert.notEqual(result, input);
++  assert.deepEqual(lowStock(input, 0).map((i) => i.sku), ["3"]);
++});
++
++test("lowStock compares names by code point", () => {
++  const input = [
++    { sku: "1", name: "a", qty: 1, price: 1 },
++    { sku: "2", name: "B", qty: 1, price: 1 },
++  ];
++  assert.deepEqual(lowStock(input).map((i) => i.sku), ["2", "1"]);
++});
++
++test("lowStock rejects invalid thresholds", () => {
++  for (const bad of [-1, 1.5, NaN, "3", null, Infinity]) {
++    assert.throws(() => lowStock(items, bad), { message: "invalid threshold" });
++  }
++});

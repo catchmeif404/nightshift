@@ -1,0 +1,131 @@
+diff --git a/src/cli.js b/src/cli.js
+index dd8a7ac..dc47a37 100644
+--- a/src/cli.js
++++ b/src/cli.js
+@@ -1,5 +1,5 @@
+ import { readFileSync } from "node:fs";
+-import { totalValue } from "./items.js";
++import { lowStock, totalValue } from "./items.js";
+ 
+ // run(argv) returns the text the command prints (no trailing newline). Bad usage throws Error.
+ export function run(argv) {
+@@ -9,6 +9,21 @@ export function run(argv) {
+     const items = JSON.parse(readFileSync(file, "utf8"));
+     return String(totalValue(items));
+   }
++  if (command === "low") {
++    const usage = "usage: low <file> [--threshold N]";
++    if (file === undefined || file === "--threshold") throw new Error(usage);
++    const rest = argv.slice(2);
++    let threshold = 5;
++    if (rest.length > 0) {
++      if (rest[0] !== "--threshold" || rest.length > 2) throw new Error(usage);
++      if (rest.length < 2 || !/^\d+$/.test(rest[1])) throw new Error("invalid threshold");
++      threshold = Number(rest[1]);
++    }
++    const items = JSON.parse(readFileSync(file, "utf8"));
++    return lowStock(items, threshold)
++      .map((item) => `${item.sku} ${item.name} ${item.qty}`)
++      .join("\n");
++  }
+   throw new Error(`unknown command: ${command}`);
+ }
+ 
+diff --git a/src/items.js b/src/items.js
+index 3c456b8..b371d46 100644
+--- a/src/items.js
++++ b/src/items.js
+@@ -6,3 +6,10 @@ export function totalValue(items) {
+ export function findByName(items, name) {
+   return items.find((item) => item.name === name);
+ }
++
++export function lowStock(items, threshold = 5) {
++  if (!Number.isInteger(threshold) || threshold < 0) throw new Error("invalid threshold");
++  return items
++    .filter((item) => item.qty <= threshold)
++    .sort((a, b) => a.qty - b.qty || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
++}
+diff --git a/test/cli.test.js b/test/cli.test.js
+index cfb0e15..8023c18 100644
+--- a/test/cli.test.js
++++ b/test/cli.test.js
+@@ -11,3 +11,36 @@ test("total command", () => {
+   writeFileSync(file, JSON.stringify([{ sku: "A1", name: "Bolt", qty: 2, price: 3 }]));
+   assert.equal(run(["total", file]), "6");
+ });
++
++function writeStock() {
++  const dir = mkdtempSync(join(tmpdir(), "inv-"));
++  const file = join(dir, "items.json");
++  writeFileSync(
++    file,
++    JSON.stringify([
++      { sku: "A1", name: "Bolt", qty: 10, price: 1 },
++      { sku: "B2", name: "Nut", qty: 4, price: 1 },
++      { sku: "C3", name: "Cog", qty: 1, price: 1 },
++    ]),
++  );
++  return file;
++}
++
++test("low command default threshold", () => {
++  assert.equal(run(["low", writeStock()]), "C3 Cog 1\nB2 Nut 4");
++});
++
++test("low command with --threshold", () => {
++  const file = writeStock();
++  assert.equal(run(["low", file, "--threshold", "1"]), "C3 Cog 1");
++  assert.equal(run(["low", file, "--threshold", "0"]), "");
++  assert.equal(run(["low", file, "--threshold", "10"]), "C3 Cog 1\nB2 Nut 4\nA1 Bolt 10");
++});
++
++test("low command errors", () => {
++  const file = writeStock();
++  assert.throws(() => run(["low"]), { message: "usage: low <file> [--threshold N]" });
++  for (const args of [["--threshold"], ["--threshold", "x"], ["--threshold", "-1"], ["--threshold", "1.5"]]) {
++    assert.throws(() => run(["low", file, ...args]), { message: "invalid threshold" });
++  }
++});
+diff --git a/test/items.test.js b/test/items.test.js
+index 6700d67..01cb83d 100644
+--- a/test/items.test.js
++++ b/test/items.test.js
+@@ -1,6 +1,6 @@
+ import assert from "node:assert/strict";
+ import { test } from "node:test";
+-import { findByName, totalValue } from "../src/items.js";
++import { findByName, lowStock, totalValue } from "../src/items.js";
+ 
+ const items = [
+   { sku: "A1", name: "Bolt", qty: 10, price: 0.5 },
+@@ -9,3 +9,29 @@ const items = [
+ 
+ test("totalValue", () => assert.equal(totalValue(items), 6));
+ test("findByName", () => assert.equal(findByName(items, "Nut")?.sku, "B2"));
++
++const stock = [
++  { sku: "C3", name: "b", qty: 3, price: 1 },
++  { sku: "D4", name: "a", qty: 3, price: 1 },
++  { sku: "E5", name: "Z", qty: 0, price: 1 },
++  { sku: "F6", name: "big", qty: 6, price: 1 },
++  { sku: "G7", name: "edge", qty: 5, price: 1 },
++];
++
++test("lowStock default threshold, sorted by qty then name", () => {
++  assert.deepEqual(lowStock(stock).map((i) => i.sku), ["E5", "D4", "C3", "G7"]);
++});
++
++test("lowStock custom threshold and no mutation", () => {
++  const copy = structuredClone(stock);
++  const result = lowStock(stock, 0);
++  assert.deepEqual(result.map((i) => i.sku), ["E5"]);
++  assert.deepEqual(stock, copy);
++  assert.notEqual(lowStock(stock, 100), stock);
++});
++
++test("lowStock invalid threshold", () => {
++  for (const bad of [-1, 1.5, NaN, "5", null, Infinity]) {
++    assert.throws(() => lowStock(stock, bad), { message: "invalid threshold" });
++  }
++});

@@ -1,0 +1,81 @@
+diff --git a/src/store.js b/src/store.js
+index 6660511..3e6922e 100644
+--- a/src/store.js
++++ b/src/store.js
+@@ -1,8 +1,22 @@
+ import { readFileSync } from "node:fs";
+ import { join } from "node:path";
+ 
++const VALID_NAME = /^[A-Za-z0-9_-]+$/;
++const ENOENT = "ENOENT";
++
+ // Reads one item file, <dataDir>/<name>.json, and returns the parsed object.
+ export function readItem(dataDir, name) {
+-  const raw = readFileSync(join(dataDir, `${name}.json`), "utf8");
++  if (typeof name !== "string" || !VALID_NAME.test(name)) {
++    throw new Error(`invalid item name`);
++  }
++  let raw;
++  try {
++    raw = readFileSync(join(dataDir, `${name}.json`), "utf8");
++  } catch (err) {
++    if (err.code === ENOENT) {
++      throw new Error(`item not found: ${name}`);
++    }
++    throw err;
++  }
+   return JSON.parse(raw);
+ }
+diff --git a/test/store.test.js b/test/store.test.js
+index c232cdd..23272c2 100644
+--- a/test/store.test.js
++++ b/test/store.test.js
+@@ -1,5 +1,5 @@
+ import assert from "node:assert/strict";
+-import { mkdtempSync, writeFileSync } from "node:fs";
++import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+ import { tmpdir } from "node:os";
+ import { join } from "node:path";
+ import { test } from "node:test";
+@@ -10,3 +10,41 @@ test("readItem reads <name>.json", () => {
+   writeFileSync(join(dir, "bolt.json"), JSON.stringify({ sku: "A1", name: "Bolt", qty: 1, price: 2 }));
+   assert.equal(readItem(dir, "bolt").sku, "A1");
+ });
++
++function makeDir() {
++  return mkdtempSync(join(tmpdir(), "inv-"));
++}
++
++test("readItem rejects invalid names", () => {
++  const dir = makeDir();
++  writeFileSync(join(dir, "..secret.json"), "{}");
++  const bad = ["", "..", "../secret", "a/b", "a\\b", "a.b", "a\0b", "bolt\n", undefined, null, 5, {}, ["bolt"]];
++  for (const name of bad) {
++    assert.throws(() => readItem(dir, name), (e) => e instanceof Error && e.message.startsWith("invalid item name"));
++  }
++});
++
++test("readItem does not read files outside the data directory", () => {
++  const parent = makeDir();
++  const dir = join(parent, "data");
++  mkdirSync(dir);
++  writeFileSync(join(parent, "secret.json"), JSON.stringify({ leaked: true }));
++  assert.throws(() => readItem(dir, "../secret"), /^Error: invalid item name/);
++});
++
++test("readItem throws 'item not found' for a missing file", () => {
++  const dir = makeDir();
++  assert.throws(() => readItem(dir, "nope"), (e) => e instanceof Error && e.message === "item not found: nope");
++});
++
++test("readItem accepts names with letters, digits, _ and -", () => {
++  const dir = makeDir();
++  writeFileSync(join(dir, "A_b-9.json"), JSON.stringify({ ok: 1 }));
++  assert.deepEqual(readItem(dir, "A_b-9"), { ok: 1 });
++});
++
++test("readItem does not hide malformed JSON", () => {
++  const dir = makeDir();
++  writeFileSync(join(dir, "broken.json"), "{not json");
++  assert.throws(() => readItem(dir, "broken"), SyntaxError);
++});

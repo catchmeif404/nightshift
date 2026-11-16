@@ -1,0 +1,67 @@
+diff --git a/src/csv.js b/src/csv.js
+new file mode 100644
+index 0000000..b7cfa2b
+--- /dev/null
++++ b/src/csv.js
+@@ -0,0 +1,19 @@
++const HEADER = "sku,name,qty,price";
++const NEEDS_QUOTES = /[",\r\n]/;
++
++function escapeField(value) {
++  const text = String(value);
++  return NEEDS_QUOTES.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
++}
++
++export function toCsv(items) {
++  const lines = items.map((item) =>
++    [
++      escapeField(item.sku),
++      escapeField(item.name),
++      escapeField(item.qty),
++      escapeField(Number(item.price).toFixed(2)),
++    ].join(","),
++  );
++  return [HEADER, ...lines].join("\n") + "\n";
++}
+diff --git a/test/csv.test.js b/test/csv.test.js
+new file mode 100644
+index 0000000..31e035c
+--- /dev/null
++++ b/test/csv.test.js
+@@ -0,0 +1,36 @@
++import assert from "node:assert/strict";
++import { test } from "node:test";
++import { toCsv } from "../src/csv.js";
++
++test("empty array gives header only", () => {
++  assert.equal(toCsv([]), "sku,name,qty,price\n");
++});
++
++test("rows with two-decimal price and trailing newline", () => {
++  const items = [
++    { sku: "A1", name: "Bolt", qty: 10, price: 0.5 },
++    { sku: "B2", name: "Nut", qty: 4, price: 3 },
++  ];
++  assert.equal(toCsv(items), "sku,name,qty,price\nA1,Bolt,10,0.50\nB2,Nut,4,3.00\n");
++});
++
++test("quotes fields with comma, quote, CR or LF", () => {
++  const items = [
++    { sku: "A,1", name: 'He said "hi"', qty: 1, price: 1 },
++    { sku: "x", name: "a\nb", qty: 2, price: 2 },
++    { sku: "y", name: "a\rb", qty: 3, price: 3 },
++  ];
++  assert.equal(
++    toCsv(items),
++    'sku,name,qty,price\n"A,1","He said ""hi""",1,1.00\nx,"a\nb",2,2.00\ny,"a\rb",3,3.00\n',
++  );
++});
++
++test("does not modify input", () => {
++  const items = [{ sku: "A1", name: "Bolt", qty: 1, price: 0.5 }];
++  const copy = structuredClone(items);
++  Object.freeze(items);
++  Object.freeze(items[0]);
++  toCsv(items);
++  assert.deepEqual(items, copy);
++});
