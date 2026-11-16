@@ -1,6 +1,6 @@
 import { Ticket } from "./board/board.js";
 import { ProjectConfig } from "./config.js";
-import { BuildResult, HumanGate, PublishMode, Verdict } from "./enums.js";
+import { BuildResult, HumanGate, PublishMode, ReleaseResult, Verdict } from "./enums.js";
 import { Worktree } from "./git.js";
 
 const GATE_TEXT: Record<HumanGate, string> = {
@@ -88,6 +88,7 @@ ${ticketBlock(ctx.ticket)}
 ## What to review
 The developer's result: \`${result}\`. Your working directory is the ticket's worktree on branch \`${ctx.worktree.branch}\`;
 compare it with \`${ctx.project.baseBranch}\` (for a pull request, \`gh pr diff\` shows the same change).
+If the result is a document (\`${BuildResult.Doc}\`), read the document itself and check its claims the way you would check a diff.
 - Read the whole change against the ticket and the repository's own agent instructions. Check: it does what the ticket
   asks and nothing more; correctness and edge cases; security (secrets, injection, auth, user data, logs); tests.
 - Run the tests yourself. Do not trust "tests pass" in a description.
@@ -103,5 +104,27 @@ Write what the human must decide, the options and your recommendation to \`${ctx
 ## When you are done
 - On \`${Verdict.Pass}\`, write a short review to \`${ctx.reviewFile}\`: what you checked, what you changed, what is still unverified.
 - The last thing you do is write exactly one word to \`${ctx.resultFile}\`: ${Object.values(Verdict).join(", ")}.
+`;
+}
+
+export function releasePrompt(ctx: StageContext): string {
+  return `You are running a release ticket, alone: no other ticket is being worked on right now. You work unattended.
+
+${ticketBlock(ctx.ticket)}
+
+## How to work
+- Your working directory is a git worktree on branch \`${ctx.worktree.branch}\`, made from \`${ctx.project.baseBranch}\`.
+- Follow the project's release rules below and the repository's own agent instructions exactly. Do not use subagents.
+- Verify the release the way the rules say (for example a health check on the live service) before you call it done.
+- If anything fails, stop: do not retry blindly and do not roll back on your own unless the rules say so.
+${rulesBlock(ctx.rules)}
+## Things only a human decides
+If the release needs a human's call on any of these, do not release; write \`${ReleaseResult.Blocked}\` with what must be decided:
+${gatesBlock(ctx.humanGates)}
+
+## When you are done
+The last thing you do is write exactly one line to \`${ctx.resultFile}\`:
+- \`${ReleaseResult.Done} <what was released and how you verified it>\` (also when you decided nothing needed releasing, and why), or
+- \`${ReleaseResult.Blocked} <one-line reason>\`.
 `;
 }
