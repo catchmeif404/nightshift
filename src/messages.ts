@@ -17,6 +17,7 @@ export interface Messages {
   branch(name: string): string;
   cutOff(stage: Stage, times: number, reason: string, log: string): string;
   stillWorking(stage: Stage, round: number): string;
+  usageLimit(agent: string, until: string): string;
   postMerge(code: number, tail: string): string;
   released(summary: string): string;
   releaseBlocked(reason: string): string;
@@ -43,6 +44,7 @@ const english: Messages = {
   branch: (name) => `branch ${name}`,
   cutOff: (stage, n, reason, log) => `the ${stage} stage was cut off ${n} times. Last log line: ${reason} (log: ${log})`,
   stillWorking: (stage, round) => `still working: ${stage} stage, round ${round}.`,
+  usageLimit: (agent, until) => `${agent} hit its usage limit; waiting until ${until}, then resuming the same session (not counted as a try).`,
   postMerge: (code, tail) => ` Post-merge check (exit ${code}): ${tail}`,
   released: (summary) => `release done: ${summary}`,
   releaseBlocked: (reason) => `release blocked: ${reason}`,
@@ -65,6 +67,7 @@ const korean: Messages = {
   branch: (name) => `브랜치 ${name}`,
   cutOff: (stage, n, reason, log) => `${stage} 단계가 ${n}번 끊김. 마지막 로그: ${reason} (로그: ${log})`,
   stillWorking: (stage, round) => `생존 신호: ${stage} 단계 진행 중 (${round}회차).`,
+  usageLimit: (agent, until) => `${agent} 사용량 한도. ${until}까지 기다렸다가 같은 세션으로 이어 갑니다 (시도 횟수로 세지 않음).`,
   postMerge: (code, tail) => ` 머지 뒤 점검 (exit ${code}): ${tail}`,
   released: (summary) => `출시 처리 끝: ${summary}`,
   releaseBlocked: (reason) => `출시 막힘: ${reason}`,

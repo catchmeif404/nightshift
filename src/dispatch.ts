@@ -8,11 +8,12 @@ import { Config } from "./config.js";
 import { CliCommand, SettleReason, StateFile, TicketKind, TicketStatus, WorkerMode } from "./enums.js";
 import { messagesFor } from "./messages.js";
 import { Logger } from "./log.js";
-import { Runner, TicketPipeline } from "./pipeline.js";
+import { Runner, TicketOutcome, TicketPipeline } from "./pipeline.js";
 import {
   SlotInfo,
   Slots,
   TicketState,
+  UsageLimits,
   acquireLock,
   projectSlotKey,
   releaseLock,
@@ -30,6 +31,7 @@ export function openRunner(config: Config): Runner {
     builder: openAgent(config, config.builder, paths.sessions),
     reviewer: openAgent(config, config.reviewer, paths.sessions),
     slots: new Slots(paths.slots),
+    limits: new UsageLimits(paths.limits),
   };
 }
 
@@ -92,6 +94,13 @@ export async function dispatch(r: Runner, spawner: WorkerSpawner = spawnWorker):
     return [];
   }
   try {
+    // While an agent's account is over its usage limit, start nothing: every run would be refused anyway.
+    const limited = r.limits.active(Date.now());
+    if (limited.length > 0) {
+      const until = new Date(Math.max(...limited.map((l) => l.until))).toLocaleString("sv-SE", { hour12: false }).slice(0, 16);
+      r.log.line(`dispatch: usage limit (${limited.map((l) => l.agent).join(", ")}) until ${until}, waiting`);
+      return [];
+    }
     const live = r.slots.live();
     const candidates = [...(await stuckTickets(r)), ...(await r.board.list(TicketStatus.Ready))];
     const starts = planDispatch(candidates, live, r.config.maxSlots);
@@ -120,12 +129,13 @@ async function claim(r: Runner, tickets: Ticket[]): Promise<Ticket[]> {
   return claimed;
 }
 
-async function runTicket(r: Runner, ticket: Ticket, key: string): Promise<void> {
+async function runTicket(r: Runner, ticket: Ticket, key: string): Promise<TicketOutcome> {
   try {
-    await new TicketPipeline(r, ticket, key).run();
+    return await new TicketPipeline(r, ticket, key).run();
   } catch (error) {
     r.log.line(`${ticket.id} stage error, will resume later: ${error instanceof Error ? error.message : String(error)}`);
     new TicketState(r.paths.results, ticket.id).touch(StateFile.Failed);
+    return TicketOutcome.Paused;
   }
 }
 
@@ -139,18 +149,29 @@ export async function work(r: Runner, key: string): Promise<void> {
     if (release) {
       const stuck = (await stuckTickets(r)).filter((t) => t.id === target);
       const ready = await claim(r, (await r.board.list(TicketStatus.Ready)).filter((t) => t.id === target));
-      for (const ticket of [...stuck, ...ready]) await runTicket(r, ticket, key);
+      for (const ticket of [...stuck, ...ready]) {
+        if ((await runTicket(r, ticket, key)) === TicketOutcome.Limited) return;
+      }
       return;
     }
     const mine = (t: Ticket): boolean => t.project === target && t.kind !== TicketKind.Release;
-    for (const ticket of (await stuckTickets(r)).filter(mine)) await runTicket(r, ticket, key);
+    // A usage limit stops this worker: the next tickets would hit the same limit. Dispatch resumes after the reset.
+    for (const ticket of (await stuckTickets(r)).filter(mine)) {
+      if ((await runTicket(r, ticket, key)) === TicketOutcome.Limited) return;
+    }
     for (let batch = 0; batch < r.config.maxBatches; batch += 1) {
       const ready = (await r.board.list(TicketStatus.Ready)).filter(mine);
       if (ready.length === 0) break;
-      const claimed = await claim(r, ready);
-      if (claimed.length === 0) break;
-      r.log.line(`work ${target}: batch ${batch + 1}: ${claimed.map((t) => t.id).join(" ")}`);
-      for (const ticket of claimed) await runTicket(r, ticket, key);
+      r.log.line(`work ${target}: batch ${batch + 1}: ${ready.map((t) => t.id).join(" ")}`);
+      // Claim each ticket just before it runs, so a stop (usage limit) never leaves claimed tickets nobody works on.
+      let ran = 0;
+      for (const ticket of ready) {
+        const claimed = (await claim(r, [ticket]))[0];
+        if (claimed === undefined) continue;
+        ran += 1;
+        if ((await runTicket(r, claimed, key)) === TicketOutcome.Limited) return;
+      }
+      if (ran === 0) break;
     }
   } finally {
     r.slots.remove(key);

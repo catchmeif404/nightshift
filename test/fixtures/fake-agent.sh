@@ -6,6 +6,7 @@
 #   EXIT <code>    exit with <code> without writing anything
 #   GARBAGE        write a result the runner must reject
 #   RELEASE_DONE / RELEASE_BLOCKED  answer a release run
+#   LIMIT          fail the way Claude Code does at its usage limit
 # Every run appends "<session mode> <session id> <first prompt line>" to $FAKE_CALLS_FILE,
 # and saves its prompt to $FAKE_CALLS_FILE.<n>.
 set -euo pipefail
@@ -45,6 +46,7 @@ case "$action" in
     echo "$word" > "$result"
     ;;
   EXIT\ *) exit "${action#EXIT }" ;;
+  LIMIT) echo "You've hit your 5-hour limit · resets 3:30pm (Asia/Seoul)" >&2; exit 1 ;;
   GARBAGE) echo "all done, trust me" > "$result" ;;
   *) echo "fake agent: no plan line $n" >&2; exit 3 ;;
 esac
