@@ -97,7 +97,7 @@ def diagram_internals():
     wt = card("worktree", 4, 0, ["Worktree", "own branch per ticket;", "your checkout untouched"], ["worktree", "티켓마다 자기 브랜치,", "내 체크아웃은 그대로"])
     build = card("build", 4, 1, ["Build", "result: PR, BRANCH,", "DOC or BLOCKED"], ["개발", "결과: PR, BRANCH,", "DOC 또는 BLOCKED"])
     review = card("review", 3, 1, ["Review", "PASS, REWORK,", "NEEDS_HUMAN, BLOCKED"], ["검토", "PASS, REWORK,", "NEEDS_HUMAN, BLOCKED"])
-    settle = card("settle", 2, 1, ["Settle", "moves the ticket: review,", "blocked or done"], ["정리", "티켓 옮기기: review,", "blocked, done"], "accent")
+    settle = card("settle", 2, 1, ["Update ticket", "moves it to review,", "blocked or done"], ["티켓에 반영", "review, blocked, done", "중 하나로 옮김"], "accent")
     merge = card("merge", 2, 2, ["Merge", "with autoMerge on,", "then post-merge command"], ["머지", "autoMerge 일 때,", "그다음 머지 뒤 명령"])
     agents = card("agents", 3, 2, ["Coding agents", "Claude Code (default) · Codex · any CLI", "fixed session per stage, resumed after a cut-off"], ["코딩 에이전트", "Claude Code (기본) · Codex · 아무 CLI", "단계마다 세션 고정, 끊기면 이어 가기"], "plain", w=COLS[4] + CARD_W - COLS[3])
     cards = [b, d, s, w, wt, build, review, settle, merge, agents]
@@ -111,11 +111,11 @@ def diagram_internals():
         ("wt→build", down(wt, build, cx(wt)), None, False, "From the worktree to the build stage"),
         ("build→review", left_to_right_back(review, build, build["y"] + t1), ("result", "결과", "above"), False, "From build to review: the result file"),
         ("review→build", right_to_left(review, build, build["y"] + t2), ("REWORK", "재작업", "below"), False, "From review back to build: rework with the review notes"),
-        ("review→settle", left_to_right_back(settle, review, cy(review)), ("verdict", "판정", "above"), False, "From review to settle: the verdict"),
-        ("settle→merge", down(settle, merge, cx(settle)), ("PASS", "PASS", "beside"), False, "From settle to merge, when the review passed"),
+        ("review→settle", left_to_right_back(settle, review, cy(review)), ("verdict", "판정", "above"), False, "From review to updating the ticket: the verdict"),
+        ("settle→merge", down(settle, merge, cx(settle)), ("PASS", "PASS", "beside"), False, "From updating the ticket to merge, when the review passed"),
         ("build→agents", down(build, agents, cx(build)), ("developer", "개발 실행", "beside"), False, "From the build stage to the coding agent: a developer run"),
         ("review→agents", down(review, agents, cx(review)), ("reviewer", "검토 실행", "beside"), False, "From the review stage to the coding agent: a reviewer run"),
-        ("settle→board", [seg_h(settle["x"], left_x, cy(settle)), seg_v(left_x, cy(settle), b["y"] + b["h"] + 1)], ("status + reason + note", "상태 + 사유 + 메모", "above-long"), False, "From settle back to the board: status, reason and note"),
+        ("settle→board", [seg_h(settle["x"], left_x, cy(settle)), seg_v(left_x, cy(settle), b["y"] + b["h"] + 1)], ("status + reason + note", "상태 + 사유 + 메모", "above-long"), False, "From updating the ticket back to the board: status, reason and note"),
     ]
     caption = (
         "Every stage must leave a one-line result file; anything else is set aside and the stage runs again. State lives in .nightshift/: stage, session, tries, results, log.",
