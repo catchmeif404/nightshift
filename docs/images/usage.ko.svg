@@ -46,9 +46,9 @@
 <text class="t" x="708" y="203" font-size="15" text-anchor="middle" font-weight="600">Notion 티켓 DB</text>
 <text class="t m" x="708" y="223" font-size="14" text-anchor="middle">담당 = Claude Code</text>
 <rect class="card" x="880.5" y="160.5" width="199" height="95" rx="10"/>
-<text class="t" x="980" y="193" font-size="15" text-anchor="middle" font-weight="600">notion_board.py</text>
-<text class="t m" x="980" y="213" font-size="14" text-anchor="middle">command 보드 스크립트</text>
-<text class="t m" x="980" y="233" font-size="14" text-anchor="middle">Notion ↔ nightshift</text>
+<text class="t" x="980" y="193" font-size="15" text-anchor="middle" font-weight="600">notion_bridge.py</text>
+<text class="t m" x="980" y="213" font-size="14" text-anchor="middle">우리 Notion 티켓과</text>
+<text class="t m" x="980" y="233" font-size="14" text-anchor="middle">nightshift를 잇는 스크립트</text>
 <rect class="card" x="608.5" y="336.5" width="199" height="95" rx="10"/>
 <text class="t" x="708" y="369" font-size="15" text-anchor="middle" font-weight="600">nightshift 서비스</text>
 <text class="t m" x="708" y="389" font-size="14" text-anchor="middle">launchd, 2분마다,</text>
@@ -70,7 +70,7 @@
 <text class="t m" x="1252" y="741" font-size="14" text-anchor="middle">PASS면 nightshift가</text>
 <text class="t m" x="1252" y="761" font-size="14" text-anchor="middle">머지</text>
 <rect class="card" x="880.5" y="688.5" width="199" height="95" rx="10"/>
-<text class="t" x="980" y="721" font-size="15" text-anchor="middle" font-weight="600">post_merge.sh</text>
+<text class="t" x="980" y="721" font-size="15" text-anchor="middle" font-weight="600">after_merge.sh</text>
 <text class="t m" x="980" y="741" font-size="14" text-anchor="middle">에뮬레이터 QA 스모크,</text>
 <text class="t m" x="980" y="761" font-size="14" text-anchor="middle">figdex 출시 판단</text>
 </svg>

@@ -59,13 +59,13 @@ def diagram_usage():
     owner = card("owner", 0, 0, ["Owner", "asks in Telegram"], ["대표", "텔레그램으로 요청"])
     pm = card("pm", 1, 0, ["PM bot · Hermes", "files tickets; woken", "when a worker ends"], ["한결 · Hermes PM 봇", "티켓 만들기, 작업자가", "끝나면 깨어나 보고"])
     notion = card("notion", 2, 0, ["Notion ticket DB", "assigned to", "Claude Code"], ["Notion 티켓 DB", "담당 = Claude Code"])
-    board = card("board", 3, 0, ["notion_board.py", "command-board script", "Notion ↔ nightshift"], ["notion_board.py", "command 보드 스크립트", "Notion ↔ nightshift"])
+    board = card("board", 3, 0, ["notion_bridge.py", "connects our Notion", "tickets to nightshift"], ["notion_bridge.py", "우리 Notion 티켓과", "nightshift를 잇는 스크립트"])
     service = card("service", 2, 1, ["nightshift service", "launchd, every", "2 minutes and at login"], ["nightshift 서비스", "launchd, 2분마다,", "로그인할 때도"])
     ns = card("ns", 3, 1, ["nightshift", "dispatch; one worker", "per project (max 5)"], ["nightshift", "배차, 프로젝트당", "작업자 1명 (최대 5)"], "accent")
     builder = card("builder", 3, 2, ["Claude Code · sonnet", "builds in its own", "worktree, opens a PR"], ["Claude Code · sonnet", "자기 worktree에서", "개발, PR 열기"])
     reviewer = card("reviewer", 4, 2, ["Claude Code · opus", "reviews as CTO,", "fixes small things"], ["Claude Code · opus", "CTO로 검토,", "작은 건 직접 고침"])
     pr = card("pr", 4, 3, ["GitHub pull request", "merged by nightshift", "after PASS"], ["GitHub PR", "PASS면 nightshift가", "머지"])
-    post = card("post", 3, 3, ["post_merge.sh", "QA smoke on emulator,", "figdex release call"], ["post_merge.sh", "에뮬레이터 QA 스모크,", "figdex 출시 판단"])
+    post = card("post", 3, 3, ["after_merge.sh", "QA smoke on emulator,", "figdex release call"], ["after_merge.sh", "에뮬레이터 QA 스모크,", "figdex 출시 판단"])
     cards = [owner, pm, notion, board, service, ns, builder, reviewer, pr, post]
     t1, t2 = 32, 64  # thirds of a 96px-high edge
     v1, v2 = 67, 133  # thirds of a 200px-wide edge
@@ -73,12 +73,12 @@ def diagram_usage():
         ("owner→pm", right_to_left(owner, pm, owner["y"] + t1), ("asks", "요청", "above"), False, "From the owner to the PM bot: asks for work"),
         ("pm→owner", left_to_right_back(owner, pm, owner["y"] + t2), ("reports", "보고", "below"), False, "From the PM bot back to the owner: reports"),
         ("pm→notion", right_to_left(pm, notion, cy(pm)), ("files", "티켓", "above"), False, "From the PM bot to the Notion ticket DB: files a ticket"),
-        ("board→notion", left_to_right_back(notion, board, notion["y"] + t1), ("writes", "쓰기", "above"), False, "From the board script to Notion: writes status and notes"),
-        ("notion→board", right_to_left(notion, board, notion["y"] + t2), ("reads", "읽기", "below"), False, "From Notion to the board script: reads tickets"),
+        ("board→notion", left_to_right_back(notion, board, notion["y"] + t1), ("writes", "쓰기", "above"), False, "From the Notion bridge to Notion: writes status and notes"),
+        ("notion→board", right_to_left(notion, board, notion["y"] + t2), ("reads", "읽기", "below"), False, "From Notion to the Notion bridge: reads tickets"),
         ("notion→service", down(notion, service, cx(notion)), ("hook: kickstart now", "훅: 바로 깨움", "beside"), False, "From the Notion ticket DB to the nightshift service: a ticket set ready kicks it right away"),
         ("service→ns", right_to_left(service, ns, cy(service)), ("run", "run", "above"), False, "From the nightshift service to nightshift: run every 2 minutes"),
-        ("ns→board", up(board, ns, ns["x"] + v1), ("calls", "호출", "beside-left"), False, "From nightshift to the board script: list, set-status, note"),
-        ("board→ns", down(board, ns, ns["x"] + v2), ("tickets", "티켓", "beside"), False, "From the board script to nightshift: tickets"),
+        ("ns→board", up(board, ns, ns["x"] + v1), ("calls", "호출", "beside-left"), False, "From nightshift to the Notion bridge: list, set-status, note"),
+        ("board→ns", down(board, ns, ns["x"] + v2), ("tickets", "티켓", "beside"), False, "From the Notion bridge to nightshift: tickets"),
         ("ns→builder", down(ns, builder, cx(ns)), ("starts", "시작", "beside"), False, "From nightshift to the builder: starts a run per ticket"),
         ("builder→reviewer", right_to_left(builder, reviewer, builder["y"] + t1), ("result", "결과", "above"), False, "From the builder to the reviewer: the result file"),
         ("reviewer→builder", left_to_right_back(builder, reviewer, builder["y"] + t2), ("REWORK", "재작업", "below"), False, "From the reviewer back to the builder: rework"),

@@ -47,9 +47,9 @@
 <text class="t m" x="708" y="213" font-size="14" text-anchor="middle">assigned to</text>
 <text class="t m" x="708" y="233" font-size="14" text-anchor="middle">Claude Code</text>
 <rect class="card" x="880.5" y="160.5" width="199" height="95" rx="10"/>
-<text class="t" x="980" y="193" font-size="15" text-anchor="middle" font-weight="600">notion_board.py</text>
-<text class="t m" x="980" y="213" font-size="14" text-anchor="middle">command-board script</text>
-<text class="t m" x="980" y="233" font-size="14" text-anchor="middle">Notion ↔ nightshift</text>
+<text class="t" x="980" y="193" font-size="15" text-anchor="middle" font-weight="600">notion_bridge.py</text>
+<text class="t m" x="980" y="213" font-size="14" text-anchor="middle">connects our Notion</text>
+<text class="t m" x="980" y="233" font-size="14" text-anchor="middle">tickets to nightshift</text>
 <rect class="card" x="608.5" y="336.5" width="199" height="95" rx="10"/>
 <text class="t" x="708" y="369" font-size="15" text-anchor="middle" font-weight="600">nightshift service</text>
 <text class="t m" x="708" y="389" font-size="14" text-anchor="middle">launchd, every</text>
@@ -71,7 +71,7 @@
 <text class="t m" x="1252" y="741" font-size="14" text-anchor="middle">merged by nightshift</text>
 <text class="t m" x="1252" y="761" font-size="14" text-anchor="middle">after PASS</text>
 <rect class="card" x="880.5" y="688.5" width="199" height="95" rx="10"/>
-<text class="t" x="980" y="721" font-size="15" text-anchor="middle" font-weight="600">post_merge.sh</text>
+<text class="t" x="980" y="721" font-size="15" text-anchor="middle" font-weight="600">after_merge.sh</text>
 <text class="t m" x="980" y="741" font-size="14" text-anchor="middle">QA smoke on emulator,</text>
 <text class="t m" x="980" y="761" font-size="14" text-anchor="middle">figdex release call</text>
 </svg>
