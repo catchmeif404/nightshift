@@ -5,6 +5,7 @@
 #   REVIEW <word>  write <word> as the verdict (and a review note)
 #   EXIT <code>    exit with <code> without writing anything
 #   GARBAGE        write a result the runner must reject
+#   RELEASE_DONE / RELEASE_BLOCKED  answer a release run
 # Every run appends "<session mode> <session id> <first prompt line>" to $FAKE_CALLS_FILE,
 # and saves its prompt to $FAKE_CALLS_FILE.<n>.
 set -euo pipefail
@@ -36,6 +37,8 @@ case "$action" in
     echo "BRANCH $branch" > "$result"
     ;;
   BUILD_BLOCKED) echo "BLOCKED missing access to the staging database" > "$result" ;;
+  RELEASE_DONE) echo "DONE v1.2.3 tagged, health check 200" > "$result" ;;
+  RELEASE_BLOCKED) echo "BLOCKED the deploy workflow failed" > "$result" ;;
   REVIEW\ *)
     word="${action#REVIEW }"
     [ -n "$review" ] && echo "review note round $n: $word" > "$review"
