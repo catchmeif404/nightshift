@@ -7,7 +7,6 @@
 **티켓을 올려 두면 한 모델이 만들고, 다른 모델이 검토하고, 사람이 정할 일만 남겨 둡니다.**
 
 [![npm](https://img.shields.io/npm/v/@catchmeif404/nightshift?color=2f6beb&labelColor=black&logo=npm&style=flat-square)](https://www.npmjs.com/package/@catchmeif404/nightshift)
-[![npm downloads](https://img.shields.io/npm/dt/@catchmeif404/nightshift?color=3fb950&labelColor=black&label=downloads&style=flat-square)](https://www.npmjs.com/package/@catchmeif404/nightshift)
 [![GitHub Stars](https://img.shields.io/github/stars/catchmeif404/nightshift?color=e3b341&labelColor=black&style=flat-square)](https://github.com/catchmeif404/nightshift/stargazers)
 [![Node](https://img.shields.io/node/v/@catchmeif404/nightshift?color=white&labelColor=black&logo=nodedotjs&style=flat-square)](docs/INSTALL.md)
 [![License](https://img.shields.io/github/license/catchmeif404/nightshift?color=white&labelColor=black&style=flat-square)](LICENSE)
