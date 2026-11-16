@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { parseArgs } from "node:util";
+import { Brand } from "./brand.js";
+import { add, daemon, doctor, init, runOnce, status, workSlot } from "./commands.js";
+import { ConfigError, loadConfig } from "./config.js";
+import { BoardType, CliCommand, TicketKind } from "./enums.js";
+
+const HELP = `${Brand.name}: tickets in, one model builds, another reviews, you decide only what a human must.
+
+Usage: ${Brand.name} <command> [options]
+
+  init [--board local-md|github] [--repo owner/name] [--repo-path .]
+                      write ${Brand.configFile} and a rules file (github: also create the labels)
+  add "<title>" --project <name> [--body "..."] [--release]
+                      add a ticket to the local markdown board
+  run                 start workers for ready and cut-off tickets, then exit
+  daemon              run every daemonIntervalMinutes until stopped
+  status              running workers and tickets by status
+  doctor              check tools, sign-ins and the config
+
+Options: --root <dir>  folder that holds ${Brand.configFile} (default: current folder)
+`;
+
+function version(): string {
+  const pkg: unknown = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
+  return typeof pkg === "object" && pkg !== null && "version" in pkg ? String(pkg.version) : "unknown";
+}
+
+async function main(argv: string[]): Promise<number> {
+  const { values, positionals } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: {
+      root: { type: "string", default: "." },
+      board: { type: "string", default: BoardType.LocalMarkdown },
+      repo: { type: "string", default: "" },
+      "repo-path": { type: "string", default: "." },
+      project: { type: "string", default: "" },
+      body: { type: "string", default: "" },
+      release: { type: "boolean", default: false },
+      help: { type: "boolean", short: "h", default: false },
+    },
+  });
+  const root = resolve(values.root);
+  const command = positionals[0] ?? CliCommand.Help;
+  if (values.help) {
+    console.log(HELP);
+    return 0;
+  }
+  switch (command) {
+    case CliCommand.Init: {
+      const board = Object.values(BoardType).find((b) => b === values.board);
+      if (board === undefined) throw new ConfigError(`--board must be one of: ${Object.values(BoardType).join(", ")}`);
+      if (board === BoardType.GitHub && values.repo === "") throw new ConfigError("--repo owner/name is required for --board github");
+      await init(root, { board, repo: values.repo, repoPath: values["repo-path"] });
+      return 0;
+    }
+    case CliCommand.Add: {
+      const title = positionals[1] ?? "";
+      if (title === "" || values.project === "") throw new ConfigError(`usage: ${Brand.name} add "<title>" --project <name>`);
+      const id = add(loadConfig(root), title, values.project, values.release ? TicketKind.Release : TicketKind.Build, values.body);
+      console.log(`added ${id}`);
+      return 0;
+    }
+    case CliCommand.Run:
+      await runOnce(loadConfig(root));
+      return 0;
+    case CliCommand.Work:
+      await workSlot(loadConfig(root), positionals[1] ?? "");
+      return 0;
+    case CliCommand.Daemon:
+      await daemon(loadConfig(root));
+      return 0;
+    case CliCommand.Status:
+      await status(loadConfig(root));
+      return 0;
+    case CliCommand.Doctor:
+      return (await doctor(root)) ? 0 : 1;
+    case CliCommand.Version:
+      console.log(version());
+      return 0;
+    default:
+      console.log(HELP);
+      return command === CliCommand.Help ? 0 : 1;
+  }
+}
+
+main(process.argv.slice(2)).then(
+  (code) => {
+    process.exitCode = code;
+  },
+  (error: unknown) => {
+    console.error(`${Brand.name}: ${error instanceof Error ? error.message : String(error)}`);
+    process.exitCode = 1;
+  },
+);
