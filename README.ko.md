@@ -1,12 +1,43 @@
-# nightshift
+<div align="center">
+
+<img src="docs/images/wordmark.svg" alt="nightshift" width="420">
+
+<br>
 
 **티켓을 올려 두면 한 모델이 만들고, 다른 모델이 검토하고, 사람이 정할 일만 남겨 둡니다.**
 
+[![npm](https://img.shields.io/npm/v/@catchmeif404/nightshift?color=2f6beb&labelColor=black&logo=npm&style=flat-square)](https://www.npmjs.com/package/@catchmeif404/nightshift)
+[![npm downloads](https://img.shields.io/npm/dt/@catchmeif404/nightshift?color=3fb950&labelColor=black&label=downloads&style=flat-square)](https://www.npmjs.com/package/@catchmeif404/nightshift)
+[![GitHub Stars](https://img.shields.io/github/stars/catchmeif404/nightshift?color=e3b341&labelColor=black&style=flat-square)](https://github.com/catchmeif404/nightshift/stargazers)
+[![Node](https://img.shields.io/node/v/@catchmeif404/nightshift?color=white&labelColor=black&logo=nodedotjs&style=flat-square)](docs/INSTALL.md)
+[![License](https://img.shields.io/github/license/catchmeif404/nightshift?color=white&labelColor=black&style=flat-square)](LICENSE)
+
 [English](README.md) | [한국어](README.ko.md)
 
-![실제 실행을 다시 재생한 화면: 티켓을 넣으면 Claude Code sonnet이 자기 브랜치에서 만들고, opus가 검토하다가 새 slugify가 한글과 악센트를 망가뜨리는 버그를 찾아 고치고, 머지는 사람에게 남깁니다.](docs/images/demo.ko.gif)
+<br>
+
+<img src="docs/images/demo.ko.gif" alt="실제 실행을 다시 재생한 화면: 티켓을 넣으면 Claude Code sonnet이 자기 브랜치에서 만들고, opus가 검토하다가 새 slugify가 한글과 악센트를 망가뜨리는 버그를 찾아 고치고, 머지는 사람에게 남깁니다." width="900">
 
 <sub>실제 실행을 기다리는 시간만 잘라 재생했습니다. sonnet이 24초 만에 만들었고, opus가 33초 동안 검토하면서 개발 모델이 놓친 버그를 잡았습니다.</sub>
+
+</div>
+
+<br>
+
+## 설치
+
+```sh
+npm install -g @catchmeif404/nightshift
+nightshift init --repo-path ~/code/my-app
+nightshift add "slugify 함수 추가" --project my-app
+nightshift run
+```
+
+[10분 안에 처음 시작하기 →](docs/ko/GETTING-STARTED.md)
+
+<br>
+
+## 무엇인가
 
 nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마크다운 파일 폴더, GitHub Issues, Notion)에 티켓을 올려
 두면, nightshift가 티켓마다 코딩 에이전트의 개발 실행(기본 Claude Code `sonnet`, 또는 Codex)을 띄워 자기 브랜치에서
@@ -126,6 +157,27 @@ Notion은 내장 보드가 있습니다([설정](docs/ko/USAGE.md#notion을-보�
 nightshift는 worktree 안에서 파일을 고치고 명령을 실행할 권한으로 코딩 에이전트를 무인 실행합니다. 그래도 괜찮은
 컴퓨터와 저장소에서 돌리고, 믿을 수 있을 때까지 `autoMerge`는 끄고, `trustedAuthors`는 짧게 두세요. 쓰는 에이전트
 서비스의 약관이 무인 실행을 허용하는지도 확인하세요.
+
+## 함께 쓰는 것
+
+<table>
+<tr><td width="200"><b><a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a></b><br>Anthropic</td><td>기본 개발자(<code>sonnet</code>)와 검토자(<code>opus</code>).</td></tr>
+<tr><td width="200"><b><a href="https://github.com/openai/codex">Codex CLI</a></b><br>OpenAI</td><td>어느 역할이든, Claude Code와 섞어서도.</td></tr>
+<tr><td width="200"><b><a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a></b><br>Nous Research</td><td><a href="#우리가-쓰는-방식-맥-한-대-위의-제품-팀">우리가 쓰는 방식</a>의 PM 봇과 다른 팀원들을 돌립니다. nightshift를 쓰는 데는 필요 없습니다.</td></tr>
+</table>
+
+nightshift는 독립 프로젝트이며 Anthropic, OpenAI, Nous Research와 관계가 없습니다.
+
+## 함께해요
+
+> [!TIP]
+> 아직 0.1입니다. 써 보시고 어디서 막히는지 알려 주시는 게 지금 가장 큰 도움이 됩니다.
+>
+> <table>
+> <tr><td width="140">[![Open an issue](https://img.shields.io/github/issues/catchmeif404/nightshift?label=Issues&logo=github&style=flat-square&labelColor=black&color=2f6beb)](https://github.com/catchmeif404/nightshift/issues)</td><td>어디서 막혔는지, 뭐가 필요한지, 어떻게 쓰고 계신지. 이슈는 전부 읽습니다.</td></tr>
+> <tr><td width="140">[![Star](https://img.shields.io/github/stars/catchmeif404/nightshift?label=Star&logo=github&style=flat-square&labelColor=black&color=e3b341)](https://github.com/catchmeif404/nightshift)</td><td>쓸 만하다면 스타 하나가 다른 사람이 찾는 데 도움이 됩니다.</td></tr>
+> <tr><td width="140">[![Follow on GitHub](https://img.shields.io/github/followers/catchmeif404?label=Follow&logo=github&style=flat-square&labelColor=black&color=24292f)](https://github.com/catchmeif404)</td><td><a href="https://github.com/catchmeif404">catchmeif404</a>의 릴리스와 다른 프로젝트.</td></tr>
+> </table>
 
 ## 라이선스
 
