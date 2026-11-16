@@ -25,10 +25,10 @@ npm install -g @catchmeif404/nightshift
 nightshift --help
 ```
 
-소스에서 (GitHub 저장소가 공개된 뒤):
+소스에서:
 
 ```sh
-git clone <이 저장소> nightshift
+git clone https://github.com/catchmeif404/nightshift.git
 cd nightshift
 npm install
 npm run build
