@@ -96,4 +96,4 @@ Then mark the ticket done: change `status: review` to `status: done` in `.ticket
   the verdict is `NEEDS_HUMAN` and the ticket goes to `blocked` with the decision written out.
 - Put house rules in `nightshift.rules.md` (test command, commit style, things never to touch).
 - Move to GitHub Issues and pull requests: [Usage → GitHub](USAGE.md#github-issues-and-pull-requests).
-- Keep it running on its own: [Usage → running continuously](USAGE.md#running-continuously).
+- Keep it running on its own: `nightshift service install` ([Usage → running continuously](USAGE.md#running-continuously)).

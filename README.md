@@ -74,11 +74,13 @@ nightshift add "Add a slugify helper" --project my-app --body "lowercase, dashes
 nightshift run                     # starts workers in the background and returns
 nightshift logs -f                 # watch them
 nightshift status                  # tickets by status
+nightshift service install         # from now on, picks up new tickets on its own (every 2 minutes)
 ```
 
 With the local board, tickets are files in `.tickets/`; the runner moves them through
 `ready → working → review | blocked → done` and appends notes to each file. Finished work waits on a local branch
-(`nightshift/t-1`) for you to merge. To keep it running on its own, see [running continuously](docs/USAGE.md#running-continuously).
+(`nightshift/t-1`) for you to merge. `service install` registers a LaunchAgent (macOS) or systemd timer (Linux):
+see [running continuously](docs/USAGE.md#running-continuously).
 
 ### GitHub Issues
 
@@ -103,6 +105,7 @@ This writes the config, creates the `nightshift:*` labels and trusts the signed-
 | `projects.<name>.rulesFile` | none | house rules added to every prompt for this project |
 | `projects.<name>.postMergeCommand` | none | runs after a merge; its result is noted on the ticket |
 | `builder`, `reviewer` | Claude Code `sonnet` / `opus` | `type` (`claude-code`, `codex` or `command`), `model`, `permissionMode` (Claude Code), `sandbox` (Codex: `auto`, `workspace-write`, `read-only`, `danger-full-access`) |
+| `pollSeconds` | 120 | how often the service and `daemon` look for work (at least 30) |
 | `maxSlots` | 3 | projects worked at the same time |
 | `maxRework` | 1 | extra build-and-review rounds after a REWORK |
 | `maxStageTries` | 3 | cut-offs before a ticket is blocked |

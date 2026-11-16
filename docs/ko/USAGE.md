@@ -69,36 +69,25 @@ push할 수 있는 `origin` 원격이 있어야 합니다. (검토를 PR 댓글�
 
 ## 계속 돌리기
 
-`nightshift run`은 준비된 것을 띄우고 끝나고, 작업자는 백그라운드에서 계속 돕니다. 새 티켓과 끊긴 실행을 이어 가려면
-누군가 다시 불러야 합니다.
+`nightshift run`은 준비된 것을 띄우고 끝나고, 작업자는 백그라운드에서 계속 돕니다. 새 티켓을 가져가고 끊긴 실행을
+이어 가는 걸 사람 없이 하려면 서비스로 설치하세요.
 
-**터미널에서:** `nightshift daemon` (`daemonIntervalMinutes`마다, 기본 15분).
-
-**cron** (macOS, Linux). cron은 PATH가 짧으니 `node`, `claude`, `git`, `gh`가 있는 폴더를 넣어 주세요(`which node claude`로 확인).
-
-```cron
-*/15 * * * * cd $HOME/nightshift-queue && PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin nightshift run >> .nightshift/cron.log 2>&1
+```sh
+cd ~/nightshift-queue
+nightshift service install     # macOS: LaunchAgent, Linux: systemd 사용자 타이머
+nightshift service status      # 설치 여부, 마지막 실행·종료 코드, 로그 마지막 줄
+nightshift service uninstall
 ```
 
-**launchd** (macOS). `~/Library/LaunchAgents/dev.nightshift.queue.plist`로 저장한 뒤
-`launchctl load ~/Library/LaunchAgents/dev.nightshift.queue.plist`:
+서비스는 이 큐에 대해 `pollSeconds`(기본 120초, 최소 30초)마다, 그리고 로그인할 때 `nightshift run`을 실행합니다.
+`node`, `git`, `gh`, `claude`, `codex`는 설치할 때 쓴 셸의 PATH로 찾으니, 새 CLI를 깔았으면 `service install`을 다시
+실행하세요. 서비스 자체 출력은 `.nightshift/service.log`에 남습니다. Linux에서 로그아웃 중에도 돌리려면
+`loginctl enable-linger $USER`. 큐 폴더마다 서비스가 따로 생깁니다.
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-  <key>Label</key><string>dev.nightshift.queue</string>
-  <key>ProgramArguments</key><array>
-    <string>/bin/zsh</string><string>-lc</string>
-    <string>cd ~/nightshift-queue &amp;&amp; nightshift run</string>
-  </array>
-  <key>StartInterval</key><integer>900</integer>
-  <key>StandardOutPath</key><string>/tmp/nightshift-queue.log</string>
-  <key>StandardErrorPath</key><string>/tmp/nightshift-queue.log</string>
-</dict></plist>
-```
+배차는 한 번에 하나만 돕니다(`.nightshift/` 안의 잠금). 서비스가 있어도 직접 `run`을 해도 안전합니다.
 
-배차는 한 번에 하나만 돕니다(`.nightshift/` 안의 잠금). 겹쳐 불러도 안전합니다.
+터미널에 띄워 두고 싶으면 `nightshift daemon`이 멈출 때까지 같은 일을 합니다. cron을 쓰고 싶으면 도구들이 든 PATH와 함께
+`nightshift run --root <큐>`를 부르면 됩니다.
 
 ## 팀 규칙, 사람 결정 게이트, 출시 티켓
 
@@ -198,12 +187,12 @@ push할 수 있는 `origin` 원격이 있어야 합니다. (검토를 PR 댓글�
 | `run`이 ready 티켓이 "wait for a project that is already being worked on" | 프로젝트당 작업자 1명. 그 작업자가 끝나면 다음 묶음을 이어서 가져감 |
 | Codex 빌드가 git index·lock 파일을 못 써서 `BLOCKED` | Codex `sandbox`가 `workspace-write`임. `auto`(기본)로 |
 | `doctor`: "Notion: ... 404" 또는 "no property" | 데이터베이스를 통합에 연결하지 않았거나, `properties` / `statuses`의 이름이 실제와 다름 |
-| 티켓이 `working`에 머물고 아무것도 안 돎 | 실행이 끊김. `resumeCooldownMinutes`(15분) 뒤 다음 `run`이 이어 감. `nightshift logs`로 마지막 종료 확인 |
+| 티켓이 `working`에 머물고 아무것도 안 돎 | 실행이 끊김. `resumeCooldownMinutes`(15분) 뒤 다음 `run`이 이어 감. `nightshift logs`로 마지막 종료 확인. 서비스가 설치돼 있는지(`nightshift service status`) |
 | `blocked`: "stage was cut off 3 times" | 메모의 마지막 로그 줄 확인. 흔한 원인: 사용량 한도, `claude` 로그아웃, 무인 실행 중 권한 확인 창 |
 | 실행 요약에 권한 규칙 얘기나 승인 요청이 나옴 | 내 Claude Code 설정이 실행에 필요한 걸 막음. `~/.claude/settings.json`에서 허용하거나 `permissionMode`를 바꾸세요 |
 | `blocked`: "could not make a worktree" | 프로젝트 경로가 git 저장소가 아니거나 `baseBranch`(기본 `main`)가 없음 |
 | `review`: "the merge failed" | PR에 충돌이나 필수 검사 실패. GitHub에서 고치거나 티켓을 다시 `ready`로 |
 | nightshift가 만든 브랜치를 지웠는데 사용 중이라고 함 | 그 저장소에서 `git worktree prune` 후 다시 |
 
-**전부 멈추기:** cron / launchd / daemon을 멈추고, `nightshift status`로 작업자를 찾아 멈춥니다(`kill <pid>`). 끊긴 티켓은
+**전부 멈추기:** `nightshift service uninstall`(또는 daemon 멈춤) 후, `nightshift status`로 작업자를 찾아 멈춥니다(`kill <pid>`). 끊긴 티켓은
 `working`에 남아 있다가 다시 켜면 이어집니다.

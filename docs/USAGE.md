@@ -73,37 +73,25 @@ in `review` with the reason. Leave `autoMerge` off until you have watched it for
 
 ## Running continuously
 
-`nightshift run` starts what is ready and exits; workers keep going in the background. Something has to call it again
-for new tickets and for resuming cut-off runs:
+`nightshift run` starts what is ready and exits; workers keep going in the background. To have new tickets picked up
+and cut-off runs resumed without you, install it as a service:
 
-**In a terminal:** `nightshift daemon` (every `daemonIntervalMinutes`, default 15).
-
-**cron** (macOS and Linux). Cron has a short PATH, so give it the folders where `node`, `claude`, `git` and `gh` live
-(`which node claude` shows them):
-
-```cron
-*/15 * * * * cd $HOME/nightshift-queue && PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin nightshift run >> .nightshift/cron.log 2>&1
+```sh
+cd ~/nightshift-queue
+nightshift service install     # macOS: a LaunchAgent; Linux: a systemd user timer
+nightshift service status      # installed? last run, last exit, the last lines of its log
+nightshift service uninstall
 ```
 
-**launchd** (macOS), as `~/Library/LaunchAgents/dev.nightshift.queue.plist`, then
-`launchctl load ~/Library/LaunchAgents/dev.nightshift.queue.plist`:
+The service runs `nightshift run` for this queue every `pollSeconds` (default 120, at least 30) and at login. It finds
+`node`, `git`, `gh`, `claude` and `codex` through the PATH of the shell you installed it from, so run
+`service install` again after installing a new CLI. Its own output goes to `.nightshift/service.log`. On Linux, add
+`loginctl enable-linger $USER` to keep it running while you are logged out. Each queue folder gets its own service.
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-  <key>Label</key><string>dev.nightshift.queue</string>
-  <key>ProgramArguments</key><array>
-    <string>/bin/zsh</string><string>-lc</string>
-    <string>cd ~/nightshift-queue &amp;&amp; nightshift run</string>
-  </array>
-  <key>StartInterval</key><integer>900</integer>
-  <key>StandardOutPath</key><string>/tmp/nightshift-queue.log</string>
-  <key>StandardErrorPath</key><string>/tmp/nightshift-queue.log</string>
-</dict></plist>
-```
+Only one dispatch runs at a time (a lock in `.nightshift/`), so a manual `run` while the service is installed is safe.
 
-Only one dispatch runs at a time (a lock in `.nightshift/`), so overlapping calls are safe.
+Prefer to keep it in a terminal? `nightshift daemon` does the same until you stop it. Prefer cron? Call
+`nightshift run --root <queue>` from it, with a PATH that includes your tools.
 
 ## House rules, human gates and release tickets
 
@@ -205,12 +193,12 @@ once to check the token, the sharing and the property names.
 | `run` says ready tickets "wait for a project that is already being worked on" | one worker per project; the next batch is picked up by that worker when it finishes |
 | a Codex build ends `BLOCKED` because git could not write its index or lock file | the Codex `sandbox` is `workspace-write`; use `auto` (the default) |
 | `doctor`: "Notion: ... 404" or "no property" | the database is not shared with the integration, or a property name in `properties` / `statuses` does not match |
-| a ticket stays `working` and nothing runs | the run was cut off; the next `run` resumes it after `resumeCooldownMinutes` (15). `nightshift logs` shows the last exit |
+| a ticket stays `working` and nothing runs | the run was cut off; the next `run` resumes it after `resumeCooldownMinutes` (15). `nightshift logs` shows the last exit. Is the service installed (`nightshift service status`)? |
 | `blocked`: "stage was cut off 3 times" | read the last log line in the note. Common causes: usage limit, `claude` not signed in, a permission prompt in an unattended run |
 | run summaries mention a permission rule or ask for approval | your Claude Code settings deny something the run needed. Allow it in `~/.claude/settings.json`, or change `permissionMode` |
 | `blocked`: "could not make a worktree" | the project path is not a git repository, or `baseBranch` does not exist (`main` by default) |
 | `review`: "the merge failed" | the pull request has a conflict or failing required checks; fix it on GitHub or set the ticket `ready` again |
 | you deleted a branch nightshift made and it is in use | `git worktree prune` in that repository, then try again |
 
-**Stop everything:** stop your cron / launchd / daemon, then find workers with `nightshift status` and stop them
+**Stop everything:** `nightshift service uninstall` (or stop your daemon), then find workers with `nightshift status` and stop them
 (`kill <pid>`). Cut-off tickets stay `working` and resume when you start again.

@@ -162,11 +162,11 @@ export async function workSlot(config: Config, key: string): Promise<void> {
 }
 
 export async function daemon(config: Config): Promise<void> {
-  const minutes = Math.max(1, config.daemonIntervalMinutes);
-  console.log(`dispatching every ${minutes} min. Ctrl+C to stop (running workers keep going).`);
+  const seconds = config.pollSeconds;
+  console.log(`looking for work every ${seconds}s. Ctrl+C to stop (running workers keep going).`);
   for (;;) {
     await runOnce(config);
-    await sleep(minutes * 60_000);
+    await sleep(seconds * 1000);
   }
 }
 

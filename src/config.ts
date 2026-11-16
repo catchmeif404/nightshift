@@ -61,7 +61,8 @@ export interface Config {
   maxBatches: number;
   resumeCooldownMinutes: number;
   heartbeatMinutes: number;
-  daemonIntervalMinutes: number;
+  // How often "daemon" and the installed service look for work.
+  pollSeconds: number;
   autoMerge: boolean;
   humanGates: HumanGate[];
   // Gets one message as its last argument when a ticket is blocked. Empty: log only.
@@ -234,7 +235,7 @@ export function parseConfig(raw: unknown, root: string): Config {
     maxBatches: num(top, "maxBatches", 5, "config"),
     resumeCooldownMinutes: num(top, "resumeCooldownMinutes", 15, "config"),
     heartbeatMinutes: num(top, "heartbeatMinutes", 30, "config"),
-    daemonIntervalMinutes: num(top, "daemonIntervalMinutes", 15, "config"),
+    pollSeconds: Math.max(30, num(top, "pollSeconds", 120, "config")),
     autoMerge: bool(top, "autoMerge", false, "config"),
     humanGates,
     notifyCommand: inside(root, str(top, "notifyCommand", "", "config")),
