@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { TicketKind, TicketStatus } from "../enums.js";
+import { SettleReason, TicketKind, TicketStatus } from "../enums.js";
 import { Board, Ticket, isTicketStatus, kindFrom, oldestFirst } from "./board.js";
 
 enum Field {
@@ -93,7 +93,7 @@ export class LocalMarkdownBoard implements Board {
     return tickets.sort(oldestFirst);
   }
 
-  async setStatus(id: string, status: TicketStatus, note: string): Promise<void> {
+  async setStatus(id: string, status: TicketStatus, _reason: SettleReason, note: string): Promise<void> {
     const file = this.read(id);
     file.fields.set(Field.Status, status);
     this.write(id, file);

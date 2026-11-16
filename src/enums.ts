@@ -15,6 +15,8 @@ export enum TicketKind {
 export enum BoardType {
   LocalMarkdown = "local-md",
   GitHub = "github",
+  // Any executable that speaks the board protocol (list / set-status / note). See README.
+  Command = "command",
 }
 
 export enum AgentType {
@@ -31,6 +33,8 @@ export enum PublishMode {
 export enum Stage {
   Build = "build",
   Review = "review",
+  // A release ticket is one run that follows the project's release rules; it has no review stage.
+  Release = "release",
 }
 
 // The first word of the one line a build run writes to its result file.
@@ -38,6 +42,12 @@ export enum BuildResult {
   PullRequest = "PR",
   Branch = "BRANCH",
   Doc = "DOC",
+  Blocked = "BLOCKED",
+}
+
+// The first word of the one line a release run writes.
+export enum ReleaseResult {
+  Done = "DONE",
   Blocked = "BLOCKED",
 }
 
@@ -61,6 +71,25 @@ export enum StateFile {
   Failed = "failed",
   Result = "result",
   ResultKind = "kind",
+}
+
+// Why a ticket moved. Boards may act on it (e.g. file a decision page for NeedsHuman).
+export enum SettleReason {
+  Claimed = "claimed",
+  ReadyToMerge = "ready-to-merge",
+  Merged = "merged",
+  MergeFailed = "merge-failed",
+  Accepted = "accepted",
+  Released = "released",
+  NeedsHuman = "needs-human",
+  Blocked = "blocked",
+  CutOff = "cut-off",
+  Misconfigured = "misconfigured",
+}
+
+export enum NoteLanguage {
+  English = "en",
+  Korean = "ko",
 }
 
 export enum SessionMode {

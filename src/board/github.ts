@@ -1,5 +1,5 @@
 import { Brand } from "../brand.js";
-import { GitHubState, TicketKind, TicketStatus } from "../enums.js";
+import { GitHubState, SettleReason, TicketKind, TicketStatus } from "../enums.js";
 import { run } from "../exec.js";
 import { Board, Ticket, oldestFirst } from "./board.js";
 
@@ -94,7 +94,7 @@ export class GitHubBoard implements Board {
     return tickets.sort(oldestFirst);
   }
 
-  async setStatus(id: string, status: TicketStatus, note: string): Promise<void> {
+  async setStatus(id: string, status: TicketStatus, _reason: SettleReason, note: string): Promise<void> {
     const { repo, number } = splitId(id);
     const view: unknown = JSON.parse(await this.call(["issue", "view", number, "--repo", repo, "--json", "labels,state"]));
     const current = isIssueView(view) ? view.labels.map((l) => l.name) : [];

@@ -5,7 +5,8 @@ import { openAgent } from "./agent/index.js";
 import { Ticket } from "./board/board.js";
 import { openBoard } from "./board/index.js";
 import { Config } from "./config.js";
-import { CliCommand, StateFile, TicketKind, TicketStatus, WorkerMode } from "./enums.js";
+import { CliCommand, SettleReason, StateFile, TicketKind, TicketStatus, WorkerMode } from "./enums.js";
+import { messagesFor } from "./messages.js";
 import { Logger } from "./log.js";
 import { Runner, TicketPipeline } from "./pipeline.js";
 import {
@@ -110,7 +111,7 @@ async function claim(r: Runner, tickets: Ticket[]): Promise<Ticket[]> {
   const claimed: Ticket[] = [];
   for (const ticket of tickets) {
     try {
-      await r.board.setStatus(ticket.id, TicketStatus.Working, "picked up by the developer run.");
+      await r.board.setStatus(ticket.id, TicketStatus.Working, SettleReason.Claimed, messagesFor(r.config.language).claimed);
       claimed.push({ ...ticket, status: TicketStatus.Working });
     } catch (error) {
       r.log.line(`${ticket.id} could not claim: ${error instanceof Error ? error.message : String(error)}`);
