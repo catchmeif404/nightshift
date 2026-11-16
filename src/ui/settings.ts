@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { chmodSync, closeSync, copyFileSync, existsSync, fsyncSync, openSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, closeSync, copyFileSync, existsSync, fsyncSync, openSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { Brand } from "../brand.js";
 import { Check, configChecks } from "../commands.js";
@@ -349,11 +349,13 @@ export function saveEdit(root: string, edit: SettingsForm, revision: string): Sa
   const c = candidate(root, edit, revision);
   if (hasFailure(c.issues)) throw new SettingsError("not saved: fix the marked fields", 422, c.issues);
   if (c.changed.length === 0) return { revision: c.file.revision, changed: [], backup: "", issues: c.issues };
-  const mode = statSync(c.file.path).mode & 0o777;
-  const backup = `${c.file.path}.bak-${stamp()}`;
-  copyFileSync(c.file.path, backup);
+  // A symlinked config (e.g. kept in a dotfiles repo) stays a symlink: the file it points to is replaced.
+  const target = realpathSync(c.file.path);
+  const mode = statSync(target).mode & 0o777;
+  const backup = `${target}.bak-${stamp()}`;
+  copyFileSync(target, backup);
   chmodSync(backup, mode);
-  const tmp = `${c.file.path}.tmp-${process.pid}-${randomBytes(4).toString("hex")}`;
+  const tmp = `${target}.tmp-${process.pid}-${randomBytes(4).toString("hex")}`;
   const body = `${JSON.stringify(c.raw, null, 2)}\n`;
   try {
     const fd = openSync(tmp, "wx", mode);
@@ -363,7 +365,7 @@ export function saveEdit(root: string, edit: SettingsForm, revision: string): Sa
     } finally {
       closeSync(fd);
     }
-    renameSync(tmp, c.file.path);
+    renameSync(tmp, target);
   } catch (error) {
     rmSync(tmp, { force: true });
     throw error;

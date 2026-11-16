@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { ChildProcess, spawn } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, symlinkSync, writeFileSync } from "node:fs";
 import { request } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -227,6 +227,18 @@ test("a saved setting survives a restart of the console", async () => {
   servers.push(again);
   const view = JSON.parse((await call(again, "/api/settings")).body) as { form: SettingsForm };
   assert.equal(view.form.maxSlots, 5);
+});
+
+test("a symlinked config stays a symlink; the file it points to is saved", async () => {
+  const b = await box();
+  const real = join(b.root, "real.json");
+  renameSync(b.configFile, real);
+  symlinkSync("real.json", b.configFile);
+  const { form, revision } = await formOf(b);
+  assert.equal((await post(b, "/api/settings/save", { edit: { ...form, maxSlots: 4 }, revision })).status, 200);
+  assert.ok(lstatSync(b.configFile).isSymbolicLink());
+  assert.equal(loadConfig(b.root).maxSlots, 4);
+  assert.equal((JSON.parse(readFileSync(real, "utf8")) as { maxSlots: number }).maxSlots, 4);
 });
 
 test("wrong values are refused with the field named, and nothing is written", async () => {

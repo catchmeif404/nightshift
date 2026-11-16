@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { closeSync, existsSync, openSync, readSync, statSync } from "node:fs";
 import { Ticket } from "../board/board.js";
 import { openBoard } from "../board/index.js";
 import { Config } from "../config.js";
@@ -88,11 +88,22 @@ export function waitReasons(
   return reasons.length > 0 ? reasons : [{ cause: WaitCause.NextDispatch, detail: "" }];
 }
 
+// Reads only the end of the log, so a long-running runner's big log file costs the same as a small one.
 function logTail(file: string): string[] {
   if (!existsSync(file)) return [];
-  const text = readFileSync(file, "utf8");
-  const tail = text.length > LOG_TAIL_BYTES ? text.slice(-LOG_TAIL_BYTES) : text;
-  return tail.split("\n").filter((l) => l !== "").slice(-LOG_LINES).map(mask);
+  const size = statSync(file).size;
+  const length = Math.min(size, LOG_TAIL_BYTES);
+  const buf = Buffer.alloc(length);
+  const fd = openSync(file, "r");
+  try {
+    readSync(fd, buf, 0, length, size - length);
+  } finally {
+    closeSync(fd);
+  }
+  const lines = buf.toString("utf8").split("\n");
+  // The first line may start mid-line (or mid-character) when the file was cut.
+  if (size > length) lines.shift();
+  return lines.filter((l) => l !== "").slice(-LOG_LINES).map(mask);
 }
 
 // What "status" and "logs" show, as data. Reads only: nothing is cleaned up, started or moved.
