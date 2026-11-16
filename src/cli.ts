@@ -62,7 +62,8 @@ async function main(argv: string[]): Promise<number> {
       if (board === undefined) throw new ConfigError(`--board must be one of: ${Object.values(BoardType).join(", ")}`);
       if (board === BoardType.GitHub && values.repo === "") throw new ConfigError("--repo owner/name is required for --board github");
       const trusted = values.trusted.split(",").map((t) => t.trim()).filter((t) => t !== "");
-      await init(root, { board, repo: values.repo, repoPath: values["repo-path"], trusted });
+      // The repo path is where the user is now, not relative to --root: store it absolute.
+      await init(root, { board, repo: values.repo, repoPath: resolve(values["repo-path"]), trusted });
       return 0;
     }
     case CliCommand.Add: {

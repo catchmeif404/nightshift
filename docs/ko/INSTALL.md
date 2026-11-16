@@ -18,14 +18,14 @@ nightshift는 Claude Code를 `--permission-mode auto`로 무인 실행합니다.
 
 ## CLI 설치
 
-npm에서 (0.1 배포 후):
+npm에서:
 
 ```sh
 npm install -g nightshift
 nightshift --help
 ```
 
-소스에서 (지금 가능):
+소스에서 (GitHub 저장소가 공개된 뒤):
 
 ```sh
 git clone <이 저장소> nightshift
