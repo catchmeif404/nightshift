@@ -22,7 +22,7 @@ sure it works on its own: the runs use your normal Claude Code sign-in and setti
 From npm:
 
 ```sh
-npm install -g nightshift
+npm install -g @catchmeif404/nightshift
 nightshift --help
 ```
 
@@ -69,7 +69,7 @@ Next: [Getting started](GETTING-STARTED.md).
 ## Uninstall
 
 ```sh
-npm uninstall -g nightshift      # or, for a source install: npm unlink -g nightshift
+npm uninstall -g @catchmeif404/nightshift      # or, for a source install: npm unlink -g @catchmeif404/nightshift
 rm -rf ~/nightshift-queue        # the queue folder: config, tickets, logs, worktrees
 ```
 
