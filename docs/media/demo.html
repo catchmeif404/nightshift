@@ -1,0 +1,111 @@
+<!doctype html>
+<!--
+  The README demo, replayed from a real run (2026-11-16, Claude Code sonnet building, opus reviewing).
+  The commands, log lines, review and commits are that run's own; long lines are shortened, the waiting is cut
+  ("24 seconds later"), and the dim notes ("(sonnet)", "← the reviewer") are added labels. docs/media/render.mjs screenshots render(t) frame by frame into docs/images/demo.*.gif.
+  ?lang=ko switches the captions to Korean.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>nightshift demo</title>
+<style>
+  :root { --bg: #0d1117; --panel: #161b22; --ink: #e6edf3; --dim: #8b949e; --green: #3fb950; --blue: #58a6ff;
+          --yellow: #d29922; --purple: #bc8cff; --red: #f85149; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1000px; height: 620px; background: #010409; overflow: hidden;
+               font-family: "SF Mono", Menlo, "JetBrains Mono", Consolas, "Apple SD Gothic Neo", monospace; }
+  .window { position: absolute; inset: 16px 16px 72px 16px; background: var(--bg); border: 1px solid #30363d;
+            border-radius: 12px; overflow: hidden; }
+  .bar { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: var(--panel);
+         border-bottom: 1px solid #30363d; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .bar .title { margin-left: 10px; color: var(--dim); font-size: 13px; }
+  .term { position: absolute; top: 34px; left: 0; right: 0; bottom: 0; padding: 12px 18px; font-size: 14.5px;
+          line-height: 21px; color: var(--ink); white-space: pre; overflow: hidden; }
+  .prompt { color: var(--green); }
+  .dim { color: var(--dim); }
+  .skip { color: var(--yellow); }
+  .pass { color: var(--green); font-weight: 700; }
+  .blue { color: var(--blue); }
+  .purple { color: var(--purple); }
+  .caret { display: inline-block; width: 8px; height: 17px; margin-left: 1px; vertical-align: -3px; background: var(--ink); }
+  .caption { position: absolute; left: 16px; right: 16px; bottom: 14px; height: 44px; display: flex; align-items: center;
+             gap: 14px; font-family: -apple-system, "Segoe UI", "Apple SD Gothic Neo", sans-serif; }
+  .step { flex: 1; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+          font-size: 15px; color: #6e7681; background: #0d1117; border: 1px solid #21262d; }
+  .step.on { color: #ffffff; background: #1f3b73; border-color: #2f6beb; font-weight: 600; }
+  .step.done { color: #9ecbff; border-color: #1f3b73; }
+</style>
+</head>
+<body>
+<div class="window">
+  <div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="title">~/nightshift-queue</span></div>
+  <div class="term" id="term"></div>
+</div>
+<div class="caption" id="caption"></div>
+<script>
+const KO = new URLSearchParams(location.search).get("lang") === "ko";
+const STEPS = KO
+  ? ["1  티켓 쓰기", "2  한 모델이 개발", "3  다른 모델이 검토", "4  머지는 내가"]
+  : ["1  Write a ticket", "2  One model builds", "3  Another reviews", "4  You merge"];
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+// [time, kind, text, step]  kind: type = a typed command, out = a printed line (html allowed)
+const SCRIPT = [
+  [0.3, "type", "nightshift init --repo-path ~/code/demo-app", 0],
+  [2.0, "out", "wrote ~/nightshift-queue/nightshift.json", 0],
+  [2.2, "out", "wrote ~/nightshift-queue/nightshift.rules.md", 0],
+  [2.9, "type", 'nightshift add "Add a slugify helper" --project demo-app', 0],
+  [5.0, "out", 'added T-1. Start it with "nightshift run".', 0],
+  [5.7, "type", "nightshift run", 1],
+  [6.5, "out", "started project worker: demo-app", 1],
+  [7.1, "type", "nightshift logs -f", 1],
+  [7.9, "out", '<span class="dim">09:31:11</span> T-1 <span class="blue">build</span> r1: starting claude-code session babfda3e <span class="dim">(sonnet)</span>', 1],
+  [8.9, "out", '<span class="skip">         … 24 seconds later</span>', 1],
+  [9.8, "out", '<span class="dim">09:31:35</span> T-1 <span class="blue">build</span> r1: exit 0', 1],
+  [10.3, "out", '<span class="dim">09:31:35</span> T-1 <span class="purple">review</span> r1: starting claude-code session 36518516 <span class="dim">(opus)</span>', 2],
+  [11.3, "out", '<span class="skip">         … 33 seconds later</span>', 2],
+  [12.2, "out", '<span class="dim">09:32:08</span> T-1 <span class="purple">review</span> r1: exit 0', 2],
+  [12.6, "out", '<span class="dim">09:32:08</span> T-1 verdict r1: <span class="pass">PASS</span> (BRANCH nightshift/t-1)', 2],
+  [13.1, "out", '<span class="dim">09:32:08</span> T-1 -&gt; review: ready for you to merge: branch nightshift/t-1', 2],
+  [14.3, "out", "^C", 2],
+  [14.7, "type", "cat .nightshift/results/T-1.review", 2],
+  [16.4, "out", '<span class="pass"># T-1 review (round 1): PASS</span>', 2],
+  [16.7, "out", "## Changed", 2],
+  [17.0, "out", "- The original regex [^a-z0-9]+ also replaced non-ASCII letters,", 2],
+  [17.3, "out", '  e.g. "Café au lait" -&gt; "caf-au-lait", "안녕 세계" -&gt; "".', 2],
+  [17.6, "out", "  Switched to the Unicode-aware [^\\p{L}\\p{N}]+/u and added a test.", 2],
+  [17.9, "out", '- Ran npm test myself: <span class="pass">6/6 pass</span>.', 2],
+  [19.2, "type", "git -C ~/code/demo-app log --oneline main..nightshift/t-1", 3],
+  [21.6, "out", '<span class="yellow" style="color:#d29922">a610424</span> fix(text): keep non-ASCII letters in slugify   <span class="dim">← the reviewer</span>', 3],
+  [21.8, "out", '<span class="yellow" style="color:#d29922">04759c0</span> feat(text): add slugify helper                <span class="dim">← the builder</span>', 3],
+  [22.8, "out", '<span class="dim"># main is untouched. Merge it when you like.</span>', 3],
+];
+const CPS = 34; // typed characters per second
+const MAX_LINES = 22;
+
+function render(t) {
+  const lines = [];
+  let step = 0;
+  let typing = false;
+  for (const [at, kind, text, s] of SCRIPT) {
+    if (t < at) break;
+    step = s;
+    if (kind === "type") {
+      const shown = Math.min(text.length, Math.floor((t - at) * CPS));
+      typing = shown < text.length;
+      lines.push('<span class="prompt">$</span> ' + esc(text.slice(0, shown)) + (typing ? '<span class="caret"></span>' : ""));
+    } else {
+      lines.push(text);
+    }
+  }
+  if (!typing && t > 23.4) lines.push('<span class="prompt">$</span> <span class="caret"></span>');
+  document.getElementById("term").innerHTML = lines.slice(-MAX_LINES).join("\n");
+  document.getElementById("caption").innerHTML = STEPS.map((label, i) =>
+    `<div class="step ${i === step ? "on" : i < step ? "done" : ""}">${label}</div>`).join("");
+}
+window.render = render;
+render(0);
+</script>
+</body>
+</html>

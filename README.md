@@ -4,6 +4,10 @@
 
 [English](README.md) | [한국어](README.ko.md)
 
+![A real run, replayed: a ticket goes in, Claude Code sonnet builds it on its own branch, opus reviews it, catches that the new slugify mangled non-ASCII text, fixes it, and leaves the branch for you to merge.](docs/images/demo.gif)
+
+<sub>A real run, replayed with the waiting cut out: sonnet built it in 24 seconds, opus reviewed it in 33 and caught a bug the builder missed.</sub>
+
 nightshift is an unattended dev queue that runs on your own machine. Put tickets on a board (a folder of markdown
 files, GitHub Issues or Notion) and walk away. For each ticket nightshift starts a developer run of a coding agent
 (Claude Code `sonnet` by default, or Codex) that builds it on its own branch, then a separate reviewer run (`opus` by

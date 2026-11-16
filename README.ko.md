@@ -4,6 +4,10 @@
 
 [English](README.md) | [한국어](README.ko.md)
 
+![실제 실행을 다시 재생한 화면: 티켓을 넣으면 Claude Code sonnet이 자기 브랜치에서 만들고, opus가 검토하다가 새 slugify가 한글과 악센트를 망가뜨리는 버그를 찾아 고치고, 머지는 사람에게 남깁니다.](docs/images/demo.ko.gif)
+
+<sub>실제 실행을 기다리는 시간만 잘라 재생했습니다. sonnet이 24초 만에 만들었고, opus가 33초 동안 검토하면서 개발 모델이 놓친 버그를 잡았습니다.</sub>
+
 nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마크다운 파일 폴더, GitHub Issues, Notion)에 티켓을 올려
 두면, nightshift가 티켓마다 코딩 에이전트의 개발 실행(기본 Claude Code `sonnet`, 또는 Codex)을 띄워 자기 브랜치에서
 만들게 하고, 따로 검토 실행(기본 `opus`, Codex로도 가능)을 띄워 CTO처럼 확인하게 합니다. 작은 문제는 검토자가 직접
