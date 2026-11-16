@@ -19,7 +19,7 @@ import {
 } from "./enums.js";
 import { Brand } from "./brand.js";
 import { exec, run } from "./exec.js";
-import { Worktree, ensureWorktree, mergePullRequest, pullRequestState, removeWorktree, worktreeFor } from "./git.js";
+import { Worktree, ensureWorktree, gitCommonDir, mergePullRequest, pullRequestState, removeWorktree, worktreeFor } from "./git.js";
 import { Logger, clip, mask, oneLine } from "./log.js";
 import { Messages, messagesFor } from "./messages.js";
 import { RESUME_PROMPT, StageContext, buildPrompt, releasePrompt, reviewPrompt } from "./prompts.js";
@@ -299,6 +299,7 @@ export class TicketPipeline {
     if (!resume) this.state.write(StateFile.Session, sessionId);
     this.log(`${stage} r${round}: ${resume ? "resuming" : "starting"} ${agent.name} session ${sessionId} (try ${tries})`);
 
+    const gitDir = await gitCommonDir(this.r.config, tree);
     const heartbeat = this.heartbeat(stage, round, marker);
     const result = await agent.run({
       prompt: resume ? RESUME_PROMPT : prompt,
@@ -306,7 +307,7 @@ export class TicketPipeline {
       cwd: tree.path,
       sessionId,
       mode: resume ? SessionMode.Resume : SessionMode.New,
-      writableDirs: [this.r.paths.results],
+      writableDirs: gitDir === "" ? [this.r.paths.results] : [this.r.paths.results, gitDir],
     });
     clearInterval(heartbeat);
     this.log(`${stage} r${round}: exit ${result.exitCode}: ${tail(result.output, 600)}`);

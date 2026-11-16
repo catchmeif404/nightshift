@@ -15,14 +15,27 @@ export enum TicketKind {
 export enum BoardType {
   LocalMarkdown = "local-md",
   GitHub = "github",
+  Notion = "notion",
   // Any executable that speaks the board protocol (list / set-status / note). See README.
   Command = "command",
 }
 
 export enum AgentType {
   ClaudeCode = "claude-code",
+  Codex = "codex",
   // Any executable: gets the prompt on stdin, the session on env. Used for tests and custom agents.
   Command = "command",
+}
+
+// How much a Codex run may do unattended.
+export enum CodexSandbox {
+  // Codex's own "approve for me": workspace-write sandbox, and anything that needs more (a commit into the
+  // repository's .git, a push) is escalated to Codex's automatic reviewer. Like Claude Code's auto mode.
+  Auto = "auto",
+  // Writes only in the worktree and the result folder, never escalates. Codex cannot commit from a worktree here.
+  WorkspaceWrite = "workspace-write",
+  ReadOnly = "read-only",
+  FullAccess = "danger-full-access",
 }
 
 export enum PublishMode {

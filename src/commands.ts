@@ -208,6 +208,14 @@ export async function doctor(root: string): Promise<boolean> {
   statePaths(config.stateDir);
   checks.push({ level: CheckLevel.Ok, what: `state folder ${config.stateDir}` });
   checks.push({ level: (await tool(config.tools.git, ["--version"], root)) ? CheckLevel.Ok : CheckLevel.Fail, what: "git" });
+  if (config.board.type === BoardType.Notion) {
+    try {
+      await openRunner(config).board.list(TicketStatus.Ready);
+      checks.push({ level: CheckLevel.Ok, what: `Notion database ${config.board.notion.databaseId} is readable` });
+    } catch (error) {
+      checks.push({ level: CheckLevel.Fail, what: `Notion: ${error instanceof Error ? error.message : String(error)}` });
+    }
+  }
   if (config.board.type === BoardType.Command) {
     checks.push({ level: existsSync(config.board.command) ? CheckLevel.Ok : CheckLevel.Fail, what: `board command ${config.board.command}` });
   }
@@ -218,6 +226,8 @@ export async function doctor(root: string): Promise<boolean> {
   for (const agent of [config.builder, config.reviewer]) {
     if (agent.type === AgentType.ClaudeCode) {
       checks.push({ level: (await tool(config.tools.claude, ["--version"], root)) ? CheckLevel.Ok : CheckLevel.Fail, what: `claude CLI (${agent.model})` });
+    } else if (agent.type === AgentType.Codex) {
+      checks.push({ level: (await tool(config.tools.codex, ["--version"], root)) ? CheckLevel.Ok : CheckLevel.Fail, what: `codex CLI (${agent.model || "its default model"}, sandbox ${agent.sandbox})` });
     } else {
       checks.push({ level: existsSync(agent.command) ? CheckLevel.Ok : CheckLevel.Fail, what: `agent command ${agent.command}` });
     }

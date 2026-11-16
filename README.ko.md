@@ -5,15 +5,15 @@
 [English](README.md) | [한국어](README.ko.md)
 
 nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(GitHub Issues 또는 마크다운 파일 폴더)에 티켓을 올려 두면,
-티켓마다 개발 실행(Claude Code, 기본 `sonnet`)이 자기 브랜치에서 만들고, 따로 띄운 검토 실행(기본 `opus`)이 CTO처럼
-확인합니다. 작은 문제는 직접 고치고, 큰 문제는 한 번 더 고치라고 돌려보내고, 사람이 정해야 하는 일(돈, 법률 문구, 데이터
+티켓마다 개발 실행(기본 Claude Code `sonnet`, 또는 Codex)이 자기 브랜치에서 만들고, 따로 띄운 검토 실행(기본 `opus`)이 CTO처럼
+확인합니다(검토도 Codex로 바꿀 수 있습니다). 작은 문제는 직접 고치고, 큰 문제는 한 번 더 고치라고 돌려보내고, 사람이 정해야 하는 일(돈, 법률 문구, 데이터
 삭제, 외부 공개)은 머지하지 않고 멈춥니다.
 
 우리 제품을 만드는 러너에서 나왔고, 지금은 그 러너 자리를 대신해 우리 제품을 만들고 있습니다. 이전 bash 러너는 처음
 12일 동안 **티켓 225개**를 만들고 검토했고, **84%**가 1회차 검토를 통과했습니다(통과는 AI 검토자의 판정입니다).
 
-> 상태: 초기(0.1). 내장: Claude Code 에이전트, 로컬 마크다운·GitHub Issues·command 보드.
-> 다른 에이전트(Codex 등)와 트래커(Notion, Linear 등)는 아직 내장이 아니라 직접 쓴 작은 스크립트로 붙입니다.
+> 상태: 초기(0.1). 에이전트: **Claude Code**(기본)와 **Codex**, 두 역할 어디에나, 섞어서도.
+> 보드: **로컬 마크다운**(기본), **GitHub Issues**, **Notion**, 그 밖의 트래커는 작은 스크립트로.
 
 **문서:** [설치](docs/ko/INSTALL.md) · [처음 시작하기 (10분)](docs/ko/GETTING-STARTED.md) · [사용법·문제 해결](docs/ko/USAGE.md)
 
@@ -73,7 +73,8 @@ nightshift init --board github --repo you/my-app --repo-path ./my-app
 
 ### 다른 트래커 (command 보드)
 
-Linear, Jira, Notion, 스프레드시트 등은 `board.command`에 작은 스크립트를 지정하면 보드로 씁니다. 스크립트는
+Notion은 내장 보드가 있습니다([설정](docs/ko/USAGE.md#notion을-보드로)). Linear, Jira, 스프레드시트 등은
+`board.command`에 작은 스크립트를 지정하면 보드로 씁니다. 스크립트는
 `list <상태>`(티켓 JSON 배열 출력), `set-status <id> <상태> <사유>`, `note <id>`(메모는 stdin) 세 명령만 알면 됩니다.
 사유(`needs-human`, `merged`, `cut-off` 등)를 보고 결정 요청 페이지를 여는 식으로 트래커 쪽 동작을 붙일 수 있습니다.
 `language: "ko"`로 두면 러너가 티켓에 남기는 메모가 한국어가 됩니다.

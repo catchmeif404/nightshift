@@ -2,7 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import { Brand } from "./brand.js";
-import { AgentType, BoardType, HumanGate, NoteLanguage, PublishMode } from "./enums.js";
+import { NotionBoardConfig } from "./board/notion.js";
+import { AgentType, BoardType, CodexSandbox, HumanGate, NoteLanguage, PublishMode, TicketStatus } from "./enums.js";
 
 export interface AgentConfig {
   type: AgentType;
@@ -11,6 +12,8 @@ export interface AgentConfig {
   command: string;
   // Passed to claude --permission-mode.
   permissionMode: string;
+  // Codex sandbox: read-only, workspace-write (network on) or danger-full-access.
+  sandbox: CodexSandbox;
 }
 
 export interface ProjectConfig {
@@ -34,12 +37,15 @@ export interface BoardConfig {
   trustedAuthors: string[];
   // Command: the executable that speaks the board protocol.
   command: string;
+  // Notion: the database and how its properties map to tickets.
+  notion: NotionBoardConfig;
 }
 
 export interface ToolPaths {
   git: string;
   gh: string;
   claude: string;
+  codex: string;
 }
 
 export interface Config {
@@ -121,18 +127,58 @@ function oneOf<T extends string>(o: JsonObject, key: string, allowed: readonly T
   return match;
 }
 
-function agent(o: JsonObject, where: string, model: string, root: string): AgentConfig {
+function agent(o: JsonObject, where: string, claudeModel: string, root: string): AgentConfig {
+  const type = oneOf(o, "type", Object.values(AgentType), AgentType.ClaudeCode, where);
+  // Claude Code gets sonnet / opus by default; other agents use their own configured default model.
+  const model = type === AgentType.ClaudeCode ? claudeModel : "";
   return {
-    type: oneOf(o, "type", Object.values(AgentType), AgentType.ClaudeCode, where),
+    type,
     model: str(o, "model", model, where),
     command: inside(root, str(o, "command", "", where)),
     permissionMode: str(o, "permissionMode", "auto", where),
+    sandbox: oneOf(o, "sandbox", Object.values(CodexSandbox), CodexSandbox.Auto, where),
   };
 }
 
 function inside(root: string, path: string): string {
   if (path === "~" || path.startsWith("~/")) return join(homedir(), path.slice(1));
   return path === "" || isAbsolute(path) ? path : resolve(root, path);
+}
+
+const DEFAULT_NOTION_STATUSES: Record<TicketStatus, string> = {
+  [TicketStatus.Ready]: "Ready",
+  [TicketStatus.Working]: "In progress",
+  [TicketStatus.Review]: "In review",
+  [TicketStatus.Blocked]: "Blocked",
+  [TicketStatus.Done]: "Done",
+};
+
+function notionConfig(o: JsonObject, root: string): NotionBoardConfig {
+  const where = "board.notion";
+  const props = optObject(o, "properties", where);
+  const statuses = optObject(o, "statuses", where);
+  const filter = optObject(o, "filter", where);
+  const statusMap = { ...DEFAULT_NOTION_STATUSES };
+  for (const s of Object.values(TicketStatus)) statusMap[s] = str(statuses, s, DEFAULT_NOTION_STATUSES[s], `${where}.statuses`);
+  return {
+    databaseId: str(o, "databaseId", "", where).replace(/-/g, ""),
+    tokenEnv: str(o, "tokenEnv", "NOTION_TOKEN", where),
+    tokenFile: inside(root, str(o, "tokenFile", "", where)),
+    apiUrl: str(o, "apiUrl", "https://api.notion.com/v1", where),
+    properties: {
+      title: str(props, "title", "Name", `${where}.properties`),
+      status: str(props, "status", "Status", `${where}.properties`),
+      project: str(props, "project", "Project", `${where}.properties`),
+      kind: str(props, "kind", "", `${where}.properties`),
+      body: str(props, "body", "", `${where}.properties`),
+      notes: str(props, "notes", "", `${where}.properties`),
+      id: str(props, "id", "", `${where}.properties`),
+    },
+    statuses: statusMap,
+    releaseKind: str(o, "releaseKind", "Release", where),
+    filterProperty: str(filter, "property", "", `${where}.filter`),
+    filterEquals: str(filter, "equals", "", `${where}.filter`),
+  };
 }
 
 export const DEFAULT_GATES: HumanGate[] = Object.values(HumanGate);
@@ -146,7 +192,9 @@ export function parseConfig(raw: unknown, root: string): Config {
     repos: strList(boardRaw, "repos", [], "board"),
     trustedAuthors: strList(boardRaw, "trustedAuthors", [], "board"),
     command: inside(root, str(boardRaw, "command", "", "board")),
+    notion: notionConfig(optObject(boardRaw, "notion", "board"), root),
   };
+  if (board.type === BoardType.Notion && board.notion.databaseId === "") throw new ConfigError("board.notion.databaseId is required for a Notion board");
   if (board.type === BoardType.Command && board.command === "") throw new ConfigError("board.command is required for a command board");
 
   const projectsRaw = optObject(top, "projects", "config");
@@ -196,6 +244,7 @@ export function parseConfig(raw: unknown, root: string): Config {
       git: str(toolsRaw, "git", "git", "tools"),
       gh: str(toolsRaw, "gh", "gh", "tools"),
       claude: str(toolsRaw, "claude", "claude", "tools"),
+      codex: str(toolsRaw, "codex", "codex", "tools"),
     },
   };
 }

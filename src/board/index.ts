@@ -4,6 +4,7 @@ import { Board } from "./board.js";
 import { CommandBoard } from "./command.js";
 import { GitHubBoard } from "./github.js";
 import { LocalMarkdownBoard } from "./localMarkdown.js";
+import { NotionBoard } from "./notion.js";
 
 export function openBoard(config: Config): Board {
   switch (config.board.type) {
@@ -11,6 +12,8 @@ export function openBoard(config: Config): Board {
       return new LocalMarkdownBoard(config.board.dir);
     case BoardType.GitHub:
       return new GitHubBoard(config.tools.gh, config.board.repos, config.board.trustedAuthors, config.root);
+    case BoardType.Notion:
+      return new NotionBoard(config.board.notion);
     case BoardType.Command:
       return new CommandBoard(config.board.command, config.root);
   }
