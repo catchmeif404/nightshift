@@ -53,17 +53,30 @@ nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마�
 - **사람이 정할 일은 사람이.** 머지는 설정한 게이트에서 멈추고, `autoMerge`는 기본으로 꺼져 있습니다.
 - **믿을 수 없는 이슈는 돌리지 않습니다.** GitHub에서는 `trustedAuthors`가 연 이슈만 집습니다. 이슈는 곧 프롬프트이니까요.
 
-## 우리가 쓰는 방식
+## 우리가 쓰는 방식: 맥 한 대 위의 제품 팀
 
 > 실제 사례로 보여 드리는 우리 회사 설정입니다. **여러분은 이 중 아무것도 필요 없습니다.** Hermes도, Notion도, 연결
 > 스크립트도요. 마크다운 티켓 폴더나 GitHub Issues와 nightshift만 있으면 됩니다. [빠른 시작](#빠른-시작)부터 보세요.
 
-catchmeif404의 제품은 nightshift로 만들고 있습니다. 대표가 텔레그램으로 요청하면 [Hermes Agent](https://github.com/NousResearch/hermes-agent)
-위의 PM 봇(한결)이 Notion에 티켓을 만듭니다. nightshift는 2분마다 일을 찾는 launchd 서비스로 돌고, 티켓이 생기면 Notion 훅이 그 서비스를
-바로 깨웁니다. 작은 연결 스크립트(`notion_bridge.py`)로 Notion을 읽고 쓰며, Claude Code `sonnet`에게 개발을, `opus`에게 검토를 시키고, 통과한 것을 머지하고, 머지 뒤
-점검을 돌린 다음 PM 봇을 깨워 보고하게 합니다. 예전에 쓰던 bash 러너를 대신하고 있고, `nightshift service uninstall` 하나로 코드 작업 전체를 멈춥니다.
+catchmeif404는 사람 한 명과 AI 팀원들로 일합니다. 팀 보드는 Notion이고, 기획과 운영은
+[Hermes Agent](https://github.com/NousResearch/hermes-agent) 위의 봇들이 cron 일정에 맞춰 하고, 개발팀이 nightshift입니다.
 
-![catchmeif404에서 nightshift를 쓰는 방식: 대표, Hermes 위의 PM 봇, Notion 티켓 DB, Notion 연결 스크립트, nightshift 서비스, nightshift, 개발하는 Claude Code sonnet과 검토하는 opus, 머지된 PR, 머지 뒤 훅.](docs/images/usage.ko.svg)
+| 누가 | 하는 일 | 어디서 |
+|---|---|---|
+| 대표 | 텔레그램으로 요청하고, Notion 결정 요청 페이지에 답합니다 | 휴대폰 |
+| PM 봇(한결) | 30분마다(cron) 보드·로드맵·에러 리포트를 읽고, 요청을 티켓으로 만들고, 팀원에게 나눠 주고, 후속을 챙기고, 보고합니다 | Hermes Agent |
+| 마케팅·리서치·운영·출시와 정책·CS·디자인 봇 | PM이 넘긴 카드를 처리합니다: 초안, 조사, 5분 간격 에러 감시, 출시 점검, 고객 답장, 시안 | Hermes Agent |
+| 개발자와 CTO | 모든 코드 티켓: `sonnet`이 자기 브랜치에서 만들고 `opus`가 검토·머지합니다. 머지 뒤 QA 스모크 테스트, 우리 앱이면 출시 판단까지 | nightshift + Claude Code |
+| 보드 | 티켓, 결정 요청, 회의록, 릴리스, 지표 | Notion |
+
+요청은 이렇게 흘러갑니다. 대표가 텔레그램에 "진열장에 정렬 버튼 추가해 줘"라고 쓰면, PM 봇이 개발 티켓으로 Notion에
+올립니다. Notion 훅이 nightshift 서비스를 바로 깨우고(서비스도 2분마다 스스로 확인합니다), nightshift는 작은 연결
+스크립트(`notion_bridge.py`)로 티켓을 읽어 개발·검토 실행을 돌리고, PR을 머지한 뒤 PM 봇의 cron을 깨웁니다. PM 봇은
+티켓에 남은 결과를 읽고 대표에게 알립니다. 대표만 정할 수 있는 일(돈, 법률 문구, 외부 공개)은 결정 요청 페이지가 되고,
+대표가 댓글로 답하면 PM 봇이 티켓을 다시 큐에 넣습니다. nightshift는 예전에 쓰던 bash 러너를 대신하고 있고,
+`nightshift service uninstall` 하나로 코드 작업 전체를 멈춥니다.
+
+![우리 제품 팀: 대표, 30분마다 도는 Hermes 위의 PM 봇, Notion 티켓 DB, Notion 연결 스크립트, nightshift 서비스, nightshift, 개발하는 Claude Code sonnet과 검토하는 opus, 머지된 PR, 머지 뒤 훅.](docs/images/usage.ko.svg)
 
 ## 빠른 시작
 
