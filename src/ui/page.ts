@@ -40,6 +40,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 table { border-collapse: collapse; width: 100%; } td, th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
 th { color: var(--mut); font-weight: 600; font-size: 13px; }
 td:first-child { font-family: var(--mono); font-size: 14px; }
+td.id { white-space: nowrap; overflow-wrap: normal; }
 pre:empty { display: none; }
 pre { margin: 0; max-height: 260px; overflow: auto; font: 13px/1.5 var(--mono); white-space: pre-wrap; word-break: break-all; background: #08080a; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; color: #d4d8df; }
 .tag { display: inline-block; font-size: 12px; color: var(--accent); border: 1px solid var(--accent-strong); border-radius: 10px; padding: 0 8px; margin-right: 6px; }
@@ -124,7 +125,7 @@ function renderStatus(s) {
     var tb = h("table", {});
     g.items.forEach(function (it) {
       var why = it.waiting.map(function (w) { return t(w.cause) + (w.detail ? " (" + w.detail + ")" : ""); });
-      tb.append(h("tr", {}, h("td", {}, it.id), h("td", {}, it.title, h("div", { class: "mut" }, it.project)),
+      tb.append(h("tr", {}, h("td", { class: "id" }, it.id), h("td", {}, it.title, h("div", { class: "mut" }, it.project)),
         h("td", {}, it.stage ? h("span", { class: "tag" }, it.stage) : null, why.length ? h("span", { class: "warn" }, t("waiting") + ": " + why.join(", ")) : null)));
     });
     box.append(tb);
