@@ -1,0 +1,16 @@
+{
+  "anon_id": "r-2c9d",
+  "task": "t1",
+  "condition": "OFF",
+  "model_alias": "sonnet",
+  "permission_mode": "auto",
+  "max_rework": 2,
+  "max_wall_s": 1200,
+  "started_at": "2026-11-16T23:48:09.332Z",
+  "outcome": "pass",
+  "last_review_tail": " `map`만 쓰고 입력을 바꾸지 않습니다. 테스트는 배열과 항목을 `Object.freeze`한 뒤 `deepEqual`로 확인합니다.\n\n사소한 참고 사항이며 수정은 하지 않았습니다.\n- `1.005.toFixed(2)`는 `\"1.00\"`이 됩니다. 이는 JS 부동소수점의 일반적인 동작이고 티켓 범위 안입니다.\n- `sku`나 `name`이 `null` 또는 `undefined`이면 `\"null\"` 또는 `\"undefined\"`라는 글자가 그대로 출력됩니다. 티켓에 규정이 없어 문제로 보지 않았습니다.\n\nVERDICT: PASS\n",
+  "branch": "bench/t1",
+  "ended_at": "2026-11-16T23:48:54.012Z",
+  "total_s": 44.68,
+  "repo": "/tmp/ns-bench/r-2c9d/repo"
+}

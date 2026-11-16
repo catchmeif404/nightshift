@@ -1,0 +1,391 @@
+{
+  "n_runs": 6,
+  "pairs": {
+    "total_tokens": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 216444,
+          "off": 176304,
+          "diff": 40140,
+          "ratio": 1.227674925129322
+        },
+        {
+          "task": "t2",
+          "on": 291826,
+          "off": 218062,
+          "diff": 73764,
+          "ratio": 1.3382707670295604
+        },
+        {
+          "task": "t3",
+          "on": 294414,
+          "off": 251784,
+          "diff": 42630,
+          "ratio": 1.169311791059003
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 42630,
+      "median_ratio": 1.227674925129322
+    },
+    "input_tokens": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 12,
+          "off": 10,
+          "diff": 2,
+          "ratio": 1.2
+        },
+        {
+          "task": "t2",
+          "on": 16,
+          "off": 12,
+          "diff": 4,
+          "ratio": 1.3333333333333333
+        },
+        {
+          "task": "t3",
+          "on": 16,
+          "off": 14,
+          "diff": 2,
+          "ratio": 1.1428571428571428
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 2,
+      "median_ratio": 1.2
+    },
+    "output_tokens": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 2539,
+          "off": 2538,
+          "diff": 1,
+          "ratio": 1.0003940110323088
+        },
+        {
+          "task": "t2",
+          "on": 3244,
+          "off": 3262,
+          "diff": -18,
+          "ratio": 0.9944819129368485
+        },
+        {
+          "task": "t3",
+          "on": 4334,
+          "off": 3556,
+          "diff": 778,
+          "ratio": 1.218785151856018
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 1,
+      "median_ratio": 1.0003940110323088
+    },
+    "cache_read_tokens": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 159841,
+          "off": 121119,
+          "diff": 38722,
+          "ratio": 1.3197021111468885
+        },
+        {
+          "task": "t2",
+          "on": 233634,
+          "off": 159479,
+          "diff": 74155,
+          "ratio": 1.4649828504066367
+        },
+        {
+          "task": "t3",
+          "on": 231055,
+          "off": 191190,
+          "diff": 39865,
+          "ratio": 1.2085098593022647
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 39865,
+      "median_ratio": 1.3197021111468885
+    },
+    "cache_write_tokens": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 54052,
+          "off": 52637,
+          "diff": 1415,
+          "ratio": 1.0268822311301935
+        },
+        {
+          "task": "t2",
+          "on": 54932,
+          "off": 55309,
+          "diff": -377,
+          "ratio": 0.9931837494801931
+        },
+        {
+          "task": "t3",
+          "on": 59009,
+          "off": 57024,
+          "diff": 1985,
+          "ratio": 1.0348099046015713
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 1415,
+      "median_ratio": 1.0268822311301935
+    },
+    "total_s": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 48.986,
+          "off": 44.68,
+          "diff": 4.305999999999997,
+          "ratio": 1.0963742166517456
+        },
+        {
+          "task": "t2",
+          "on": 54.937,
+          "off": 51.49,
+          "diff": 3.4469999999999956,
+          "ratio": 1.0669450378714314
+        },
+        {
+          "task": "t3",
+          "on": 63.975,
+          "off": 52.342,
+          "diff": 11.633000000000003,
+          "ratio": 1.2222498185013948
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 4.305999999999997,
+      "median_ratio": 1.0963742166517456
+    },
+    "build_s": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 24.069,
+          "off": 22.347,
+          "diff": 1.7219999999999978,
+          "ratio": 1.0770573231306215
+        },
+        {
+          "task": "t2",
+          "on": 29.956,
+          "off": 29.808,
+          "diff": 0.1479999999999997,
+          "ratio": 1.0049651100375738
+        },
+        {
+          "task": "t3",
+          "on": 33.131,
+          "off": 29.19,
+          "diff": 3.940999999999999,
+          "ratio": 1.1350119904076739
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 1.7219999999999978,
+      "median_ratio": 1.0770573231306215
+    },
+    "rework_s": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 0,
+          "off": 0,
+          "diff": 0,
+          "ratio": null
+        },
+        {
+          "task": "t2",
+          "on": 0,
+          "off": 0,
+          "diff": 0,
+          "ratio": null
+        },
+        {
+          "task": "t3",
+          "on": 0,
+          "off": 0,
+          "diff": 0,
+          "ratio": null
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 0,
+      "median_ratio": null
+    },
+    "review_s": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 19.438,
+          "off": 19.027,
+          "diff": 0.4109999999999978,
+          "ratio": 1.0216008829557994
+        },
+        {
+          "task": "t2",
+          "on": 20.618,
+          "off": 18.582,
+          "diff": 2.035999999999998,
+          "ratio": 1.1095683995264234
+        },
+        {
+          "task": "t3",
+          "on": 23.8,
+          "off": 19.711,
+          "diff": 4.089000000000002,
+          "ratio": 1.2074476180812745
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 2.035999999999998,
+      "median_ratio": 1.1095683995264234
+    },
+    "wait_overhead_s": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 5.478999999999999,
+          "off": 3.3059999999999974,
+          "diff": 2.173000000000002,
+          "ratio": 1.6572897761645504
+        },
+        {
+          "task": "t2",
+          "on": 4.3629999999999995,
+          "off": 3.1000000000000014,
+          "diff": 1.2629999999999981,
+          "ratio": 1.4074193548387088
+        },
+        {
+          "task": "t3",
+          "on": 7.044000000000004,
+          "off": 3.4410000000000025,
+          "diff": 3.6030000000000015,
+          "ratio": 2.0470793374019176
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 2.173000000000002,
+      "median_ratio": 1.6572897761645504
+    },
+    "rework_rounds": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 0,
+          "off": 0,
+          "diff": 0,
+          "ratio": null
+        },
+        {
+          "task": "t2",
+          "on": 0,
+          "off": 0,
+          "diff": 0,
+          "ratio": null
+        },
+        {
+          "task": "t3",
+          "on": 0,
+          "off": 0,
+          "diff": 0,
+          "ratio": null
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 0,
+      "median_ratio": null
+    },
+    "hidden_pass": {
+      "rows": [
+        {
+          "task": "t1",
+          "on": 9,
+          "off": 9,
+          "diff": 0,
+          "ratio": 1
+        },
+        {
+          "task": "t2",
+          "on": 5,
+          "off": 5,
+          "diff": 0,
+          "ratio": 1
+        },
+        {
+          "task": "t3",
+          "on": 11,
+          "off": 11,
+          "diff": 0,
+          "ratio": 1
+        }
+      ],
+      "n_pairs": 3,
+      "n_excluded": 0,
+      "median_diff": 0,
+      "median_ratio": 1
+    }
+  },
+  "arms": {
+    "ON": {
+      "completed": {
+        "n": 3,
+        "count": 3
+      },
+      "accepted_by_grader": {
+        "n": 3,
+        "count": 3
+      },
+      "critical_defect": {
+        "n": 3,
+        "count": 0
+      },
+      "scope_ok": {
+        "n": 3,
+        "count": 3
+      }
+    },
+    "OFF": {
+      "completed": {
+        "n": 3,
+        "count": 3
+      },
+      "accepted_by_grader": {
+        "n": 3,
+        "count": 3
+      },
+      "critical_defect": {
+        "n": 3,
+        "count": 0
+      },
+      "scope_ok": {
+        "n": 3,
+        "count": 3
+      }
+    }
+  }
+}

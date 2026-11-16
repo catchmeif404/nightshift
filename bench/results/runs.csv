@@ -1,0 +1,7 @@
+anon_id,task,condition,outcome,completed,accepted_by_grader,input_tokens,output_tokens,cache_read_tokens,cache_write_tokens,total_tokens,total_s,build_s,rework_s,review_s,wait_overhead_s,build_rounds,rework_rounds,sessions,hidden_pass,hidden_total,own_tests_pass,security_ok,scope_ok,critical_defect,out_of_scope_files,models,error
+r-2c9d,t1,OFF,pass,true,true,10,2538,121119,52637,176304,44.68,22.347,0,19.027,3.3059999999999974,1,0,2,9,9,true,true,true,false,,claude-sonnet-5-5,
+r-7f3a,t1,ON,pass,true,true,12,2539,159841,54052,216444,48.986,24.069,0,19.438,5.478999999999999,1,0,2,9,9,true,true,true,false,,claude-sonnet-5-5,
+r-b415,t2,OFF,pass,true,true,12,3262,159479,55309,218062,51.49,29.808,0,18.582,3.1000000000000014,1,0,2,5,5,true,true,true,false,,claude-sonnet-5-5,
+r-e08a,t2,ON,pass,true,true,16,3244,233634,54932,291826,54.937,29.956,0,20.618,4.3629999999999995,1,0,2,5,5,true,true,true,false,,claude-sonnet-5-5,
+r-91ce,t3,OFF,pass,true,true,14,3556,191190,57024,251784,52.342,29.19,0,19.711,3.4410000000000025,1,0,2,11,11,true,true,true,false,,claude-sonnet-5-5,
+r-5d62,t3,ON,pass,true,true,16,4334,231055,59009,294414,63.975,33.131,0,23.8,7.044000000000004,1,0,2,11,11,true,true,true,false,,claude-sonnet-5-5,

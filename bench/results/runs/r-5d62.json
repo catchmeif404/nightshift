@@ -1,0 +1,18 @@
+{
+  "anon_id": "r-5d62",
+  "task": "t3",
+  "condition": "ON",
+  "model_alias": "sonnet",
+  "permission_mode": "auto",
+  "max_rework": 2,
+  "max_wall_s": 1200,
+  "started_at": "2026-11-16T23:50:47.377Z",
+  "run_stdout": "started project worker: repo\nWorkers run in the background. Follow them with \"nightshift logs -f\"; see results with \"nightshift status\".\n",
+  "dispatch_started_after_s": 0.643,
+  "outcome": "pass",
+  "ticket_notes": "3. The CLI gets a command `low <file> [--threshold N]` in `src/cli.js`: it reads the JSON array from `<file>` and `run()` returns one line per low-stock item, formatted `<sku> <name> <qty>`, joined with `\\n`. With no low-stock items it returns an empty string. `--threshold` takes the next argument as the number; a missing or invalid number throws `invalid threshold`. A missing `<file>` throws `usage: low <file> [--threshold N]`.\n4. The existing `total` command keeps working unchanged.\n\nDeliverable: the code plus tests (extend `test/items.test.js` and `test/cli.test.js`).\nCheck: `npm test` passes.\nOut of scope: new dependencies, a new file for the feature, changing `totalValue`/`findByName`/`readItem`.\n\n## Notes\n\n- 2026-11-16 23:50 picked up by the developer run.\n- 2026-11-16 23:51 review passed, ready for you to merge: branch nightshift/t-1. Review: PASS Checked: the full diff against main (src/items.js, src/cli.js, both test files) against each ticket requirement. - lowStock: filters qty <= threshold. It sorts by qty and then by name with plain code-point comparison. It returns a new array (filter creates it) and does not mutate the input. Invalid thresholds (negative, fractional, NaN, string, null, Infinity) throw \"invalid threshold\". - CLI `low`: output format and the empty-string case are correct. A missing file throws the usage message. A missing or invalid --threshold value throws \"invalid threshold\". The `total` command is untouched. - Scope: no new files, no new dependencies, and totalValue/findByName/readItem are unchanged. The commit message follows Conventional Commits. - I ran `npm test` myself: 10/10 pass. Changed: nothing. Unverified / minor notes (no action needed): - Extra or unknown arguments after the file (e.g. `low f.json foo`) throw the usage error. The ticket does not specify this. - Items with a missing or non-numeric qty are not validated. The ticket does not ask for it.\n",
+  "branch": "nightshift/t-1",
+  "ended_at": "2026-11-16T23:51:51.352Z",
+  "total_s": 63.975,
+  "repo": "/tmp/ns-bench/r-5d62/repo"
+}

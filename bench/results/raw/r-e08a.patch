@@ -1,0 +1,71 @@
+diff --git a/src/store.js b/src/store.js
+index 6660511..7b658a7 100644
+--- a/src/store.js
++++ b/src/store.js
+@@ -1,8 +1,22 @@
+ import { readFileSync } from "node:fs";
+ import { join } from "node:path";
+ 
++const VALID_NAME = /^[A-Za-z0-9_-]+$/;
++const ENOENT = "ENOENT";
++
+ // Reads one item file, <dataDir>/<name>.json, and returns the parsed object.
+ export function readItem(dataDir, name) {
+-  const raw = readFileSync(join(dataDir, `${name}.json`), "utf8");
++  if (typeof name !== "string" || !VALID_NAME.test(name)) {
++    throw new Error(`invalid item name: ${String(name)}`);
++  }
++  let raw;
++  try {
++    raw = readFileSync(join(dataDir, `${name}.json`), "utf8");
++  } catch (err) {
++    if (err.code === ENOENT) {
++      throw new Error(`item not found: ${name}`);
++    }
++    throw err;
++  }
+   return JSON.parse(raw);
+ }
+diff --git a/test/store.test.js b/test/store.test.js
+index c232cdd..a6d3514 100644
+--- a/test/store.test.js
++++ b/test/store.test.js
+@@ -1,5 +1,5 @@
+ import assert from "node:assert/strict";
+-import { mkdtempSync, writeFileSync } from "node:fs";
++import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+ import { tmpdir } from "node:os";
+ import { join } from "node:path";
+ import { test } from "node:test";
+@@ -10,3 +10,31 @@ test("readItem reads <name>.json", () => {
+   writeFileSync(join(dir, "bolt.json"), JSON.stringify({ sku: "A1", name: "Bolt", qty: 1, price: 2 }));
+   assert.equal(readItem(dir, "bolt").sku, "A1");
+ });
++
++test("readItem rejects invalid names", () => {
++  const root = mkdtempSync(join(tmpdir(), "inv-"));
++  const dir = join(root, "data");
++  mkdirSync(dir);
++  writeFileSync(join(root, "secret.json"), "{}");
++  const bad = ["", "..", "../secret", "a/b", "a\\b", "a.b", "bolt.json", "a\0b", "bolt\n", null, undefined, 5, {}, ["bolt"]];
++  for (const name of bad) {
++    assert.throws(() => readItem(dir, name), (e) => e instanceof Error && e.message.startsWith("invalid item name"));
++  }
++});
++
++test("readItem throws item not found for a missing file", () => {
++  const dir = mkdtempSync(join(tmpdir(), "inv-"));
++  assert.throws(() => readItem(dir, "nope"), { message: "item not found: nope" });
++});
++
++test("readItem accepts _ and - in names", () => {
++  const dir = mkdtempSync(join(tmpdir(), "inv-"));
++  writeFileSync(join(dir, "a_b-C1.json"), JSON.stringify({ sku: "Z" }));
++  assert.equal(readItem(dir, "a_b-C1").sku, "Z");
++});
++
++test("readItem does not hide malformed JSON", () => {
++  const dir = mkdtempSync(join(tmpdir(), "inv-"));
++  writeFileSync(join(dir, "broken.json"), "{not json");
++  assert.throws(() => readItem(dir, "broken"), SyntaxError);
++});

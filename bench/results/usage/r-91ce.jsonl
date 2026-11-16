@@ -1,0 +1,7 @@
+{"session":1,"role":"builder","round":1,"ts":"2026-11-16T23:51:58.553Z","model":"claude-sonnet-5-5","input":2,"output":94,"cache_read":9644,"cache_write":20238}
+{"session":1,"role":"builder","round":1,"ts":"2026-11-16T23:52:09.834Z","model":"claude-sonnet-5-5","input":2,"output":1782,"cache_read":29882,"cache_write":4194}
+{"session":1,"role":"builder","round":1,"ts":"2026-11-16T23:52:13.119Z","model":"claude-sonnet-5-5","input":2,"output":127,"cache_read":34076,"cache_write":4757}
+{"session":1,"role":"builder","round":1,"ts":"2026-11-16T23:52:18.728Z","model":"claude-sonnet-5-5","input":2,"output":651,"cache_read":38833,"cache_write":169}
+{"session":2,"role":"reviewer","round":1,"ts":"2026-11-16T23:52:29.544Z","model":"claude-sonnet-5-5","input":2,"output":90,"cache_read":11392,"cache_write":18650}
+{"session":2,"role":"reviewer","round":1,"ts":"2026-11-16T23:52:35.097Z","model":"claude-sonnet-5-5","input":2,"output":261,"cache_read":30042,"cache_write":7279}
+{"session":2,"role":"reviewer","round":1,"ts":"2026-11-16T23:52:40.158Z","model":"claude-sonnet-5-5","input":2,"output":551,"cache_read":37321,"cache_write":1737}

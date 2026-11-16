@@ -1,0 +1,18 @@
+{
+  "anon_id": "r-7f3a",
+  "task": "t1",
+  "condition": "ON",
+  "model_alias": "sonnet",
+  "permission_mode": "auto",
+  "max_rework": 2,
+  "max_wall_s": 1200,
+  "started_at": "2026-11-16T23:47:18.016Z",
+  "run_stdout": "started project worker: repo\nWorkers run in the background. Follow them with \"nightshift logs -f\"; see results with \"nightshift status\".\n",
+  "dispatch_started_after_s": 0.658,
+  "outcome": "pass",
+  "ticket_notes": "5. An empty array gives just the header line (with its trailing `\\n`).\n6. `toCsv` must not modify the array or its items.\n\nDeliverable: `src/csv.js` plus tests in `test/csv.test.js`.\nCheck: `npm test` passes, including your new tests.\nOut of scope: changing existing files, adding dependencies, a CLI command for it.\n\n## Notes\n\n- 2026-11-16 23:47 picked up by the developer run.\n- 2026-11-16 23:48 review passed, ready for you to merge: branch nightshift/t-1. Review: 검토 완료: src/csv.js와 test/csv.test.js만 변경됨(범위 준수). npm test 직접 실행, 8개 전부 통과. 헤더, 가격 소수 둘째 자리, RFC4180 인용(콤마/따옴표/CR/LF), 줄 끝  , 빈 배열, 입력 불변(freeze 테스트) 모두 확인. 수정한 것 없음. 미검증: 잘못된 price(NaN/undefined) 입력 동작은 티켓 범위 밖이라 확인하지 않음.\n",
+  "branch": "nightshift/t-1",
+  "ended_at": "2026-11-16T23:48:07.002Z",
+  "total_s": 48.986,
+  "repo": "/tmp/ns-bench/r-7f3a/repo"
+}

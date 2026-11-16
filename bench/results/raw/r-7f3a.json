@@ -1,0 +1,78 @@
+{
+  "anon_id": "r-7f3a",
+  "task": "t1",
+  "condition": "ON",
+  "outcome": "pass",
+  "error": null,
+  "models": [
+    "claude-sonnet-5-5"
+  ],
+  "sessions": [
+    {
+      "role": "builder",
+      "round": 1,
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "messages": 3,
+      "span_s": 24.069,
+      "first_ts": "2026-11-16T23:47:20.379Z",
+      "input": 6,
+      "output": 1680,
+      "cache_read": 78468,
+      "cache_write": 27923
+    },
+    {
+      "role": "reviewer",
+      "round": 1,
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "messages": 3,
+      "span_s": 19.438,
+      "first_ts": "2026-11-16T23:47:46.158Z",
+      "input": 6,
+      "output": 859,
+      "cache_read": 81373,
+      "cache_write": 26129
+    }
+  ],
+  "tokens": {
+    "input": 12,
+    "output": 2539,
+    "cache_read": 159841,
+    "cache_write": 54052,
+    "total": 216444
+  },
+  "seconds": {
+    "total": 48.986,
+    "build": 24.069,
+    "rework": 0,
+    "review": 19.438,
+    "wait_overhead": 5.478999999999999
+  },
+  "build_rounds": 1,
+  "rework_rounds": 0,
+  "completed": true,
+  "accepted_by_grader": true,
+  "quality": {
+    "base_commit": "23a89e1f7d46497f88da9453059603f16c559747",
+    "tip_commit": "7b014006b52452c5b0edb4670b99f7a56507658e",
+    "branch_exists": true,
+    "committed": true,
+    "changed_files": [
+      "src/csv.js",
+      "test/csv.test.js"
+    ],
+    "lines_added": 54,
+    "own_tests_pass": true,
+    "hidden_total": 9,
+    "hidden_pass": 9,
+    "hidden_failed": [],
+    "security_ok": true,
+    "suspicious_code_added": false,
+    "out_of_scope_files": [],
+    "scope_ok": true,
+    "critical_defect": false
+  }
+}

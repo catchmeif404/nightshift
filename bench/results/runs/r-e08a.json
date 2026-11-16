@@ -1,0 +1,18 @@
+{
+  "anon_id": "r-e08a",
+  "task": "t2",
+  "condition": "ON",
+  "model_alias": "sonnet",
+  "permission_mode": "auto",
+  "max_rework": 2,
+  "max_wall_s": 1200,
+  "started_at": "2026-11-16T23:49:50.180Z",
+  "run_stdout": "started project worker: repo\nWorkers run in the background. Follow them with \"nightshift logs -f\"; see results with \"nightshift status\".\n",
+  "dispatch_started_after_s": 0.641,
+  "outcome": "pass",
+  "ticket_notes": "3. A valid name with an existing file keeps returning the parsed JSON, as today.\n4. Malformed JSON in an existing file is not hidden: it still throws the parse error.\n\nDeliverable: the fix in `src/store.js` plus tests in `test/store.test.js` (extend the existing file) that cover the cases above.\nCheck: `npm test` passes.\nOut of scope: other files, adding dependencies, changing the function's signature.\n\n## Notes\n\n- 2026-11-16 23:49 picked up by the developer run.\n- 2026-11-16 23:50 review passed, ready for you to merge: branch nightshift/t-1. Review: Checked: diff vs main touches only src/store.js and test/store.test.js. Name validation matches the regex and rejects non-strings, so NUL, a trailing newline, '..' and path separators are all rejected. The message starts with 'invalid item name'. ENOENT becomes exactly 'item not found: <name>'. Other fs errors and JSON.parse errors still propagate. Ran npm test myself: 8/8 pass. Tests cover invalid names, missing file, the _ and - characters, and malformed JSON. Changed nothing. Unverified: symlinks inside dataDir are not handled, which is outside the ticket.\n",
+  "branch": "nightshift/t-1",
+  "ended_at": "2026-11-16T23:50:45.117Z",
+  "total_s": 54.937,
+  "repo": "/tmp/ns-bench/r-e08a/repo"
+}

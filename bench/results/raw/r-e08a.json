@@ -1,0 +1,78 @@
+{
+  "anon_id": "r-e08a",
+  "task": "t2",
+  "condition": "ON",
+  "outcome": "pass",
+  "error": null,
+  "models": [
+    "claude-sonnet-5-5"
+  ],
+  "sessions": [
+    {
+      "role": "builder",
+      "round": 1,
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "messages": 5,
+      "span_s": 29.956,
+      "first_ts": "2026-11-16T23:49:52.471Z",
+      "input": 10,
+      "output": 2233,
+      "cache_read": 151815,
+      "cache_write": 28251
+    },
+    {
+      "role": "reviewer",
+      "round": 1,
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "messages": 3,
+      "span_s": 20.618,
+      "first_ts": "2026-11-16T23:50:23.891Z",
+      "input": 6,
+      "output": 1011,
+      "cache_read": 81819,
+      "cache_write": 26681
+    }
+  ],
+  "tokens": {
+    "input": 16,
+    "output": 3244,
+    "cache_read": 233634,
+    "cache_write": 54932,
+    "total": 291826
+  },
+  "seconds": {
+    "total": 54.937,
+    "build": 29.956,
+    "rework": 0,
+    "review": 20.618,
+    "wait_overhead": 4.3629999999999995
+  },
+  "build_rounds": 1,
+  "rework_rounds": 0,
+  "completed": true,
+  "accepted_by_grader": true,
+  "quality": {
+    "base_commit": "a54bdf3c2f0a4b96ea8a7c2613075f1ef392d5b3",
+    "tip_commit": "b09188192e9cee61c0ffaba5532f1d3be643f1b7",
+    "branch_exists": true,
+    "committed": true,
+    "changed_files": [
+      "src/store.js",
+      "test/store.test.js"
+    ],
+    "lines_added": 44,
+    "own_tests_pass": true,
+    "hidden_total": 5,
+    "hidden_pass": 5,
+    "hidden_failed": [],
+    "security_ok": true,
+    "suspicious_code_added": false,
+    "out_of_scope_files": [],
+    "scope_ok": true,
+    "critical_defect": false
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "anon_id": "r-b415",
+  "task": "t2",
+  "condition": "OFF",
+  "model_alias": "sonnet",
+  "permission_mode": "auto",
+  "max_rework": 2,
+  "max_wall_s": 1200,
+  "started_at": "2026-11-16T23:48:56.386Z",
+  "outcome": "pass",
+  "last_review_tail": " 이름은 기존처럼 파싱된 JSON을 반환합니다.\n- **요구사항 4 (깨진 JSON):** `JSON.parse`가 try 블록 밖에 있어서 `SyntaxError`가 숨겨지지 않습니다.\n- **테스트:** 위 네 가지와 상위 디렉터리 탈출(`../secret`) 시도를 모두 다룹니다.\n\n사소한 지적이 두 가지 있지만 수정하지 않았습니다. `` `invalid item name` ``은 템플릿 리터럴이 필요 없는 곳에 쓰였고, `ENOENT` 상수는 과하게 추출됐습니다. 둘 다 동작에는 영향이 없습니다.\n\nVERDICT: PASS\n",
+  "branch": "bench/t2",
+  "ended_at": "2026-11-16T23:49:47.876Z",
+  "total_s": 51.49,
+  "repo": "/tmp/ns-bench/r-b415/repo"
+}
