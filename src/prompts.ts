@@ -28,6 +28,7 @@ export interface StageContext {
   reviewFile: string;
   humanGates: HumanGate[];
   ticketSections: string[];
+  gatePaths: string[];
 }
 
 function ticketBlock(ticket: Ticket): string {
@@ -41,6 +42,12 @@ function sectionsBlock(labels: string[], reviewer: boolean): string {
     ? "The review grades the work by these items and runs the items that say how to check it itself, instead of trusting the description."
     : "Deliver what these items ask, keep out of what they rule out, and expect the review to grade by them and run the check items itself.";
   return `\n## Ticket form\nThis ticket body carries these items:\n${list}\n${rule}\n`;
+}
+
+function gatePathsBlock(globs: string[]): string {
+  if (globs.length === 0) return "";
+  const list = globs.map((g) => `  - ${g}`).join("\n");
+  return `\n## Gated paths\nThe runner sends the ticket to a human, whatever your verdict, when the change touches a file matching one of these globs. Say in your review which gated files the change touches and why, and do not widen the change into them without need:\n${list}\n`;
 }
 
 function rulesBlock(rules: string): string {
@@ -109,7 +116,7 @@ ${rulesBlock(ctx.rules)}
 ## Things only a human decides
 If merging this would need a human's call on any of these, the verdict is \`${Verdict.NeedsHuman}\`:
 ${gatesBlock(ctx.humanGates)}
-Write what the human must decide, the options and your recommendation to \`${ctx.reviewFile}\`.
+${gatePathsBlock(ctx.gatePaths)}Write what the human must decide, the options and your recommendation to \`${ctx.reviewFile}\`.
 
 ## When you are done
 - On \`${Verdict.Pass}\`, write a short review to \`${ctx.reviewFile}\`: what you checked, what you changed, what is still unverified.

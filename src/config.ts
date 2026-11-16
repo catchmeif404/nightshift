@@ -75,6 +75,8 @@ export interface Config {
   language: NoteLanguage;
   // Labels ("Label:" lines) every ticket body must carry before it runs. Empty: no check.
   ticketSections: string[];
+  // Globs of repository paths: a change touching one goes to a human whatever the review says. Empty: off.
+  gatePaths: string[];
   tools: ToolPaths;
 }
 
@@ -195,6 +197,13 @@ function sectionLabels(o: JsonObject): string[] {
   return labels;
 }
 
+function gateGlobs(o: JsonObject): string[] {
+  const globs = strList(o, "gatePaths", [], "config").map((g) => g.trim());
+  const bad = globs.find((g) => g === "" || /[\r\n]/.test(g));
+  if (bad !== undefined) throw new ConfigError(`config.gatePaths: "${bad}" must be a non-empty glob without a line break`);
+  return globs;
+}
+
 export const DEFAULT_GATES: HumanGate[] = Object.values(HumanGate);
 
 export function parseConfig(raw: unknown, root: string): Config {
@@ -256,6 +265,7 @@ export function parseConfig(raw: unknown, root: string): Config {
     workerDoneCommand: str(top, "workerDoneCommand", "", "config"),
     language: oneOf(top, "language", Object.values(NoteLanguage), NoteLanguage.English, "config"),
     ticketSections: sectionLabels(top),
+    gatePaths: gateGlobs(top),
     tools: {
       git: str(toolsRaw, "git", "git", "tools"),
       gh: str(toolsRaw, "gh", "gh", "tools"),

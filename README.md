@@ -169,6 +169,7 @@ This writes the config, creates the `nightshift:*` labels and trusts the signed-
 | `autoMerge` | `false` | merge pull requests that pass review |
 | `humanGates` | all five | `money`, `legal`, `destructive-data`, `outward-facing`, `product-direction` |
 | `ticketSections` | `[]` | labels such as `["Deliverable","Check","Out of scope"]`; a ticket body without a `Label: text` line for each is blocked before it runs, and the prompts list them |
+| `gatePaths` | `[]` | globs such as `["db/migration/**", "**/*.sql"]`; if the change against the base branch touches a file matching one, a passing review becomes `NEEDS_HUMAN` and nothing is merged, even with `autoMerge` |
 | `notifyCommand` | none | gets one message as its last argument when a ticket is blocked |
 | `workerDoneCommand` | none | shell command run each time a worker finishes |
 | `language` | `en` | language of the notes on tickets: `en` or `ko` |

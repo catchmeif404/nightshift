@@ -27,7 +27,7 @@ function git(cwd: string, args: string[]): void {
   execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.com", ...args], { cwd, stdio: "ignore" });
 }
 
-export function sandbox(overrides: Record<string, unknown> = {}): Sandbox {
+export function sandbox(overrides: Record<string, unknown> = {}, publish: PublishMode = PublishMode.Branch): Sandbox {
   const root = mkdtempSync(join(tmpdir(), "nightshift-test-"));
   const repo = join(root, "repo");
   execFileSync("git", ["init", "-q", "-b", "main", repo]);
@@ -46,7 +46,7 @@ export function sandbox(overrides: Record<string, unknown> = {}): Sandbox {
   const config = parseConfig(
     {
       board: { type: BoardType.LocalMarkdown, dir: ".tickets" },
-      projects: { demo: { repoPath: repo, publish: PublishMode.Branch } },
+      projects: { demo: { repoPath: repo, publish } },
       builder: { type: AgentType.Command, command: agent, model: "fake-builder" },
       reviewer: { type: AgentType.Command, command: agent, model: "fake-reviewer" },
       resumeCooldownMinutes: 0,

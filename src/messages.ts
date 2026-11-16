@@ -1,4 +1,5 @@
 import { NoteLanguage, Stage } from "./enums.js";
+import type { GateHit } from "./git.js";
 
 // Every note the runner writes on a ticket, in each supported language.
 export interface Messages {
@@ -11,6 +12,8 @@ export interface Messages {
   stillNotRight(rounds: number, review: string): string;
   reviewBlocked(review: string): string;
   needsHuman(result: string, review: string): string;
+  gatePaths(hits: GateHit[], result: string, review: string): string;
+  gatePathsUnknown(error: string, result: string): string;
   mergeFailed(error: string, result: string, review: string): string;
   merged(result: string, review: string, postMerge: string): string;
   docAccepted(result: string, review: string): string;
@@ -23,6 +26,10 @@ export interface Messages {
   released(summary: string): string;
   releaseBlocked(reason: string): string;
   noReason: string;
+}
+
+function hitList(hits: GateHit[]): string {
+  return hits.map((h) => `${h.glob} -> ${h.files.join(", ")}`).join("; ");
 }
 
 function withReview(review: string, label: string): string {
@@ -39,6 +46,8 @@ const english: Messages = {
   stillNotRight: (rounds, review) => `still not right after ${rounds} rounds.${withReview(review, "Review")}`,
   reviewBlocked: (review) => `review blocked it.${withReview(review, "Review")}`,
   needsHuman: (result, review) => `needs a human decision before merging (${result}).${withReview(review, "Review")}`,
+  gatePaths: (hits, result, review) => `review passed, but the change touches gated paths, so a human must look before merging (${result}). Matched: ${hitList(hits)}.${withReview(review, "Review")}`,
+  gatePathsUnknown: (e, result) => `could not list the changed files to check gatePaths, so a human must look before merging (${result}): ${e}`,
   mergeFailed: (e, result, review) => `review passed but the merge failed (${e}): ${result}.${withReview(review, "Review")}`,
   merged: (result, review, post) => `merged ${result}.${withReview(review, "Review")}${post}`,
   docAccepted: (result, review) => `document accepted: ${result}.${withReview(review, "Review")}`,
@@ -63,6 +72,8 @@ const korean: Messages = {
   stillNotRight: (rounds, review) => `${rounds}회차까지 고쳐도 통과 못 함.${withReview(review, "검토")}`,
   reviewBlocked: (review) => `검토 단계에서 막힘.${withReview(review, "검토")}`,
   needsHuman: (result, review) => `머지 전에 사람 결정이 필요함 (${result}).${withReview(review, "검토")}`,
+  gatePaths: (hits, result, review) => `검토는 통과했지만 지정 경로(gatePaths)가 바뀌어 머지 전에 사람이 봐야 함 (${result}). 맞은 글롭 -> 파일: ${hitList(hits)}.${withReview(review, "검토")}`,
+  gatePathsUnknown: (e, result) => `바뀐 파일 목록을 얻지 못해 gatePaths를 검사할 수 없음. 머지 전에 사람이 봐야 함 (${result}): ${e}`,
   mergeFailed: (e, result, review) => `검토는 통과했지만 머지 실패 (${e}): ${result}.${withReview(review, "검토")}`,
   merged: (result, review, post) => `머지함: ${result}.${withReview(review, "검토")}${post}`,
   docAccepted: (result, review) => `문서 결과 통과: ${result}.${withReview(review, "검토")}`,
