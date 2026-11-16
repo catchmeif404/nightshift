@@ -1,0 +1,48 @@
+#!/bin/bash
+# A stand-in coding agent for tests. Each run takes the next line of $FAKE_PLAN_FILE:
+#   BUILD          commit a file and write "BRANCH <branch>"
+#   BUILD_BLOCKED  write "BLOCKED <reason>"
+#   REVIEW <word>  write <word> as the verdict (and a review note)
+#   EXIT <code>    exit with <code> without writing anything
+#   GARBAGE        write a result the runner must reject
+# Every run appends "<session mode> <session id> <first prompt line>" to $FAKE_CALLS_FILE,
+# and saves its prompt to $FAKE_CALLS_FILE.<n>.
+set -euo pipefail
+prompt="$(cat)"
+calls=0
+[ -f "$FAKE_CALLS_FILE" ] && calls=$(wc -l < "$FAKE_CALLS_FILE")
+n=$(( calls + 1 ))
+printf '%s\n' "$prompt" > "$FAKE_CALLS_FILE.$n"
+echo "$NIGHTSHIFT_SESSION_MODE $NIGHTSHIFT_SESSION_ID $(printf '%s' "$prompt" | head -n 1 | cut -c1-40)" >> "$FAKE_CALLS_FILE"
+
+action="$(sed -n "${n}p" "$FAKE_PLAN_FILE")"
+# A resumed session gets only "you were cut off": like a real agent, it remembers its files from the first run.
+memory="$FAKE_CALLS_FILE.session.$NIGHTSHIFT_SESSION_ID"
+if [ "$NIGHTSHIFT_SESSION_MODE" = resume ] && [ -f "$memory" ]; then
+  result="$(sed -n 1p "$memory")"
+  review="$(sed -n 2p "$memory")"
+else
+  result="$(printf '%s' "$prompt" | grep -oE '(one line|one word) to `[^`]+`' | head -n 1 | sed -E 's/.*`([^`]+)`/\1/' || true)"
+  review="$(printf '%s' "$prompt" | grep -oE 'findings for the developer to `[^`]+`|findings to `[^`]+`|short review to `[^`]+`' | head -n 1 | sed -E 's/.*`([^`]+)`/\1/' || true)"
+  printf '%s\n%s\n' "$result" "$review" > "$memory"
+fi
+branch="$(git rev-parse --abbrev-ref HEAD)"
+
+case "$action" in
+  BUILD)
+    echo "change $n" >> work.txt
+    git add work.txt
+    git -c user.name=fake -c user.email=fake@example.com commit -q -m "fake change $n"
+    echo "BRANCH $branch" > "$result"
+    ;;
+  BUILD_BLOCKED) echo "BLOCKED missing access to the staging database" > "$result" ;;
+  REVIEW\ *)
+    word="${action#REVIEW }"
+    [ -n "$review" ] && echo "review note round $n: $word" > "$review"
+    echo "$word" > "$result"
+    ;;
+  EXIT\ *) exit "${action#EXIT }" ;;
+  GARBAGE) echo "all done, trust me" > "$result" ;;
+  *) echo "fake agent: no plan line $n" >&2; exit 3 ;;
+esac
+echo "fake agent ran: $action"
