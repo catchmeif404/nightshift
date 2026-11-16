@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ALLOWED_FILES, BENCH_ROOT, cleanEnv, exec } from "./common.mjs";
 
-const EXPECTED_TESTS = { t1: 9, t2: 5, t3: 10 };
+const EXPECTED_TESTS = { t1: 9, t2: 5, t3: 11 };
 const SUSPECT = /\b(child_process|eval\(|new Function|fetch\(|https?:\/\/|node:net|node:http)/;
 
 export async function grade(repoDir, branch, task) {
@@ -12,12 +12,12 @@ export async function grade(repoDir, branch, task) {
   const tmp = mkdtempSync(join(tmpdir(), "grade-"));
   const dir = join(tmp, "repo");
   await exec("git", ["clone", "-q", repoDir, dir], { env });
-  const checkout = await exec("git", ["checkout", "-q", branch], { cwd: dir, env });
-  const base = await exec("git", ["rev-parse", "main"], { cwd: dir, env });
+  const checkout = await exec("git", ["checkout", "-q", "-B", "result", `origin/${branch}`], { cwd: dir, env });
+  const base = await exec("git", ["rev-parse", "origin/main"], { cwd: dir, env });
   const tip = await exec("git", ["rev-parse", "HEAD"], { cwd: dir, env });
   const branchExists = checkout.code === 0;
-  const files = branchExists ? (await exec("git", ["diff", "--name-only", `main..${branch}`], { cwd: dir, env })).stdout.split("\n").filter(Boolean) : [];
-  const patch = branchExists ? (await exec("git", ["diff", `main..${branch}`], { cwd: dir, env })).stdout : "";
+  const files = branchExists ? (await exec("git", ["diff", "--name-only", "origin/main..result"], { cwd: dir, env })).stdout.split("\n").filter(Boolean) : [];
+  const patch = branchExists ? (await exec("git", ["diff", "origin/main..result"], { cwd: dir, env })).stdout : "";
   const committed = branchExists && files.length > 0;
   const own = branchExists ? await exec("npm", ["test", "--silent"], { cwd: dir, env, timeoutMs: 120000 }) : { code: 1 };
   const hidden = branchExists
