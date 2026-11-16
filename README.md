@@ -71,7 +71,8 @@ issue `nightshift:ready`. The worker opens a pull request, the reviewer reviews 
 
 | key | default | what it does |
 |---|---|---|
-| `board.type` | `local-md` | `local-md` (folder of tickets) or `github` |
+| `board.type` | `local-md` | `local-md` (folder of tickets), `github`, or `command` (any tracker, see below) |
+| `board.command` | none | for `command`: the executable that speaks the board protocol |
 | `board.repos`, `board.trustedAuthors` | `[]` | GitHub repos to read, and whose issues may run |
 | `projects.<name>.repoPath` | (required) | the repo a ticket of this project works in |
 | `projects.<name>.publish` | `pr` | `pr` pushes and opens a pull request; `branch` leaves a local branch |
@@ -84,9 +85,30 @@ issue `nightshift:ready`. The worker opens a pull request, the reviewer reviews 
 | `autoMerge` | `false` | merge pull requests that pass review |
 | `humanGates` | all five | `money`, `legal`, `destructive-data`, `outward-facing`, `product-direction` |
 | `notifyCommand` | none | gets one message as its last argument when a ticket is blocked |
+| `workerDoneCommand` | none | shell command run each time a worker finishes |
+| `language` | `en` | language of the notes on tickets: `en` or `ko` |
 
 A `command` agent is any executable: it gets the prompt on stdin and `NIGHTSHIFT_MODEL`, `NIGHTSHIFT_SESSION_ID`,
 `NIGHTSHIFT_SESSION_MODE` (`new` or `resume`) in its environment.
+
+## Any tracker: the command board
+
+Linear, Jira, Notion, a spreadsheet: point `board.command` at a small script and nightshift uses it as the board.
+
+```
+<command> list <status>                      print a JSON array: [{"id","title","body","project","kind","createdAt"}]
+<command> set-status <id> <status> <reason>  the note comes on stdin
+<command> note <id>                          the note comes on stdin
+```
+
+Statuses are `ready`, `working`, `review`, `blocked`, `done`; `kind` is `build` or `release`. The reason tells the
+tracker why a ticket moved (`needs-human`, `merged`, `cut-off`, ...), so it can, say, open a decision page for
+`needs-human`. Exit non-zero on failure. Tickets the script does not want run, it simply does not list.
+
+## Release tickets
+
+A ticket of kind `release` runs alone, as one run of the reviewer model that follows the project's rules file
+(tag, deploy, verify). It writes `DONE <what and how it was verified>` or `BLOCKED <why>`.
 
 ## Safety
 

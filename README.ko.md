@@ -65,6 +65,13 @@ nightshift init --board github --repo you/my-app --repo-path ./my-app
 `nightshift:ready` 라벨을 달면 됩니다. 작업자가 PR을 열고, 검토자가 검토하고, 이슈가 `nightshift:review`로 갑니다
 (`autoMerge`면 머지되고 닫힙니다). 혼자 돌아야 하는 티켓에는 `nightshift:release`를 답니다.
 
+### 다른 트래커 (command 보드)
+
+Linear, Jira, Notion, 스프레드시트 등은 `board.command`에 작은 스크립트를 지정하면 보드로 씁니다. 스크립트는
+`list <상태>`(티켓 JSON 배열 출력), `set-status <id> <상태> <사유>`, `note <id>`(메모는 stdin) 세 명령만 알면 됩니다.
+사유(`needs-human`, `merged`, `cut-off` 등)를 보고 결정 요청 페이지를 여는 식으로 트래커 쪽 동작을 붙일 수 있습니다.
+`language: "ko"`로 두면 러너가 티켓에 남기는 메모가 한국어가 됩니다.
+
 설정 키 전체는 [영어 README](README.md#config-nightshiftjson)에 있습니다.
 
 ## 안전
