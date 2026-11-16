@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1416" height="848" viewBox="0 0 1416 848" role="img" aria-label="catchmeif404에서 nightshift를 쓰는 방식">
+<style>
+.bg{fill:#f6f8fa} .card{fill:#ffffff;stroke:#d0d7de} .accent{fill:#eaf1fe;stroke:#2f6beb;stroke-width:1.5} .dashed{fill:#ffffff;stroke:#8c959f;stroke-dasharray:6 5}
+.t{font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', Helvetica, Arial, sans-serif;fill:#1f2328} .m{fill:#59636e} .ln{stroke:#8c959f;stroke-width:2;fill:none;stroke-linecap:round} .hd{fill:#8c959f} .lb{font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', Helvetica, Arial, sans-serif;font-size:12px;fill:#59636e}
+@media (prefers-color-scheme: dark){.bg{fill:#0d1117} .card,.dashed{fill:#161b22;stroke:#3d444d} .accent{fill:#0f2a5c;stroke:#4c8dff} .t{fill:#e6edf3} .m,.lb{fill:#9198a1} .ln{stroke:#6e7681} .hd{fill:#6e7681}}
+</style>
+<defs><marker id="h" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path class="hd" d="M0 0 L4 2 L0 4 Z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="1416" height="848" rx="12"/>
+<text class="t" x="64" y="96" font-size="24" font-weight="600">catchmeif404에서 nightshift를 쓰는 방식</text>
+<path class="ln" d="M 264 192 L 331 192" marker-end="url(#h)"/>
+<text class="lb" x="300" y="176" text-anchor="middle">요청</text>
+<path class="ln" d="M 336 224 L 269 224" marker-end="url(#h)"/>
+<text class="lb" x="300" y="248" text-anchor="middle">보고</text>
+<path class="ln" d="M 536 208 L 603 208" marker-end="url(#h)"/>
+<text class="lb" x="572" y="192" text-anchor="middle">티켓</text>
+<path class="ln" d="M 880 192 L 813 192" marker-end="url(#h)"/>
+<text class="lb" x="844" y="176" text-anchor="middle">쓰기</text>
+<path class="ln" d="M 808 224 L 875 224" marker-end="url(#h)"/>
+<text class="lb" x="844" y="248" text-anchor="middle">읽기</text>
+<path class="ln" d="M 708 256 L 708 331" marker-end="url(#h)"/>
+<text class="lb" x="720" y="299" text-anchor="start">훅</text>
+<path class="ln" d="M 536 384 L 603 384" marker-end="url(#h)"/>
+<text class="lb" x="572" y="368" text-anchor="middle">타이머</text>
+<path class="ln" d="M 808 384 L 875 384" marker-end="url(#h)"/>
+<text class="lb" x="844" y="368" text-anchor="middle">run</text>
+<path class="ln" d="M 708 432 L 708 507" stroke-dasharray="6 6" marker-end="url(#h)"/>
+<text class="lb" x="720" y="475" text-anchor="start">스위치 끔</text>
+<path class="ln" d="M 947 336 L 947 261" marker-end="url(#h)"/>
+<text class="lb" x="935" y="300" text-anchor="end">호출</text>
+<path class="ln" d="M 1013 256 L 1013 331" marker-end="url(#h)"/>
+<text class="lb" x="1025" y="299" text-anchor="start">티켓</text>
+<path class="ln" d="M 980 432 L 980 507" marker-end="url(#h)"/>
+<text class="lb" x="992" y="475" text-anchor="start">시작</text>
+<path class="ln" d="M 1080 544 L 1147 544" marker-end="url(#h)"/>
+<text class="lb" x="1116" y="528" text-anchor="middle">결과</text>
+<path class="ln" d="M 1152 576 L 1085 576" marker-end="url(#h)"/>
+<text class="lb" x="1116" y="600" text-anchor="middle">재작업</text>
+<path class="ln" d="M 1252 608 L 1252 683" marker-end="url(#h)"/>
+<text class="lb" x="1264" y="651" text-anchor="start">PASS</text>
+<path class="ln" d="M 1152 736 L 1085 736" marker-end="url(#h)"/>
+<text class="lb" x="1116" y="720" text-anchor="middle">머지 뒤</text>
+<rect class="card" x="64.5" y="160.5" width="199" height="95" rx="10"/>
+<text class="t" x="164" y="203" font-size="15" text-anchor="middle" font-weight="600">대표</text>
+<text class="t m" x="164" y="223" font-size="14" text-anchor="middle">텔레그램으로 요청</text>
+<rect class="card" x="336.5" y="160.5" width="199" height="95" rx="10"/>
+<text class="t" x="436" y="193" font-size="15" text-anchor="middle" font-weight="600">한결 · Hermes PM 봇</text>
+<text class="t m" x="436" y="213" font-size="14" text-anchor="middle">티켓 만들기, 작업자가</text>
+<text class="t m" x="436" y="233" font-size="14" text-anchor="middle">끝나면 깨어나 보고</text>
+<rect class="card" x="608.5" y="160.5" width="199" height="95" rx="10"/>
+<text class="t" x="708" y="203" font-size="15" text-anchor="middle" font-weight="600">Notion 티켓 DB</text>
+<text class="t m" x="708" y="223" font-size="14" text-anchor="middle">담당 = Claude Code</text>
+<rect class="card" x="880.5" y="160.5" width="199" height="95" rx="10"/>
+<text class="t" x="980" y="193" font-size="15" text-anchor="middle" font-weight="600">notion_board.py</text>
+<text class="t m" x="980" y="213" font-size="14" text-anchor="middle">command 보드 스크립트</text>
+<text class="t m" x="980" y="233" font-size="14" text-anchor="middle">Notion ↔ nightshift</text>
+<rect class="card" x="336.5" y="336.5" width="199" height="95" rx="10"/>
+<text class="t" x="436" y="379" font-size="15" text-anchor="middle" font-weight="600">Hermes cron</text>
+<text class="t m" x="436" y="399" font-size="14" text-anchor="middle">15분마다</text>
+<rect class="card" x="608.5" y="336.5" width="199" height="95" rx="10"/>
+<text class="t" x="708" y="369" font-size="15" text-anchor="middle" font-weight="600">claude_dev_runner.sh</text>
+<text class="t m" x="708" y="389" font-size="14" text-anchor="middle">진입점 · 스위치 파일</text>
+<text class="t m" x="708" y="409" font-size="14" text-anchor="middle">nightshift.enabled</text>
+<rect class="accent" x="880.5" y="336.5" width="199" height="95" rx="10"/>
+<text class="t" x="980" y="369" font-size="15" text-anchor="middle" font-weight="600">nightshift</text>
+<text class="t m" x="980" y="389" font-size="14" text-anchor="middle">배차, 프로젝트당</text>
+<text class="t m" x="980" y="409" font-size="14" text-anchor="middle">작업자 1명 (최대 5)</text>
+<rect class="dashed" x="608.5" y="512.5" width="199" height="95" rx="10"/>
+<text class="t" x="708" y="545" font-size="15" text-anchor="middle" font-weight="600">이전 bash 러너</text>
+<text class="t m" x="708" y="565" font-size="14" text-anchor="middle">스위치 파일이</text>
+<text class="t m" x="708" y="585" font-size="14" text-anchor="middle">없을 때만</text>
+<rect class="card" x="880.5" y="512.5" width="199" height="95" rx="10"/>
+<text class="t" x="980" y="545" font-size="15" text-anchor="middle" font-weight="600">Claude Code · sonnet</text>
+<text class="t m" x="980" y="565" font-size="14" text-anchor="middle">자기 worktree에서</text>
+<text class="t m" x="980" y="585" font-size="14" text-anchor="middle">개발, PR 열기</text>
+<rect class="card" x="1152.5" y="512.5" width="199" height="95" rx="10"/>
+<text class="t" x="1252" y="545" font-size="15" text-anchor="middle" font-weight="600">Claude Code · opus</text>
+<text class="t m" x="1252" y="565" font-size="14" text-anchor="middle">CTO로 검토,</text>
+<text class="t m" x="1252" y="585" font-size="14" text-anchor="middle">작은 건 직접 고침</text>
+<rect class="card" x="1152.5" y="688.5" width="199" height="95" rx="10"/>
+<text class="t" x="1252" y="721" font-size="15" text-anchor="middle" font-weight="600">GitHub PR</text>
+<text class="t m" x="1252" y="741" font-size="14" text-anchor="middle">PASS면 nightshift가</text>
+<text class="t m" x="1252" y="761" font-size="14" text-anchor="middle">머지</text>
+<rect class="card" x="880.5" y="688.5" width="199" height="95" rx="10"/>
+<text class="t" x="980" y="721" font-size="15" text-anchor="middle" font-weight="600">post_merge.sh</text>
+<text class="t m" x="980" y="741" font-size="14" text-anchor="middle">에뮬레이터 QA 스모크,</text>
+<text class="t m" x="980" y="761" font-size="14" text-anchor="middle">figdex 출시 판단</text>
+</svg>

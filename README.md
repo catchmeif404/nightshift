@@ -26,6 +26,8 @@ It grew out of the runner that builds our own products, and it now runs them. It
 
 ## How it works
 
+![Inside nightshift: the board feeds dispatch, which starts one worker per project in its own slot; the worker gives each ticket a worktree, a build stage and a review stage run coding agents (Claude Code, Codex or any CLI), review can send work back for rework, and settle moves the ticket on the board and merges what passed.](docs/images/internals.en.svg)
+
 ```
 ticket ready ──► worker for that project (one per project, a few projects at once)
                  │
@@ -47,6 +49,16 @@ What makes it hold up when nobody is watching:
 - **Two models, two roles.** The one that wrote the code is not the one that approves it.
 - **Humans decide human things.** Merging stops at the gates you configure, and `autoMerge` is off by default.
 - **Untrusted issues never run.** On GitHub only issues opened by `trustedAuthors` are picked up: an issue is a prompt.
+
+## How we run it
+
+nightshift builds our own products at catchmeif404. The owner asks for work in Telegram; a PM bot on
+[Hermes Agent](https://github.com/NousResearch/hermes-agent) files it as a ticket in Notion; a hook (and a 15-minute
+timer) starts nightshift, which reads Notion through a small command-board script, has Claude Code `sonnet` build and
+`opus` review, merges what passed, runs a post-merge check and wakes the PM bot to report back. A switch file lets us
+fall back to the old bash runner in one step.
+
+![How catchmeif404 runs nightshift: owner, PM bot on Hermes, Notion ticket DB, a command-board script, the entry script with its switch, nightshift, Claude Code sonnet building and opus reviewing, the merged pull request and the post-merge hook.](docs/images/usage.en.svg)
 
 ## Quick start
 

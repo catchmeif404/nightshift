@@ -24,6 +24,8 @@ nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마�
 
 ## 동작 방식
 
+![nightshift 내부 구조: 보드가 배차에 티켓을 주고, 배차는 프로젝트마다 슬롯 하나에 작업자를 띄우고, 작업자는 티켓마다 worktree를 만들고, 개발·검토 단계가 코딩 에이전트(Claude Code, Codex, 아무 CLI)를 실행하고, 검토는 재작업으로 돌려보낼 수 있고, 정리 단계가 보드의 티켓을 옮기고 통과한 것을 머지합니다.](docs/images/internals.ko.svg)
+
 ```
 할 일 티켓 ──► 그 프로젝트의 작업자 (프로젝트당 1명, 여러 프로젝트 동시)
                │
@@ -45,6 +47,15 @@ nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마�
 - **두 모델, 두 역할.** 코드를 쓴 모델이 그 코드를 승인하지 않습니다.
 - **사람이 정할 일은 사람이.** 머지는 설정한 게이트에서 멈추고, `autoMerge`는 기본으로 꺼져 있습니다.
 - **믿을 수 없는 이슈는 돌리지 않습니다.** GitHub에서는 `trustedAuthors`가 연 이슈만 집습니다. 이슈는 곧 프롬프트이니까요.
+
+## 우리가 쓰는 방식
+
+catchmeif404의 제품은 nightshift로 만들고 있습니다. 대표가 텔레그램으로 요청하면 [Hermes Agent](https://github.com/NousResearch/hermes-agent)
+위의 PM 봇(한결)이 Notion에 티켓을 만들고, 훅(과 15분 타이머)이 nightshift를 깨웁니다. nightshift는 작은 command 보드
+스크립트로 Notion을 읽고 쓰며, Claude Code `sonnet`에게 개발을, `opus`에게 검토를 시키고, 통과한 것을 머지하고, 머지 뒤
+점검을 돌린 다음 PM 봇을 깨워 보고하게 합니다. 스위치 파일 하나로 이전 bash 러너로 바로 돌아갈 수 있습니다.
+
+![catchmeif404에서 nightshift를 쓰는 방식: 대표, Hermes 위의 PM 봇, Notion 티켓 DB, command 보드 스크립트, 스위치가 있는 진입 스크립트, nightshift, 개발하는 Claude Code sonnet과 검토하는 opus, 머지된 PR, 머지 뒤 훅.](docs/images/usage.ko.svg)
 
 ## 빠른 시작
 

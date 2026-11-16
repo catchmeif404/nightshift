@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1416" height="736" viewBox="0 0 1416 736" role="img" aria-label="nightshift 내부 구조">
+<style>
+.bg{fill:#f6f8fa} .card{fill:#ffffff;stroke:#d0d7de} .accent{fill:#eaf1fe;stroke:#2f6beb;stroke-width:1.5} .dashed{fill:#ffffff;stroke:#8c959f;stroke-dasharray:6 5}
+.t{font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', Helvetica, Arial, sans-serif;fill:#1f2328} .m{fill:#59636e} .ln{stroke:#8c959f;stroke-width:2;fill:none;stroke-linecap:round} .hd{fill:#8c959f} .lb{font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', Helvetica, Arial, sans-serif;font-size:12px;fill:#59636e}
+@media (prefers-color-scheme: dark){.bg{fill:#0d1117} .card,.dashed{fill:#161b22;stroke:#3d444d} .accent{fill:#0f2a5c;stroke:#4c8dff} .t{fill:#e6edf3} .m,.lb{fill:#9198a1} .ln{stroke:#6e7681} .hd{fill:#6e7681}}
+</style>
+<defs><marker id="h" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path class="hd" d="M0 0 L4 2 L0 4 Z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="1416" height="736" rx="12"/>
+<text class="t" x="64" y="96" font-size="24" font-weight="600">nightshift 내부 구조</text>
+<path class="ln" d="M 264 208 L 331 208" marker-end="url(#h)"/>
+<text class="lb" x="300" y="192" text-anchor="middle">티켓</text>
+<path class="ln" d="M 536 208 L 603 208" marker-end="url(#h)"/>
+<text class="lb" x="572" y="192" text-anchor="middle">시작</text>
+<path class="ln" d="M 808 208 L 875 208" marker-end="url(#h)"/>
+<path class="ln" d="M 1080 208 L 1147 208" marker-end="url(#h)"/>
+<path class="ln" d="M 1252 256 L 1252 331" marker-end="url(#h)"/>
+<path class="ln" d="M 1152 368 L 1085 368" marker-end="url(#h)"/>
+<text class="lb" x="1116" y="352" text-anchor="middle">결과</text>
+<path class="ln" d="M 1080 400 L 1147 400" marker-end="url(#h)"/>
+<text class="lb" x="1116" y="424" text-anchor="middle">재작업</text>
+<path class="ln" d="M 880 384 L 813 384" marker-end="url(#h)"/>
+<text class="lb" x="844" y="368" text-anchor="middle">판정</text>
+<path class="ln" d="M 708 432 L 708 507" marker-end="url(#h)"/>
+<text class="lb" x="720" y="475" text-anchor="start">PASS</text>
+<path class="ln" d="M 1252 432 L 1252 507" marker-end="url(#h)"/>
+<text class="lb" x="1264" y="475" text-anchor="start">개발 실행</text>
+<path class="ln" d="M 980 432 L 980 507" marker-end="url(#h)"/>
+<text class="lb" x="992" y="475" text-anchor="start">검토 실행</text>
+<path class="ln" d="M 608 384 L 164 384"/>
+<path class="ln" d="M 164 384 L 164 261" marker-end="url(#h)"/>
+<text class="lb" x="386" y="368" text-anchor="middle">상태 + 사유 + 메모</text>
+<rect class="card" x="64.5" y="160.5" width="199" height="95" rx="10"/>
+<text class="t" x="164" y="193" font-size="15" text-anchor="middle" font-weight="600">보드</text>
+<text class="t m" x="164" y="213" font-size="14" text-anchor="middle">local-md · GitHub ·</text>
+<text class="t m" x="164" y="233" font-size="14" text-anchor="middle">Notion · command</text>
+<rect class="card" x="336.5" y="160.5" width="199" height="95" rx="10"/>
+<text class="t" x="436" y="193" font-size="15" text-anchor="middle" font-weight="600">배차</text>
+<text class="t m" x="436" y="213" font-size="14" text-anchor="middle">run 또는 daemon,</text>
+<text class="t m" x="436" y="233" font-size="14" text-anchor="middle">잠금은 하나</text>
+<rect class="card" x="608.5" y="160.5" width="199" height="95" rx="10"/>
+<text class="t" x="708" y="193" font-size="15" text-anchor="middle" font-weight="600">슬롯</text>
+<text class="t m" x="708" y="213" font-size="14" text-anchor="middle">프로젝트당 작업자 1명,</text>
+<text class="t m" x="708" y="233" font-size="14" text-anchor="middle">출시 티켓은 혼자</text>
+<rect class="card" x="880.5" y="160.5" width="199" height="95" rx="10"/>
+<text class="t" x="980" y="193" font-size="15" text-anchor="middle" font-weight="600">작업자</text>
+<text class="t m" x="980" y="213" font-size="14" text-anchor="middle">끊긴 티켓 먼저,</text>
+<text class="t m" x="980" y="233" font-size="14" text-anchor="middle">그다음 할 일</text>
+<rect class="card" x="1152.5" y="160.5" width="199" height="95" rx="10"/>
+<text class="t" x="1252" y="193" font-size="15" text-anchor="middle" font-weight="600">worktree</text>
+<text class="t m" x="1252" y="213" font-size="14" text-anchor="middle">티켓마다 자기 브랜치,</text>
+<text class="t m" x="1252" y="233" font-size="14" text-anchor="middle">내 체크아웃은 그대로</text>
+<rect class="card" x="1152.5" y="336.5" width="199" height="95" rx="10"/>
+<text class="t" x="1252" y="369" font-size="15" text-anchor="middle" font-weight="600">개발</text>
+<text class="t m" x="1252" y="389" font-size="14" text-anchor="middle">결과: PR, BRANCH,</text>
+<text class="t m" x="1252" y="409" font-size="14" text-anchor="middle">DOC 또는 BLOCKED</text>
+<rect class="card" x="880.5" y="336.5" width="199" height="95" rx="10"/>
+<text class="t" x="980" y="369" font-size="15" text-anchor="middle" font-weight="600">검토</text>
+<text class="t m" x="980" y="389" font-size="14" text-anchor="middle">PASS, REWORK,</text>
+<text class="t m" x="980" y="409" font-size="14" text-anchor="middle">NEEDS_HUMAN, BLOCKED</text>
+<rect class="accent" x="608.5" y="336.5" width="199" height="95" rx="10"/>
+<text class="t" x="708" y="369" font-size="15" text-anchor="middle" font-weight="600">정리</text>
+<text class="t m" x="708" y="389" font-size="14" text-anchor="middle">티켓 옮기기: review,</text>
+<text class="t m" x="708" y="409" font-size="14" text-anchor="middle">blocked, done</text>
+<rect class="card" x="608.5" y="512.5" width="199" height="95" rx="10"/>
+<text class="t" x="708" y="545" font-size="15" text-anchor="middle" font-weight="600">머지</text>
+<text class="t m" x="708" y="565" font-size="14" text-anchor="middle">autoMerge 일 때,</text>
+<text class="t m" x="708" y="585" font-size="14" text-anchor="middle">그다음 머지 뒤 명령</text>
+<rect class="card" x="880.5" y="512.5" width="471" height="95" rx="10"/>
+<text class="t" x="1116" y="545" font-size="15" text-anchor="middle" font-weight="600">코딩 에이전트</text>
+<text class="t m" x="1116" y="565" font-size="14" text-anchor="middle">Claude Code (기본) · Codex · 아무 CLI</text>
+<text class="t m" x="1116" y="585" font-size="14" text-anchor="middle">단계마다 세션 고정, 끊기면 이어 가기</text>
+<text class="lb" x="64" y="680" font-size="13">모든 단계는 한 줄짜리 결과 파일을 남겨야 끝난 것으로 칩니다. 못 읽으면 치워 두고 그 단계를 다시 돌립니다. 상태는 .nightshift/ 에: 단계, 세션, 시도 횟수, 결과, 로그.</text>
+</svg>
