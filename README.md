@@ -1,12 +1,43 @@
-# nightshift
+<div align="center">
+
+<img src="docs/images/wordmark.svg" alt="nightshift" width="420">
+
+<br>
 
 **Tickets in. One model builds, another reviews. You only decide what a human must.**
 
+[![npm](https://img.shields.io/npm/v/@catchmeif404/nightshift?color=2f6beb&labelColor=black&logo=npm&style=flat-square)](https://www.npmjs.com/package/@catchmeif404/nightshift)
+[![npm downloads](https://img.shields.io/npm/dt/@catchmeif404/nightshift?color=3fb950&labelColor=black&label=downloads&style=flat-square)](https://www.npmjs.com/package/@catchmeif404/nightshift)
+[![GitHub Stars](https://img.shields.io/github/stars/catchmeif404/nightshift?color=e3b341&labelColor=black&style=flat-square)](https://github.com/catchmeif404/nightshift/stargazers)
+[![Node](https://img.shields.io/node/v/@catchmeif404/nightshift?color=white&labelColor=black&logo=nodedotjs&style=flat-square)](docs/INSTALL.md)
+[![License](https://img.shields.io/github/license/catchmeif404/nightshift?color=white&labelColor=black&style=flat-square)](LICENSE)
+
 [English](README.md) | [한국어](README.ko.md)
 
-![A real run, replayed: a ticket goes in, Claude Code sonnet builds it on its own branch, opus reviews it, catches that the new slugify mangled non-ASCII text, fixes it, and leaves the branch for you to merge.](docs/images/demo.gif)
+<br>
+
+<img src="docs/images/demo.gif" alt="A real run, replayed: a ticket goes in, Claude Code sonnet builds it on its own branch, opus reviews it, catches that the new slugify mangled non-ASCII text, fixes it, and leaves the branch for you to merge." width="900">
 
 <sub>A real run, replayed with the waiting cut out: sonnet built it in 24 seconds, opus reviewed it in 33 and caught a bug the builder missed.</sub>
+
+</div>
+
+<br>
+
+## Install
+
+```sh
+npm install -g @catchmeif404/nightshift
+nightshift init --repo-path ~/code/my-app
+nightshift add "Add a slugify helper" --project my-app
+nightshift run
+```
+
+[Getting started in 10 minutes →](docs/GETTING-STARTED.md)
+
+<br>
+
+## What it is
 
 nightshift is an unattended dev queue that runs on your own machine. Put tickets on a board (a folder of markdown
 files, GitHub Issues or Notion) and walk away. For each ticket nightshift starts a developer run of a coding agent
@@ -169,6 +200,27 @@ A ticket of kind `release` runs alone, as one run of the reviewer model that fol
 nightshift runs coding agents unattended with permission to edit files and run commands in a worktree. Run it on a
 machine and repositories you are fine with that on, keep `autoMerge` off until you trust it, and keep
 `trustedAuthors` short. Check that unattended use fits the terms of the agent service you use.
+
+## Built on
+
+<table>
+<tr><td width="200"><b><a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a></b><br>by Anthropic</td><td>The default developer (<code>sonnet</code>) and reviewer (<code>opus</code>).</td></tr>
+<tr><td width="200"><b><a href="https://github.com/openai/codex">Codex CLI</a></b><br>by OpenAI</td><td>Either role, mixed with Claude Code as you like.</td></tr>
+<tr><td width="200"><b><a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a></b><br>by Nous Research</td><td>Runs the PM bot and the other teammates in <a href="#how-we-run-it-a-product-team-on-one-mac">How we run it</a>. Not needed to use nightshift.</td></tr>
+</table>
+
+nightshift is an independent project and is not affiliated with Anthropic, OpenAI or Nous Research.
+
+## Be with us
+
+> [!TIP]
+> It's early (0.1). Trying it and telling us where it breaks is the most useful thing you can do right now.
+>
+> <table>
+> <tr><td width="140">[![Open an issue](https://img.shields.io/github/issues/catchmeif404/nightshift?label=Issues&logo=github&style=flat-square&labelColor=black&color=2f6beb)](https://github.com/catchmeif404/nightshift/issues)</td><td>Where it breaks, what you need, how you run it. Every issue is read.</td></tr>
+> <tr><td width="140">[![Star](https://img.shields.io/github/stars/catchmeif404/nightshift?label=Star&logo=github&style=flat-square&labelColor=black&color=e3b341)](https://github.com/catchmeif404/nightshift)</td><td>If it's useful, a star helps others find it.</td></tr>
+> <tr><td width="140">[![Follow on GitHub](https://img.shields.io/github/followers/catchmeif404?label=Follow&logo=github&style=flat-square&labelColor=black&color=24292f)](https://github.com/catchmeif404)</td><td>Releases and our other projects from <a href="https://github.com/catchmeif404">catchmeif404</a>.</td></tr>
+> </table>
 
 ## License
 

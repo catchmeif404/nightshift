@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="128" viewBox="0 0 500 128" role="img" aria-label="nightshift">
+<style>
+.word{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Helvetica,Arial,sans-serif;font-weight:800;font-size:84px;letter-spacing:-3px;fill:#1f2328}
+.moon{fill:#2f6beb}
+.star{fill:#2f6beb;opacity:.55}
+@media (prefers-color-scheme: dark){.word{fill:#f0f3f8}.moon{fill:#4c8dff}.star{fill:#4c8dff}}
+</style>
+<defs>
+  <mask id="crescent">
+    <rect x="0" y="0" width="120" height="128" fill="#fff"/>
+    <circle cx="72" cy="46" r="38" fill="#000"/>
+  </mask>
+</defs>
+<circle class="moon" cx="56" cy="64" r="44" mask="url(#crescent)"/>
+<circle class="star" cx="98" cy="26" r="4"/>
+<circle class="star" cx="112" cy="50" r="2.5"/>
+<text class="word" x="128" y="94">nightshift</text>
+</svg>
