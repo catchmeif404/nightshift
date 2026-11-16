@@ -54,11 +54,11 @@ What makes it hold up when nobody is watching:
 
 nightshift builds our own products at catchmeif404. The owner asks for work in Telegram; a PM bot on
 [Hermes Agent](https://github.com/NousResearch/hermes-agent) files it as a ticket in Notion. nightshift runs as a launchd service that looks for
-work every 2 minutes (a Notion hook also starts it right away); it reads Notion through a small command-board script, has Claude Code `sonnet` build and
-`opus` review, merges what passed, runs a post-merge check and wakes the PM bot to report back. If it ever misbehaves we can go
-back to the old bash runner: uninstall the service, remove a switch file, resume the old timer.
+work every 2 minutes, and a Notion hook kicks that service the moment a ticket is filed. It reads Notion through a small command-board script, has Claude Code `sonnet` build and
+`opus` review, merges what passed, runs a post-merge check and wakes the PM bot to report back. It replaced the bash runner we
+used before; `nightshift service uninstall` stops all code work.
 
-![How catchmeif404 runs nightshift: owner, PM bot on Hermes, Notion ticket DB, a command-board script, the entry script with its switch, nightshift, Claude Code sonnet building and opus reviewing, the merged pull request and the post-merge hook.](docs/images/usage.en.svg)
+![How catchmeif404 runs nightshift: owner, PM bot on Hermes, Notion ticket DB, a command-board script, the nightshift service, nightshift, Claude Code sonnet building and opus reviewing, the merged pull request and the post-merge hook.](docs/images/usage.en.svg)
 
 ## Quick start
 
