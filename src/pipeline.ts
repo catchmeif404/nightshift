@@ -6,6 +6,7 @@ import { Config, ProjectConfig, hasProject, projectNamed } from "./config.js";
 import {
   BuildResult,
   GitHubState,
+  NotifyEvent,
   PublishMode,
   ReleaseResult,
   SessionMode,
@@ -21,6 +22,7 @@ import { Brand } from "./brand.js";
 import { exec, run } from "./exec.js";
 import { GitError, Worktree, changedFiles, ensureWorktree, gateHits, gitCommonDir, mergePullRequest, pullRequestState, removeWorktree, worktreeFor } from "./git.js";
 import { Logger, clip, mask, oneLine } from "./log.js";
+import { sendNotification, wants } from "./notify.js";
 import { Messages, messagesFor } from "./messages.js";
 import { RESUME_PROMPT, StageContext, buildPrompt, releasePrompt, reviewPrompt } from "./prompts.js";
 import { Slots, StatePaths, TicketState, UsageLimits } from "./state.js";
@@ -76,6 +78,19 @@ export function parseVerdict(line: string): Verdict[] {
   return Object.values(Verdict).filter((v) => v === word);
 }
 
+// Which built-in notification a settled ticket triggers; reasons not listed send nothing.
+const NOTICE_EVENTS: Partial<Record<SettleReason, NotifyEvent>> = {
+  [SettleReason.ReadyToMerge]: NotifyEvent.Review,
+  [SettleReason.Merged]: NotifyEvent.Merged,
+  [SettleReason.Accepted]: NotifyEvent.Merged,
+  [SettleReason.Released]: NotifyEvent.Merged,
+  [SettleReason.Blocked]: NotifyEvent.Blocked,
+  [SettleReason.NeedsHuman]: NotifyEvent.Blocked,
+  [SettleReason.CutOff]: NotifyEvent.Blocked,
+  [SettleReason.MergeFailed]: NotifyEvent.Blocked,
+  [SettleReason.Misconfigured]: NotifyEvent.Blocked,
+};
+
 function readRules(project: ProjectConfig): string {
   return project.rulesFile !== "" && existsSync(project.rulesFile) ? readFileSync(project.rulesFile, "utf8").trim() : "";
 }
@@ -111,8 +126,21 @@ export class TicketPipeline {
   private async settle(status: TicketStatus, reason: SettleReason, note: string): Promise<TicketOutcome> {
     await this.r.board.setStatus(this.ticket.id, status, reason, clip(mask(note), 3000));
     this.log(`-> ${status} (${reason}): ${clip(oneLine(note), 200)}`);
+    const link = this.state.firstLine(StateFile.Result);
     this.state.clearStage();
+    await this.announce(reason, link);
     return TicketOutcome.Settled;
+  }
+
+  // The built-in Telegram / Slack / Discord message. A failure is only logged: the ticket has already moved.
+  private async announce(reason: SettleReason, link: string): Promise<void> {
+    const event = NOTICE_EVENTS[reason];
+    const cfg = this.r.config.notify;
+    if (event === undefined || !wants(cfg, event)) return;
+    const lines = [this.say.notice(event, this.ticket.id, clip(oneLine(this.ticket.title), 120))];
+    if (/^https:\/\/\S+$/.test(link)) lines.push(link);
+    const failure = await sendNotification(cfg, lines.join("\n"));
+    if (failure !== "") this.r.log.line(`${this.ticket.id} notify (${cfg.service}) failed: ${failure}`);
   }
 
   private async notify(message: string): Promise<void> {

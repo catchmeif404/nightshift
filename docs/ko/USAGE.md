@@ -140,6 +140,19 @@ nightshift ui --root ~/my-queue          # http://127.0.0.1:4404/ 를 출력합�
 `*`와 `?`는 폴더 이름 안에서만, `**`는 폴더를 넘어 맞습니다(`dir/**`은 `dir` 아래 전부, `**/*.sql`은 모든 `.sql`).
 git이 바뀐 파일을 못 가져오면 통과시키지 않고 사람에게 넘깁니다. `doctor`는 빈 글롭을 알려 줍니다.
 
+**채팅 알림**(`notify`, 기본 꺼짐): 스크립트 없이 nightshift가 직접 Telegram, Slack, Discord로 메시지를 보냅니다.
+
+```json
+{ "notify": { "service": "telegram", "chatId": "123456", "botTokenEnv": "NIGHTSHIFT_TELEGRAM_BOT_TOKEN", "events": ["review", "blocked", "merged"] } }
+```
+
+- `service`: `telegram`, `slack`, `discord` 중 하나(기본 `none` = 꺼짐).
+- `events`(기본 셋 다): `review`(검토 통과, 머지 대기), `blocked`(막힘·사람 결정 필요·끊김·머지 실패·설정 오류로 멈춤), `merged`(머지됨, 문서 통과, 출시 끝).
+- 비밀값은 설정에 넣지 않고 환경변수 **이름**만 적습니다. Telegram은 `botTokenEnv`(기본 `NIGHTSHIFT_TELEGRAM_BOT_TOKEN`)와 `chatId`(다른 API 주소가 필요하면 `apiUrl`), Slack·Discord는 `webhookUrlEnv`(수신 웹훅 URL, 기본 `NIGHTSHIFT_SLACK_WEBHOOK_URL` / `NIGHTSHIFT_DISCORD_WEBHOOK_URL`)입니다. 변수는 러너가 도는 환경에서 내보내 두세요(설치한 서비스라면 그 서비스 환경).
+- 메시지는 `language` 설정에 맞춘 한두 줄입니다: `<티켓> <제목>: <무슨 일>`, 그리고 PR이 있으면 PR 링크.
+- 전송이 실패해도(네트워크, HTTP 오류, 변수 없음) 로그에만 남고 티켓과 실행은 계속됩니다. 변수가 없으면 `doctor`가 경고합니다.
+- `notifyCommand`와 `workerDoneCommand`는 그대로 함께 동작합니다.
+
 **출시 티켓**(`add`의 `--release`, 또는 `nightshift:release` 라벨)은 혼자 돌며, 규칙 파일을 따르는 검토 모델 실행 한 번입니다.
 규칙 파일에 출시 절차(태그, 배포, 실서비스 확인 방법)를 적어 두세요. 실행은 `DONE`이나 `BLOCKED`로 답합니다.
 
