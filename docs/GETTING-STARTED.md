@@ -40,6 +40,22 @@ nightshift doctor
 The project is named after the folder (`demo-app`). With the local board, finished work is left on a local branch
 for you to merge (`"publish": "branch"`), so nothing is pushed anywhere.
 
+## Optional: switch on more at install time
+
+`init` can turn on the ticket form, gated paths and chat notifications in one go. Each is off unless you pass the flag,
+and the same three can be edited later in the console (`nightshift ui`):
+
+```sh
+nightshift init --repo-path ~/code/demo-app \
+  --sections deliverable,verify,out-of-scope \
+  --gate-paths default \
+  --notify telegram --notify-chat-id=-1001234567
+```
+
+- `--sections`: require a `Deliverable:` / `Check:` / `Out of scope:` line in every ticket ([ticket form](USAGE.md)).
+- `--gate-paths`: `default` (`db/migration/**`, `**/*.sql`, `.github/workflows/**`) or your own comma-separated globs; a change touching one waits for you.
+- `--notify telegram|slack|discord`: Telegram also needs `--notify-chat-id` (write `=` so a negative id is not read as a flag). Only the **name** of the environment variable goes in the file; export it where the runner runs.
+
 ## 3. Write a ticket
 
 ```sh

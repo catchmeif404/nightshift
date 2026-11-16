@@ -4,9 +4,11 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { boardLabels } from "./board/github.js";
 import { LocalMarkdownBoard } from "./board/localMarkdown.js";
 import { Brand } from "./brand.js";
-import { Config, configPath, hasProject, loadConfig } from "./config.js";
+import { Config, ConfigError, configPath, hasProject, loadConfig } from "./config.js";
 import { dispatch, missingSections, openRunner, sectionsTemplate, work } from "./dispatch.js";
-import { AgentType, BoardType, CheckLevel, NotifyService, PublishMode, TicketKind, TicketStatus } from "./enums.js";
+import {
+  AgentType, BoardType, CheckLevel, DEFAULT_GATE_PATHS, GATE_PATHS_DEFAULT_KEYWORD, NotifyService, PublishMode, SECTION_PRESET_LABELS, SectionPreset, TicketKind, TicketStatus,
+} from "./enums.js";
 import { run } from "./exec.js";
 import { missingEnv } from "./notify.js";
 import { statePaths } from "./state.js";
@@ -28,6 +30,37 @@ export interface InitOptions {
   repoPath: string;
   // GitHub logins whose issues may run. Empty: the signed-in gh user.
   trusted: string[];
+  // ticketSections labels to write. Empty: off.
+  sections: string[];
+  // gatePaths globs to write. Empty: off.
+  gatePaths: string[];
+  // Built-in chat notifications. None: off.
+  notify: NotifyService;
+  // Telegram only: the chat to write to.
+  notifyChatId: string;
+}
+
+// Turns the --sections, --gate-paths and --notify values into InitOptions parts. Throws on a value it cannot use.
+export function initExtras(sections: string, gatePaths: string, notify: string, notifyChatId: string): Pick<InitOptions, "sections" | "gatePaths" | "notify" | "notifyChatId"> {
+  const split = (v: string): string[] => v.split(",").map((x) => x.trim()).filter((x) => x !== "");
+  const presets = split(sections).map((name) => {
+    const preset = Object.values(SectionPreset).find((p) => p === name);
+    if (preset === undefined) throw new ConfigError(`--sections: unknown "${name}" (use ${Object.values(SectionPreset).join(", ")})`);
+    return preset;
+  });
+  const globs = split(gatePaths).flatMap((g) => (g === GATE_PATHS_DEFAULT_KEYWORD ? [...DEFAULT_GATE_PATHS] : [g]));
+  const service = notify === "" ? NotifyService.None : Object.values(NotifyService).find((n) => n === notify);
+  if (service === undefined || (notify !== "" && service === NotifyService.None)) {
+    throw new ConfigError(`--notify must be one of: ${Object.values(NotifyService).filter((n) => n !== NotifyService.None).join(", ")}`);
+  }
+  if (service === NotifyService.Telegram && notifyChatId === "") throw new ConfigError("--notify telegram needs --notify-chat-id <chat id>");
+  if (service !== NotifyService.Telegram && notifyChatId !== "") throw new ConfigError("--notify-chat-id is only for --notify telegram");
+  return {
+    sections: presets.filter((p, i) => presets.indexOf(p) === i).map((p) => SECTION_PRESET_LABELS[p]),
+    gatePaths: globs.filter((g, i) => globs.indexOf(g) === i),
+    notify: service,
+    notifyChatId,
+  };
 }
 
 function initProjectName(options: InitOptions): string {
@@ -54,6 +87,12 @@ function initConfig(options: InitOptions): object {
     maxSlots: 3,
     maxRework: 1,
     autoMerge: false,
+    // Only written when asked for, so a plain init stays as before.
+    ...(options.sections.length > 0 ? { ticketSections: options.sections } : {}),
+    ...(options.gatePaths.length > 0 ? { gatePaths: options.gatePaths } : {}),
+    ...(options.notify === NotifyService.None
+      ? {}
+      : { notify: options.notify === NotifyService.Telegram ? { service: options.notify, chatId: options.notifyChatId } : { service: options.notify } }),
   };
 }
 
@@ -77,6 +116,11 @@ export async function init(root: string, given: InitOptions): Promise<void> {
   } else {
     writeFileSync(path, `${JSON.stringify(initConfig(options), null, 2)}\n`);
     console.log(`wrote ${path}`);
+    if (options.notify !== NotifyService.None) {
+      const config = loadConfig(root);
+      const [name] = missingEnv(config.notify, {});
+      if (name !== undefined) console.log(`notify ${options.notify}: export ${name} where the runner runs (the secret never goes in ${Brand.configFile}).`);
+    }
   }
   const rules = join(root, RULES_FILE);
   if (!existsSync(rules)) {

@@ -4,7 +4,7 @@ import { isAbsolute, relative, resolve, sep } from "node:path";
 import { Brand } from "../brand.js";
 import { Check, configChecks } from "../commands.js";
 import { Config, configPath, inside, parseConfig } from "../config.js";
-import { AgentType, BoardType, CheckLevel } from "../enums.js";
+import { AgentType, BoardType, CheckLevel, NotifyService } from "../enums.js";
 import { clip, mask } from "../log.js";
 
 type JsonObject = Record<string, unknown>;
@@ -21,6 +21,7 @@ const LOGIN_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:\[bot\])?$/;
 const SECRET_KEY = /token|secret|passw(or)?d|api[_-]?key|credential|authorization/i;
 // Names of where a secret lives, not secrets themselves.
 const REFERENCE_KEYS = new Set(["tokenEnv", "tokenFile"]);
+const CHAT_ID_PATTERN = /^(-?\d{1,20}|@[A-Za-z0-9_]{5,32})$/;
 const KEPT = "•••••• (kept)";
 
 export interface AgentForm {
@@ -34,6 +35,10 @@ export interface SettingsForm {
   builder: AgentForm;
   reviewer: AgentForm;
   maxSlots: number;
+  ticketSections: string[];
+  gatePaths: string[];
+  // The secret is never here: only where to send. The environment variable names stay in the file as they are.
+  notify: { service: NotifyService; chatId: string };
 }
 
 export interface Issue {
@@ -123,12 +128,19 @@ function formFrom(raw: JsonObject, defaults: Config): SettingsForm {
     builder: agentForm(raw.builder, { type: defaults.builder.type, model: defaults.builder.model }),
     reviewer: agentForm(raw.reviewer, { type: defaults.reviewer.type, model: defaults.reviewer.model }),
     maxSlots: typeof raw.maxSlots === "number" ? raw.maxSlots : defaults.maxSlots,
+    ticketSections: texts(raw.ticketSections, []),
+    gatePaths: texts(raw.gatePaths, []),
+    notify: {
+      service: Object.values(NotifyService).find((n) => n === obj(raw.notify).service) ?? NotifyService.None,
+      chatId: text(obj(raw.notify).chatId, ""),
+    },
   };
 }
 
 const EDITED_PATHS = new Set([
   "board.type", "board.dir", "board.repos", "board.trustedAuthors",
   "builder.type", "builder.model", "reviewer.type", "reviewer.model", "maxSlots",
+  "ticketSections", "gatePaths", "notify.service", "notify.chatId",
 ]);
 
 function preservedFields(value: unknown, path: string, out: PreservedField[]): void {
@@ -231,6 +243,19 @@ export function validateEdit(edit: SettingsForm, current: SettingsForm, root: st
   if (b.type === BoardType.GitHub && repos.length === 0) issues.push(issue(CheckLevel.Fail, "board.repos", "a GitHub board needs at least one repository"));
   if (b.type === BoardType.GitHub && logins.length === 0) issues.push(issue(CheckLevel.Warn, "board.trustedAuthors", "empty: no issue will run"));
 
+  if (!Object.values(NotifyService).includes(edit.notify.service)) {
+    issues.push(issue(CheckLevel.Fail, "notify.service", `must be one of: ${Object.values(NotifyService).join(", ")}`));
+  }
+  if (typeof edit.notify.chatId !== "string" || (edit.notify.chatId !== current.notify.chatId && edit.notify.chatId !== "" && !CHAT_ID_PATTERN.test(edit.notify.chatId))) {
+    issues.push(issue(CheckLevel.Fail, "notify.chatId", "a Telegram chat id (a number, e.g. -1001234567890) or @channelname"));
+  }
+  if (!Array.isArray(edit.ticketSections) || edit.ticketSections.some((l) => typeof l !== "string")) {
+    issues.push(issue(CheckLevel.Fail, "ticketSections", "labels, one per line"));
+  }
+  if (!Array.isArray(edit.gatePaths) || edit.gatePaths.some((g) => typeof g !== "string")) {
+    issues.push(issue(CheckLevel.Fail, "gatePaths", "globs, one per line"));
+  }
+
   for (const p of edit.projects) {
     const field = `projects.${p.name}.repoPath`;
     const before = current.projects.find((c) => c.name === p.name);
@@ -282,6 +307,10 @@ export function applyEdit(raw: JsonObject, edit: SettingsForm, current: Settings
     if (edit[key].model !== current[key].model) set([key, "model"], edit[key].model);
   }
   if (edit.maxSlots !== current.maxSlots) set(["maxSlots"], edit.maxSlots);
+  if (!sameList(edit.ticketSections, current.ticketSections)) set(["ticketSections"], edit.ticketSections);
+  if (!sameList(edit.gatePaths, current.gatePaths)) set(["gatePaths"], edit.gatePaths);
+  if (edit.notify.service !== current.notify.service) set(["notify", "service"], edit.notify.service);
+  if (edit.notify.chatId !== current.notify.chatId) set(["notify", "chatId"], edit.notify.chatId);
   return { raw: next, changed };
 }
 

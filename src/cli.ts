@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { Brand } from "./brand.js";
-import { add, daemon, doctor, init, logs, runOnce, status, workSlot } from "./commands.js";
+import { add, daemon, doctor, init, initExtras, logs, runOnce, status, workSlot } from "./commands.js";
 import { ConfigError, loadConfig } from "./config.js";
 import { BoardType, CliCommand, ServiceAction, TicketKind } from "./enums.js";
 import { DEFAULT_PORT, startUi } from "./ui/server.js";
@@ -14,6 +14,8 @@ const HELP = `${Brand.name}: tickets in, one model builds, another reviews, you 
 Usage: ${Brand.name} <command> [options]
 
   init [--board local-md|github] [--repo owner/name] [--repo-path .] [--trusted a,b]
+       [--sections deliverable,verify,out-of-scope] [--gate-paths default|glob,glob]
+       [--notify telegram|slack|discord] [--notify-chat-id=<id>  (telegram; use = for a negative id)]
                       write ${Brand.configFile} and a rules file (github: also create the labels)
   add "<title>" --project <name> [--body "..."] [--release]
                       add a ticket to the local markdown board
@@ -44,6 +46,10 @@ async function main(argv: string[]): Promise<number> {
       repo: { type: "string", default: "" },
       "repo-path": { type: "string", default: "." },
       trusted: { type: "string", default: "" },
+      sections: { type: "string", default: "" },
+      "gate-paths": { type: "string", default: "" },
+      notify: { type: "string", default: "" },
+      "notify-chat-id": { type: "string", default: "" },
       follow: { type: "boolean", short: "f", default: false },
       lines: { type: "string", short: "n", default: "40" },
       project: { type: "string", default: "" },
@@ -66,7 +72,8 @@ async function main(argv: string[]): Promise<number> {
       if (board === BoardType.GitHub && values.repo === "") throw new ConfigError("--repo owner/name is required for --board github");
       const trusted = values.trusted.split(",").map((t) => t.trim()).filter((t) => t !== "");
       // The repo path is where the user is now, not relative to --root: store it absolute.
-      await init(root, { board, repo: values.repo, repoPath: resolve(values["repo-path"]), trusted });
+      const extras = initExtras(values.sections, values["gate-paths"], values.notify, values["notify-chat-id"].trim());
+      await init(root, { board, repo: values.repo, repoPath: resolve(values["repo-path"]), trusted, ...extras });
       return 0;
     }
     case CliCommand.Add: {

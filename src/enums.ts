@@ -120,6 +120,23 @@ export enum NotifyEvent {
   Merged = "merged",
 }
 
+// Ready-made `ticketSections` for `init --sections`: the preset name on the command line and the label it writes.
+export enum SectionPreset {
+  Deliverable = "deliverable",
+  Verify = "verify",
+  OutOfScope = "out-of-scope",
+}
+
+export const SECTION_PRESET_LABELS: Record<SectionPreset, string> = {
+  [SectionPreset.Deliverable]: "Deliverable",
+  [SectionPreset.Verify]: "Check",
+  [SectionPreset.OutOfScope]: "Out of scope",
+};
+
+// `init --gate-paths default` writes these: changes that should always reach a human.
+export const DEFAULT_GATE_PATHS: readonly string[] = ["db/migration/**", "**/*.sql", ".github/workflows/**"];
+export const GATE_PATHS_DEFAULT_KEYWORD = "default";
+
 export enum SessionMode {
   New = "new",
   Resume = "resume",
