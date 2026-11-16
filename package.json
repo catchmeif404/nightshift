@@ -30,7 +30,9 @@
     "dist/src",
     "README.md",
     "README.ko.md",
-    "docs",
+    "docs/*.md",
+    "docs/ko",
+    "docs/images/*.svg",
     "LICENSE"
   ],
   "engines": {

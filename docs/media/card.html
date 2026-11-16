@@ -1,0 +1,86 @@
+<!doctype html>
+<!-- The 1280x640 social card (GitHub social preview, X, Show HN). Rendered by: node docs/media/render.mjs card -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>nightshift card</title>
+<style>
+  :root { --navy: #0e1522; --ink: #f0f3f8; --dim: #93a0b4; --blue: #2f6beb; --blue2: #7aa7ff; --green: #3fb950;
+          --amber: #e3a008; --line: #3a4660; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1280px; height: 640px; overflow: hidden; background: var(--navy); color: var(--ink);
+               font-family: -apple-system, "SF Pro Display", "Segoe UI", "Apple SD Gothic Neo", sans-serif; }
+  .glow { position: absolute; inset: 0; background: radial-gradient(900px 500px at 85% 20%, rgba(47,107,235,.22), transparent 60%); }
+  .left { position: absolute; left: 80px; top: 92px; width: 600px; }
+  .kicker { font: 600 18px/1 "SF Mono", Menlo, monospace; color: var(--blue2); letter-spacing: .04em; }
+  h1 { margin: 22px 0 0; font-size: 104px; line-height: 1; font-weight: 800; letter-spacing: -.035em; }
+  .tag { margin-top: 30px; font-size: 31px; line-height: 1.32; font-weight: 600; color: var(--ink); }
+  .tag span { color: var(--dim); font-weight: 500; }
+  .install { position: absolute; left: 80px; bottom: 84px; padding: 16px 22px; border-radius: 12px; background: #050a12;
+             border: 1px solid var(--line); font: 500 22px/1 "SF Mono", Menlo, monospace; color: var(--ink); }
+  .install b { color: var(--green); font-weight: 600; }
+  .foot { position: absolute; left: 80px; bottom: 40px; font-size: 17px; color: var(--dim); }
+  .flow { position: absolute; left: 640px; top: 141px; width: 380px; }
+  .node { position: relative; height: 70px; border-radius: 14px; border: 1.5px solid var(--line); background: #131c2d;
+          display: flex; align-items: center; padding: 0 22px; gap: 14px; font-size: 22px; font-weight: 600; }
+  .node small { display: block; font-size: 15px; color: var(--dim); font-weight: 500; margin-top: 3px; }
+  .node .n { width: 30px; height: 30px; border-radius: 50%; background: #1d2a44; color: var(--blue2); font-size: 15px;
+             display: flex; align-items: center; justify-content: center; flex: none; }
+  .node.hot { border-color: var(--blue); background: #15254a; }
+  .node.pass { border-color: var(--green); }
+  .arrow { height: 26px; margin-left: 36px; border-left: 2px solid var(--line); position: relative; }
+  .arrow::after { content: ""; position: absolute; left: -7px; bottom: -2px; border: 6px solid transparent; border-top: 8px solid var(--line); }
+  .side { position: absolute; left: 396px; font-size: 15px; font-weight: 600; padding: 7px 11px; border-radius: 8px;
+          white-space: nowrap; background: var(--navy); }
+  .rework { top: 160px; color: var(--amber); border: 1px dashed var(--amber); }
+  .human { top: 212px; color: #ff9b8f; border: 1px dashed #ff9b8f; }
+  .ko .kicker { font-family: -apple-system, "Apple SD Gothic Neo", sans-serif; letter-spacing: 0; font-size: 19px; }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="left">
+  <div class="kicker" id="kicker">AN UNATTENDED DEV QUEUE</div>
+  <h1>nightshift</h1>
+  <div class="tag" id="tag"></div>
+</div>
+<div class="install">$ <b>npm i -g</b> @catchmeif404/nightshift</div>
+<div class="foot" id="foot"></div>
+<div class="flow">
+  <div class="node"><span class="n">1</span><div id="n1"></div></div>
+  <div class="arrow"></div>
+  <div class="node hot"><span class="n">2</span><div id="n2"></div></div>
+  <div class="arrow"></div>
+  <div class="node hot"><span class="n">3</span><div id="n3"></div></div>
+  <div class="arrow"></div>
+  <div class="node pass"><span class="n">4</span><div id="n4"></div></div>
+  <div class="side rework" id="rework"></div>
+  <div class="side human" id="human"></div>
+</div>
+<script>
+const KO = new URLSearchParams(location.search).get("lang") === "ko";
+const T = KO ? {
+  kicker: "사람 없이 도는 AI 개발 큐",
+  tag: "티켓을 올려 두면 한 모델이 만들고,<br>다른 모델이 검토합니다.<br><span>사람은 사람이 정할 일만.</span>",
+  foot: "Claude Code · Codex · GitHub Issues · Notion · 로컬 마크다운 · MIT",
+  n1: "티켓<small>GitHub Issues · Notion · 마크다운</small>",
+  n2: "개발<small>Claude Code sonnet 또는 Codex, 자기 브랜치</small>",
+  n3: "검토<small>다른 모델이 CTO처럼, 테스트 직접 실행</small>",
+  n4: "PASS<small>머지는 내가, 또는 autoMerge</small>",
+  rework: "↺ 재작업 1회", human: "돈·법률·공개는 → 사람에게",
+} : {
+  kicker: "AN UNATTENDED DEV QUEUE",
+  tag: "Tickets in. One model builds,<br>another reviews.<br><span>You only decide what a human must.</span>",
+  foot: "Claude Code · Codex · GitHub Issues · Notion · local markdown · MIT",
+  n1: "Ticket<small>GitHub Issues · Notion · markdown</small>",
+  n2: "Build<small>Claude Code sonnet or Codex, own branch</small>",
+  n3: "Review<small>another model, as a CTO; runs the tests</small>",
+  n4: "PASS<small>you merge, or autoMerge</small>",
+  rework: "↺ one rework round", human: "money · legal · public → you",
+};
+for (const [id, html] of Object.entries(T)) document.getElementById(id).innerHTML = html;
+document.documentElement.lang = KO ? "ko" : "en";
+if (KO) document.body.classList.add("ko");
+</script>
+</body>
+</html>
