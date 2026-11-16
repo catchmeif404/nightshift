@@ -66,6 +66,9 @@ test("add fills an empty form when sections are configured", () => {
   const box = sandbox({ ticketSections: LABELS });
   const id = add(box.config, "Do", "demo", TicketKind.Build, "");
   assert.match(ticketFile(box, id), /Deliverable:\n\nCheck:\n\nOut of scope:/);
+  const filled = add(box.config, "Do", "demo", TicketKind.Build, "Deliverable: x\nCheck: y");
+  assert.match(ticketFile(box, filled), /Check: y\n\nOut of scope:/);
+  assert.doesNotMatch(ticketFile(box, filled), /Deliverable:\n/);
   const plain = sandbox();
   assert.doesNotMatch(ticketFile(plain, add(plain.config, "Do", "demo", TicketKind.Build, "")), /:\n/);
 });
