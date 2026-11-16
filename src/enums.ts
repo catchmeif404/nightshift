@@ -105,6 +105,21 @@ export enum NoteLanguage {
   Korean = "ko",
 }
 
+// Where the built-in notifier sends. None: off.
+export enum NotifyService {
+  None = "none",
+  Telegram = "telegram",
+  Slack = "slack",
+  Discord = "discord",
+}
+
+// What the built-in notifier reports: a ticket ready for you (review), stopped (blocked) or merged.
+export enum NotifyEvent {
+  Review = "review",
+  Blocked = "blocked",
+  Merged = "merged",
+}
+
 export enum SessionMode {
   New = "new",
   Resume = "resume",

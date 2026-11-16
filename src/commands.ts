@@ -6,8 +6,9 @@ import { LocalMarkdownBoard } from "./board/localMarkdown.js";
 import { Brand } from "./brand.js";
 import { Config, configPath, hasProject, loadConfig } from "./config.js";
 import { dispatch, missingSections, openRunner, sectionsTemplate, work } from "./dispatch.js";
-import { AgentType, BoardType, CheckLevel, PublishMode, TicketKind, TicketStatus } from "./enums.js";
+import { AgentType, BoardType, CheckLevel, NotifyService, PublishMode, TicketKind, TicketStatus } from "./enums.js";
 import { run } from "./exec.js";
+import { missingEnv } from "./notify.js";
 import { statePaths } from "./state.js";
 
 export const RULES_FILE = `${Brand.name}.rules.md`;
@@ -260,6 +261,15 @@ export async function configChecks(config: Config, root: string): Promise<Check[
     if (p.rulesFile !== "" && !existsSync(p.rulesFile)) {
       checks.push({ level: CheckLevel.Warn, what: `project ${p.name}: rules file ${p.rulesFile} not found` });
     }
+  }
+  if (config.notify.service !== NotifyService.None) {
+    const missing = missingEnv(config.notify);
+    checks.push({
+      level: missing.length === 0 ? CheckLevel.Ok : CheckLevel.Warn,
+      what: missing.length === 0
+        ? `notify ${config.notify.service}: environment variable is set`
+        : `notify ${config.notify.service}: environment variable ${missing.join(", ")} is not set, so no message will be sent`,
+    });
   }
   if (config.autoMerge) checks.push({ level: CheckLevel.Warn, what: "autoMerge is on: passed pull requests merge without you" });
   return checks;

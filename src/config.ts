@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import { Brand } from "./brand.js";
 import { NotionBoardConfig } from "./board/notion.js";
-import { AgentType, BoardType, CodexSandbox, HumanGate, NoteLanguage, PublishMode, TicketStatus } from "./enums.js";
+import { AgentType, BoardType, CodexSandbox, HumanGate, NoteLanguage, NotifyEvent, NotifyService, PublishMode, TicketStatus } from "./enums.js";
 
 export interface AgentConfig {
   type: AgentType;
@@ -41,6 +41,19 @@ export interface BoardConfig {
   notion: NotionBoardConfig;
 }
 
+export interface NotifyConfig {
+  service: NotifyService;
+  events: NotifyEvent[];
+  // Telegram: name of the environment variable holding the bot token (the secret itself never goes in the config).
+  botTokenEnv: string;
+  // Telegram: the chat to write to. Not a secret.
+  chatId: string;
+  // Telegram: API base URL.
+  apiUrl: string;
+  // Slack / Discord: name of the environment variable holding the incoming-webhook URL.
+  webhookUrlEnv: string;
+}
+
 export interface ToolPaths {
   git: string;
   gh: string;
@@ -71,6 +84,8 @@ export interface Config {
   notifyCommand: string;
   // Runs (through /bin/sh, in the config root) each time a worker finishes. Empty: none.
   workerDoneCommand: string;
+  // Built-in Telegram / Slack / Discord messages. service "none": off.
+  notify: NotifyConfig;
   // Language of the notes the runner writes on tickets.
   language: NoteLanguage;
   // Labels ("Label:" lines) every ticket body must carry before it runs. Empty: no check.
@@ -204,6 +219,37 @@ function gateGlobs(o: JsonObject): string[] {
   return globs;
 }
 
+const DEFAULT_WEBHOOK_ENV: Record<NotifyService, string> = {
+  [NotifyService.None]: "",
+  [NotifyService.Telegram]: "",
+  [NotifyService.Slack]: "NIGHTSHIFT_SLACK_WEBHOOK_URL",
+  [NotifyService.Discord]: "NIGHTSHIFT_DISCORD_WEBHOOK_URL",
+};
+
+function notifyConfig(o: JsonObject): NotifyConfig {
+  const where = "config.notify";
+  const service = oneOf(o, "service", Object.values(NotifyService), NotifyService.None, where);
+  const events = strList(o, "events", Object.values(NotifyEvent), where).map((e) => {
+    const match = Object.values(NotifyEvent).find((n) => n === e);
+    if (match === undefined) throw new ConfigError(`${where}.events: unknown event "${e}" (use ${Object.values(NotifyEvent).join(", ")})`);
+    return match;
+  });
+  const cfg: NotifyConfig = {
+    service,
+    events: events.filter((e, i) => events.indexOf(e) === i),
+    botTokenEnv: str(o, "botTokenEnv", "NIGHTSHIFT_TELEGRAM_BOT_TOKEN", where).trim(),
+    chatId: str(o, "chatId", "", where).trim(),
+    apiUrl: str(o, "apiUrl", "https://api.telegram.org", where).replace(/\/+$/, ""),
+    webhookUrlEnv: str(o, "webhookUrlEnv", DEFAULT_WEBHOOK_ENV[service], where).trim(),
+  };
+  if (service === NotifyService.Telegram && cfg.chatId === "") throw new ConfigError(`${where}.chatId is required for telegram`);
+  if (service === NotifyService.Telegram && cfg.botTokenEnv === "") throw new ConfigError(`${where}.botTokenEnv must name an environment variable`);
+  if ((service === NotifyService.Slack || service === NotifyService.Discord) && cfg.webhookUrlEnv === "") {
+    throw new ConfigError(`${where}.webhookUrlEnv must name an environment variable`);
+  }
+  return cfg;
+}
+
 export const DEFAULT_GATES: HumanGate[] = Object.values(HumanGate);
 
 export function parseConfig(raw: unknown, root: string): Config {
@@ -263,6 +309,7 @@ export function parseConfig(raw: unknown, root: string): Config {
     humanGates,
     notifyCommand: inside(root, str(top, "notifyCommand", "", "config")),
     workerDoneCommand: str(top, "workerDoneCommand", "", "config"),
+    notify: notifyConfig(optObject(top, "notify", "config")),
     language: oneOf(top, "language", Object.values(NoteLanguage), NoteLanguage.English, "config"),
     ticketSections: sectionLabels(top),
     gatePaths: gateGlobs(top),

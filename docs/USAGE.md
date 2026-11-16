@@ -149,6 +149,19 @@ lists the globs too. Globs match the whole repository-relative path: `*` and `?`
 crosses folders (`dir/**` is everything below `dir`, `**/*.sql` any `.sql` file). If git cannot list the changed files,
 the ticket is held for a human rather than passed. `doctor` reports an empty glob.
 
+**Chat notifications** (`notify`, default off): nightshift can message Telegram, Slack or Discord by itself, with no script.
+
+```json
+{ "notify": { "service": "telegram", "chatId": "123456", "botTokenEnv": "NIGHTSHIFT_TELEGRAM_BOT_TOKEN", "events": ["review", "blocked", "merged"] } }
+```
+
+- `service`: `telegram`, `slack` or `discord` (default `none` = off).
+- `events` (default all three): `review` (passed review, waiting for you to merge), `blocked` (stopped: blocked, needs a human, cut off, merge failed, misconfigured), `merged` (merged, document accepted, release done).
+- Secrets never go in the config, only the **name** of an environment variable: `botTokenEnv` for Telegram (default `NIGHTSHIFT_TELEGRAM_BOT_TOKEN`, plus `chatId`, and `apiUrl` if you need another API host), `webhookUrlEnv` for Slack and Discord (an incoming-webhook URL; defaults `NIGHTSHIFT_SLACK_WEBHOOK_URL` / `NIGHTSHIFT_DISCORD_WEBHOOK_URL`). Export the variable where the runner runs (for the installed service, in its environment).
+- The message is one or two lines in the `language` setting: `<ticket> <title>: <what happened>`, then the pull request link when the ticket has one.
+- A failed send (network, HTTP error, variable not set) is only written to the log; the ticket and the run carry on. `doctor` warns when the variable is missing.
+- `notifyCommand` and `workerDoneCommand` work as before, alongside this.
+
 **Release tickets** (`--release` on `add`, or the `nightshift:release` label) run alone, as one reviewer run that
 follows your rules file. Write the release steps there (tag, deploy, how to check it is live). The run answers `DONE`
 or `BLOCKED`.

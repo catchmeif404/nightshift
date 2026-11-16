@@ -1,4 +1,4 @@
-import { NoteLanguage, Stage } from "./enums.js";
+import { NoteLanguage, NotifyEvent, Stage } from "./enums.js";
 import type { GateHit } from "./git.js";
 
 // Every note the runner writes on a ticket, in each supported language.
@@ -26,6 +26,8 @@ export interface Messages {
   released(summary: string): string;
   releaseBlocked(reason: string): string;
   noReason: string;
+  // The first line of a Telegram / Slack / Discord message.
+  notice(event: NotifyEvent, id: string, title: string): string;
 }
 
 function hitList(hits: GateHit[]): string {
@@ -35,6 +37,18 @@ function hitList(hits: GateHit[]): string {
 function withReview(review: string, label: string): string {
   return review === "" ? "" : ` ${label}: ${review}`;
 }
+
+const NOTICE_EN: Record<NotifyEvent, string> = {
+  [NotifyEvent.Review]: "ready for your review",
+  [NotifyEvent.Blocked]: "stopped, needs you",
+  [NotifyEvent.Merged]: "merged",
+};
+
+const NOTICE_KO: Record<NotifyEvent, string> = {
+  [NotifyEvent.Review]: "검토 대기",
+  [NotifyEvent.Blocked]: "멈춤, 확인 필요",
+  [NotifyEvent.Merged]: "머지 완료",
+};
 
 const english: Messages = {
   claimed: "picked up by the developer run.",
@@ -60,6 +74,7 @@ const english: Messages = {
   released: (summary) => `release done: ${summary}`,
   releaseBlocked: (reason) => `release blocked: ${reason}`,
   noReason: "no reason given",
+  notice: (event, id, title) => `${id} ${title}: ${NOTICE_EN[event]}`,
 };
 
 const korean: Messages = {
@@ -86,6 +101,7 @@ const korean: Messages = {
   released: (summary) => `출시 처리 끝: ${summary}`,
   releaseBlocked: (reason) => `출시 막힘: ${reason}`,
   noReason: "사유 없음",
+  notice: (event, id, title) => `${id} ${title}: ${NOTICE_KO[event]}`,
 };
 
 export function messagesFor(language: NoteLanguage): Messages {
