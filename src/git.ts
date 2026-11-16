@@ -50,6 +50,13 @@ export async function ensureWorktree(config: Config, project: ProjectConfig, tre
   return tree;
 }
 
+// The repository's shared git folder (objects, refs, the worktree's index). A sandboxed agent must be able to write
+// there to commit from a worktree, since it lives outside the worktree folder.
+export async function gitCommonDir(config: Config, tree: Worktree): Promise<string> {
+  const result = await run(config.tools.git, ["rev-parse", "--path-format=absolute", "--git-common-dir"], tree.path);
+  return result.code === 0 ? result.stdout.trim() : "";
+}
+
 // Leaves a worktree with uncommitted changes alone; the branch always stays.
 export async function removeWorktree(config: Config, project: ProjectConfig, tree: Worktree): Promise<boolean> {
   if (!existsSync(tree.path)) return true;
