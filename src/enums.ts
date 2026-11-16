@@ -114,6 +114,8 @@ export enum StageOutcome {
   Finished = "finished",
   Failed = "failed",
   GaveUp = "gave-up",
+  // The agent's account hit its usage limit: not counted as a try; everything waits until it resets.
+  Limited = "limited",
 }
 
 export enum WorkerMode {

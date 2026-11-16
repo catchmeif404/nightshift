@@ -25,6 +25,7 @@ export interface StatePaths {
   worktrees: string;
   sessions: string;
   dispatchLock: string;
+  limits: string;
 }
 
 export function statePaths(stateDir: string): StatePaths {
@@ -36,8 +37,9 @@ export function statePaths(stateDir: string): StatePaths {
     worktrees: join(stateDir, "worktrees"),
     sessions: join(stateDir, "sessions"),
     dispatchLock: join(stateDir, "dispatch.lock"),
+    limits: join(stateDir, "limits"),
   };
-  for (const dir of [paths.root, paths.results, paths.slots, paths.worktrees, paths.sessions]) {
+  for (const dir of [paths.root, paths.results, paths.slots, paths.worktrees, paths.sessions, paths.limits]) {
     mkdirSync(dir, { recursive: true, mode: 0o700 });
   }
   return paths;
@@ -230,4 +232,40 @@ export async function acquireLock(dir: string, tries: number, waitMs: number): P
 
 export function releaseLock(dir: string): void {
   rmSync(dir, { recursive: true, force: true });
+}
+
+export interface ActiveLimit {
+  agent: string;
+  until: number;
+  message: string;
+}
+
+// Usage limits are per account, so they are kept per agent (claude-code, codex, ...), not per ticket.
+// One file per agent: "<until ms>\t<message>".
+export class UsageLimits {
+  constructor(private readonly dir: string) {}
+
+  private file(agent: string): string {
+    return join(this.dir, safeId(agent));
+  }
+
+  set(agent: string, until: number, message: string): void {
+    writeFileSync(this.file(agent), `${until}\t${message.replace(/\s+/g, " ")}\n`);
+  }
+
+  // Limits still in force; expired ones are removed.
+  active(now: number): ActiveLimit[] {
+    if (!existsSync(this.dir)) return [];
+    const out: ActiveLimit[] = [];
+    for (const agent of readdirSync(this.dir)) {
+      const [untilText, ...rest] = readText(join(this.dir, agent)).split("\t");
+      const until = Number.parseInt(untilText ?? "", 10);
+      if (!Number.isFinite(until) || until <= now) {
+        rmSync(join(this.dir, agent), { force: true });
+        continue;
+      }
+      out.push({ agent, until, message: rest.join("\t") });
+    }
+    return out;
+  }
 }

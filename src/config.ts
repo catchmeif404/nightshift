@@ -63,6 +63,8 @@ export interface Config {
   heartbeatMinutes: number;
   // How often "daemon" and the installed service look for work.
   pollSeconds: number;
+  // How long to wait after a usage limit whose message names no reset time.
+  usageLimitWaitMinutes: number;
   autoMerge: boolean;
   humanGates: HumanGate[];
   // Gets one message as its last argument when a ticket is blocked. Empty: log only.
@@ -236,6 +238,7 @@ export function parseConfig(raw: unknown, root: string): Config {
     resumeCooldownMinutes: num(top, "resumeCooldownMinutes", 15, "config"),
     heartbeatMinutes: num(top, "heartbeatMinutes", 30, "config"),
     pollSeconds: Math.max(30, num(top, "pollSeconds", 120, "config")),
+    usageLimitWaitMinutes: num(top, "usageLimitWaitMinutes", 60, "config"),
     autoMerge: bool(top, "autoMerge", false, "config"),
     humanGates,
     notifyCommand: inside(root, str(top, "notifyCommand", "", "config")),

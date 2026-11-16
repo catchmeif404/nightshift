@@ -23,7 +23,8 @@ import { Worktree, ensureWorktree, gitCommonDir, mergePullRequest, pullRequestSt
 import { Logger, clip, mask, oneLine } from "./log.js";
 import { Messages, messagesFor } from "./messages.js";
 import { RESUME_PROMPT, StageContext, buildPrompt, releasePrompt, reviewPrompt } from "./prompts.js";
-import { Slots, StatePaths, TicketState } from "./state.js";
+import { Slots, StatePaths, TicketState, UsageLimits } from "./state.js";
+import { detectLimit } from "./limits.js";
 
 export interface Runner {
   config: Config;
@@ -33,6 +34,7 @@ export interface Runner {
   builder: Agent;
   reviewer: Agent;
   slots: Slots;
+  limits: UsageLimits;
 }
 
 export enum TicketOutcome {
@@ -40,6 +42,8 @@ export enum TicketOutcome {
   Settled = "settled",
   // A stage did not finish; the ticket stays "working" and is resumed on a later dispatch.
   Paused = "paused",
+  // The agent's account hit its usage limit; the worker should stop taking tickets until it resets.
+  Limited = "limited",
 }
 
 interface ParsedLine<K> {
@@ -277,7 +281,8 @@ export class TicketPipeline {
   }
 
   private async pausedOrSettled(outcome: StageOutcome): Promise<TicketOutcome> {
-    return outcome === StageOutcome.GaveUp ? TicketOutcome.Settled : TicketOutcome.Paused;
+    if (outcome === StageOutcome.GaveUp) return TicketOutcome.Settled;
+    return outcome === StageOutcome.Limited ? TicketOutcome.Limited : TicketOutcome.Paused;
   }
 
   private async runStage(stage: Stage, round: number, agent: Agent, model: string, prompt: string, tree: Worktree): Promise<StageOutcome> {
@@ -312,6 +317,16 @@ export class TicketPipeline {
     clearInterval(heartbeat);
     this.log(`${stage} r${round}: exit ${result.exitCode}: ${tail(result.output, 600)}`);
     if (result.exitCode !== 0) {
+      const limit = detectLimit(result.output, Date.now(), this.r.config.usageLimitWaitMinutes)[0];
+      if (limit !== undefined) {
+        // Not the ticket's fault: give the try back, remember the reset for every ticket of this agent.
+        this.state.write(StateFile.Tries, String(tries - 1));
+        this.r.limits.set(agent.name, limit.until, limit.message);
+        const until = new Date(limit.until).toLocaleString("sv-SE", { hour12: false }).slice(0, 16);
+        this.log(`${stage} r${round}: usage limit (${agent.name}) until ${until}: ${clip(limit.message, 160)}`);
+        await this.r.board.addNote(this.ticket.id, this.say.usageLimit(agent.name, until));
+        return StageOutcome.Limited;
+      }
       this.state.touch(StateFile.Failed);
       return StageOutcome.Failed;
     }

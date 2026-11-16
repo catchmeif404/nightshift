@@ -175,6 +175,10 @@ export async function status(config: Config): Promise<void> {
   const live = runner.slots.live();
   console.log(`board: ${runner.board.name}`);
   console.log(`log:   ${runner.paths.log}`);
+  for (const limit of runner.limits.active(Date.now())) {
+    const until = new Date(limit.until).toLocaleString("sv-SE", { hour12: false }).slice(0, 16);
+    console.log(`usage limit: ${limit.agent} until ${until} (${limit.message})`);
+  }
   console.log(live.length === 0 ? "workers: none running" : "workers:");
   for (const slot of live) console.log(`  ${slot.target} (pid ${slot.pid})${slot.stage === "" ? "" : ` - ${slot.stage}`}`);
   for (const s of [TicketStatus.Working, TicketStatus.Ready, TicketStatus.Review, TicketStatus.Blocked]) {
