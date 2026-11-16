@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { GitHubBoard } from "../src/board/github.js";
-import { TicketKind, TicketStatus } from "../src/enums.js";
+import { SettleReason, TicketKind, TicketStatus } from "../src/enums.js";
 import { FIXTURES } from "./helpers.js";
 
 function board(): { board: GitHubBoard; log: () => string[] } {
@@ -29,11 +29,11 @@ test("only issues from trusted authors become tickets, oldest first", async () =
 
 test("moving a ticket swaps its status label and leaves other labels alone", async () => {
   const { board: b, log } = board();
-  await b.setStatus("acme/app#7", TicketStatus.Review, "ready for you");
+  await b.setStatus("acme/app#7", TicketStatus.Review, SettleReason.ReadyToMerge, "ready for you");
   const calls = log();
   assert.ok(calls.some((c) => c === "issue edit 7 --repo acme/app --add-label nightshift:review --remove-label nightshift:working"), calls.join("\n"));
   assert.ok(calls.some((c) => c.startsWith("issue comment 7 --repo acme/app --body **nightshift**: ready for you")));
   assert.ok(!calls.some((c) => c.includes("issue close")));
-  await b.setStatus("acme/app#7", TicketStatus.Done, "");
+  await b.setStatus("acme/app#7", TicketStatus.Done, SettleReason.Merged, "");
   assert.ok(log().some((c) => c === "issue close 7 --repo acme/app"));
 });

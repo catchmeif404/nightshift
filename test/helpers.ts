@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { LocalMarkdownBoard } from "../src/board/localMarkdown.js";
 import { Config, parseConfig } from "../src/config.js";
 import { openRunner } from "../src/dispatch.js";
-import { AgentType, BoardType, PublishMode, TicketKind, TicketStatus } from "../src/enums.js";
+import { AgentType, BoardType, PublishMode, SettleReason, TicketKind, TicketStatus } from "../src/enums.js";
 import { Runner } from "../src/pipeline.js";
 
 // Compiled tests run from dist/test; the fixtures stay in the source tree.
@@ -75,7 +75,7 @@ export function sandbox(overrides: Record<string, unknown> = {}): Sandbox {
 
 export async function readyTicket(box: Sandbox, title: string, kind: TicketKind = TicketKind.Build): Promise<string> {
   const id = box.board.create(title, "demo", kind, `Please ${title.toLowerCase()}.`);
-  await box.board.setStatus(id, TicketStatus.Working, "");
+  await box.board.setStatus(id, TicketStatus.Working, SettleReason.Claimed, "");
   return id;
 }
 

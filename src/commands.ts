@@ -82,6 +82,7 @@ export async function init(root: string, options: InitOptions): Promise<void> {
 
 export function add(config: Config, title: string, project: string, kind: TicketKind, body: string): string {
   if (config.board.type !== BoardType.LocalMarkdown) {
+    // Other boards have their own way to add tickets.
     throw new Error(`"add" works with the local markdown board; on GitHub, open an issue with the ${Brand.labelPrefix}${TicketStatus.Ready} label.`);
   }
   if (!hasProject(config, project)) throw new Error(`project "${project}" is not in ${Brand.configFile}`);
@@ -96,6 +97,10 @@ export async function runOnce(config: Config): Promise<void> {
 export async function workSlot(config: Config, key: string): Promise<void> {
   const runner = openRunner(config);
   await work(runner, key);
+  if (config.workerDoneCommand !== "") {
+    const result = await run("/bin/sh", ["-c", config.workerDoneCommand], config.root);
+    runner.log.line(`worker-done hook exit ${result.code}`);
+  }
   await dispatch(runner);
 }
 
@@ -145,6 +150,9 @@ export async function doctor(root: string): Promise<boolean> {
   statePaths(config.stateDir);
   checks.push({ level: CheckLevel.Ok, what: `state folder ${config.stateDir}` });
   checks.push({ level: (await tool(config.tools.git, ["--version"], root)) ? CheckLevel.Ok : CheckLevel.Fail, what: "git" });
+  if (config.board.type === BoardType.Command) {
+    checks.push({ level: existsSync(config.board.command) ? CheckLevel.Ok : CheckLevel.Fail, what: `board command ${config.board.command}` });
+  }
   const needsGh = config.board.type === BoardType.GitHub || config.projects.some((p) => p.publish === PublishMode.PullRequest);
   if (needsGh) {
     checks.push({ level: (await tool(config.tools.gh, ["auth", "status"], root)) ? CheckLevel.Ok : CheckLevel.Fail, what: "gh is installed and signed in" });

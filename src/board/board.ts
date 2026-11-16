@@ -1,4 +1,4 @@
-import { TicketKind, TicketStatus } from "../enums.js";
+import { SettleReason, TicketKind, TicketStatus } from "../enums.js";
 
 export interface Ticket {
   id: string;
@@ -17,7 +17,7 @@ export interface Board {
   readonly name: string;
   // Tickets in this status, oldest first. Tickets the board cannot trust are left out.
   list(status: TicketStatus): Promise<Ticket[]>;
-  setStatus(id: string, status: TicketStatus, note: string): Promise<void>;
+  setStatus(id: string, status: TicketStatus, reason: SettleReason, note: string): Promise<void>;
   addNote(id: string, note: string): Promise<void>;
 }
 

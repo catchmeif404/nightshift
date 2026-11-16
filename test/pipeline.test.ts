@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { test } from "node:test";
-import { TicketStatus } from "../src/enums.js";
+import { SettleReason, TicketKind, TicketStatus } from "../src/enums.js";
 import { worktreeFor } from "../src/git.js";
 import { TicketOutcome, TicketPipeline } from "../src/pipeline.js";
 import { Sandbox, readyTicket, sandbox, ticketFile, ticketStatus } from "./helpers.js";
@@ -109,8 +109,8 @@ test("an unreadable result is set aside and the stage is retried, not trusted", 
 
 test("a ticket for an unknown project is blocked before any agent runs", async () => {
   const box = sandbox();
-  const id = box.board.create("Orphan", "nope", (await import("../src/enums.js")).TicketKind.Build, "");
-  await box.board.setStatus(id, TicketStatus.Working, "");
+  const id = box.board.create("Orphan", "nope", TicketKind.Build, "");
+  await box.board.setStatus(id, TicketStatus.Working, SettleReason.Claimed, "");
   await runPipeline(box, id);
   assert.equal(await ticketStatus(box, id), TicketStatus.Blocked);
   assert.equal(box.calls().length, 0);

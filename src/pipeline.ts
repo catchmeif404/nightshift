@@ -7,17 +7,22 @@ import {
   BuildResult,
   GitHubState,
   PublishMode,
+  ReleaseResult,
   SessionMode,
+  SettleReason,
   Stage,
   StageOutcome,
   StateFile,
+  TicketKind,
   TicketStatus,
   Verdict,
 } from "./enums.js";
-import { run } from "./exec.js";
+import { Brand } from "./brand.js";
+import { exec, run } from "./exec.js";
 import { Worktree, ensureWorktree, mergePullRequest, pullRequestState, removeWorktree, worktreeFor } from "./git.js";
 import { Logger, clip, mask, oneLine } from "./log.js";
-import { RESUME_PROMPT, StageContext, buildPrompt, reviewPrompt } from "./prompts.js";
+import { Messages, messagesFor } from "./messages.js";
+import { RESUME_PROMPT, StageContext, buildPrompt, releasePrompt, reviewPrompt } from "./prompts.js";
 import { Slots, StatePaths, TicketState } from "./state.js";
 
 export interface Runner {
@@ -37,20 +42,29 @@ export enum TicketOutcome {
   Paused = "paused",
 }
 
-interface ParsedBuild {
-  kind: BuildResult;
+interface ParsedLine<K> {
+  kind: K;
   value: string;
 }
 
-export function parseBuildLine(line: string): ParsedBuild[] {
+function splitLine(line: string): { head: string; value: string } {
   const space = line.indexOf(" ");
-  const head = space < 0 ? line : line.slice(0, space);
-  const value = space < 0 ? "" : line.slice(space + 1).trim();
+  return space < 0 ? { head: line, value: "" } : { head: line.slice(0, space), value: line.slice(space + 1).trim() };
+}
+
+export function parseBuildLine(line: string): Array<ParsedLine<BuildResult>> {
+  const { head, value } = splitLine(line);
   const kind = Object.values(BuildResult).find((k) => k === head);
   if (kind === undefined) return [];
   if (kind !== BuildResult.Blocked && value === "") return [];
   if ((kind === BuildResult.PullRequest || kind === BuildResult.Doc) && !/^https:\/\/\S+$/.test(value)) return [];
   return [{ kind, value }];
+}
+
+export function parseReleaseLine(line: string): Array<ParsedLine<ReleaseResult>> {
+  const { head, value } = splitLine(line);
+  const kind = Object.values(ReleaseResult).find((k) => k === head);
+  return kind === undefined ? [] : [{ kind, value }];
 }
 
 export function parseVerdict(line: string): Verdict[] {
@@ -67,9 +81,15 @@ function tail(text: string, chars: number): string {
   return clip(oneLine(lines.slice(-8).join(" ")), chars);
 }
 
+function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 // Run one ticket from wherever it stopped: build -> review -> (rework -> build -> review) -> settle.
+// A release ticket is a single release stage instead.
 export class TicketPipeline {
   private readonly state: TicketState;
+  private readonly say: Messages;
 
   constructor(
     private readonly r: Runner,
@@ -77,15 +97,16 @@ export class TicketPipeline {
     private readonly slotKey: string,
   ) {
     this.state = new TicketState(r.paths.results, ticket.id);
+    this.say = messagesFor(r.config.language);
   }
 
   private log(message: string): void {
     this.r.log.line(`${this.ticket.id} ${message}`);
   }
 
-  private async settle(status: TicketStatus, note: string): Promise<TicketOutcome> {
-    await this.r.board.setStatus(this.ticket.id, status, clip(mask(note), 1500));
-    this.log(`-> ${status}: ${clip(oneLine(note), 200)}`);
+  private async settle(status: TicketStatus, reason: SettleReason, note: string): Promise<TicketOutcome> {
+    await this.r.board.setStatus(this.ticket.id, status, reason, clip(mask(note), 3000));
+    this.log(`-> ${status} (${reason}): ${clip(oneLine(note), 200)}`);
     this.state.clearStage();
     return TicketOutcome.Settled;
   }
@@ -97,17 +118,31 @@ export class TicketPipeline {
     if (result.code !== 0) this.r.log.line(`notify failed: ${clip(oneLine(result.stderr), 200)}`);
   }
 
+  private context(project: ProjectConfig, tree: Worktree, round: number, rules: string, resultFile: StateFile): StageContext {
+    return {
+      ticket: this.ticket,
+      project,
+      worktree: tree,
+      round,
+      lastRound: round > this.r.config.maxRework,
+      rules,
+      resultFile: this.state.path(resultFile),
+      reviewFile: this.state.path(StateFile.Review),
+      humanGates: this.r.config.humanGates,
+    };
+  }
+
   async run(): Promise<TicketOutcome> {
     if (!hasProject(this.r.config, this.ticket.project)) {
-      return this.settle(TicketStatus.Blocked, `project "${this.ticket.project}" is not in the config; add it and set the ticket ready again.`);
+      return this.settle(TicketStatus.Blocked, SettleReason.Misconfigured, this.say.unknownProject(this.ticket.project));
     }
     const project = projectNamed(this.r.config, this.ticket.project);
-    let stage = Stage.Build;
+    let stage = this.ticket.kind === TicketKind.Release ? Stage.Release : Stage.Build;
     let round = 1;
     const saved = this.state.firstLine(StateFile.Stage);
     if (saved !== "") {
       const [savedStage, savedRound] = saved.split(" ");
-      stage = savedStage === Stage.Review ? Stage.Review : Stage.Build;
+      stage = Object.values(Stage).find((s) => s === savedStage) ?? stage;
       round = Math.max(1, Number.parseInt(savedRound ?? "1", 10) || 1);
       this.log(`resuming at ${stage} r${round}`);
     } else {
@@ -119,35 +154,25 @@ export class TicketPipeline {
     try {
       tree = await ensureWorktree(this.r.config, project, worktreeFor(this.r.paths.worktrees, this.ticket.id));
     } catch (error) {
-      return this.settle(TicketStatus.Blocked, `could not make a worktree: ${error instanceof Error ? error.message : String(error)}`);
+      return this.settle(TicketStatus.Blocked, SettleReason.Misconfigured, this.say.worktreeFailed(errorText(error)));
     }
     const rules = readRules(project);
+    if (stage === Stage.Release) return this.release(project, tree, rules);
 
     for (;;) {
       const lastRound = round > this.r.config.maxRework;
-      const ctx = (resultFile: StateFile): StageContext => ({
-        ticket: this.ticket,
-        project,
-        worktree: tree,
-        round,
-        lastRound,
-        rules,
-        resultFile: this.state.path(resultFile),
-        reviewFile: this.state.path(StateFile.Review),
-        humanGates: this.r.config.humanGates,
-      });
 
       if (stage === Stage.Build) {
         if (!this.state.has(StateFile.Build)) {
           const notes = round > 1 ? this.state.read(StateFile.ReviewPrevious) : "";
-          const outcome = await this.runStage(Stage.Build, round, this.r.builder, this.r.config.builder.model, buildPrompt(ctx(StateFile.Build), notes), tree);
+          const prompt = buildPrompt(this.context(project, tree, round, rules, StateFile.Build), notes);
+          const outcome = await this.runStage(Stage.Build, round, this.r.builder, this.r.config.builder.model, prompt, tree);
           if (outcome !== StageOutcome.Finished) return this.pausedOrSettled(outcome);
         }
-        const parsed = parseBuildLine(this.state.firstLine(StateFile.Build));
-        const build = parsed[0];
+        const build = parseBuildLine(this.state.firstLine(StateFile.Build))[0];
         if (build === undefined) return this.reject(StateFile.Build, "build left no result or an unrecognized one");
         if (build.kind === BuildResult.Blocked) {
-          return this.settle(TicketStatus.Blocked, `the developer could not finish: ${build.value || "no reason given"}`);
+          return this.settle(TicketStatus.Blocked, SettleReason.Blocked, this.say.buildBlocked(build.value || this.say.noReason));
         }
         this.state.write(StateFile.Result, build.value);
         this.state.write(StateFile.ResultKind, build.kind);
@@ -159,7 +184,8 @@ export class TicketPipeline {
       const result = this.state.read(StateFile.Result);
       const resultKind = this.state.read(StateFile.ResultKind);
       if (!this.state.has(StateFile.Verdict)) {
-        const outcome = await this.runStage(Stage.Review, round, this.r.reviewer, this.r.config.reviewer.model, reviewPrompt(ctx(StateFile.Verdict), `${resultKind} ${result}`), tree);
+        const prompt = reviewPrompt(this.context(project, tree, round, rules, StateFile.Verdict), `${resultKind} ${result}`);
+        const outcome = await this.runStage(Stage.Review, round, this.r.reviewer, this.r.config.reviewer.model, prompt, tree);
         if (outcome !== StageOutcome.Finished) return this.pausedOrSettled(outcome);
       }
       const verdict = parseVerdict(this.state.firstLine(StateFile.Verdict))[0];
@@ -175,49 +201,72 @@ export class TicketPipeline {
             round += 1;
             stage = Stage.Build;
             this.state.nextStage(Stage.Build, round);
-            await this.r.board.addNote(this.ticket.id, `review round ${round - 1}: sent back for rework.`);
+            await this.r.board.addNote(this.ticket.id, this.say.sentBack(round - 1));
             continue;
           }
-          return this.settle(TicketStatus.Blocked, `still not right after ${round} rounds. Review: ${review}`);
+          return this.settle(TicketStatus.Blocked, SettleReason.Blocked, this.say.stillNotRight(round, review));
         case Verdict.Blocked:
           await this.notify(`${this.ticket.id} blocked in review`);
-          return this.settle(TicketStatus.Blocked, `review blocked it: ${review}`);
+          return this.settle(TicketStatus.Blocked, SettleReason.Blocked, this.say.reviewBlocked(review));
         case Verdict.NeedsHuman:
           await this.notify(`${this.ticket.id} needs a human decision`);
-          return this.settle(TicketStatus.Blocked, `needs a human decision before merging (${resultKind} ${result}): ${review}`);
+          return this.settle(TicketStatus.Blocked, SettleReason.NeedsHuman, this.say.needsHuman(`${resultKind} ${result}`, review));
         case Verdict.Pass:
           return this.passed(project, tree, resultKind, result, review);
       }
     }
   }
 
+  private async release(project: ProjectConfig, tree: Worktree, rules: string): Promise<TicketOutcome> {
+    if (!this.state.has(StateFile.Build)) {
+      const prompt = releasePrompt(this.context(project, tree, 1, rules, StateFile.Build));
+      const outcome = await this.runStage(Stage.Release, 1, this.r.reviewer, this.r.config.reviewer.model, prompt, tree);
+      if (outcome !== StageOutcome.Finished) return this.pausedOrSettled(outcome);
+    }
+    const line = parseReleaseLine(this.state.firstLine(StateFile.Build))[0];
+    if (line === undefined) return this.reject(StateFile.Build, "release left no result or an unrecognized one");
+    this.state.remove(StateFile.Build);
+    if (line.kind === ReleaseResult.Blocked) {
+      await this.notify(`${this.ticket.id} release blocked`);
+      return this.settle(TicketStatus.Blocked, SettleReason.Blocked, this.say.releaseBlocked(line.value || this.say.noReason));
+    }
+    await removeWorktree(this.r.config, project, tree);
+    return this.settle(TicketStatus.Done, SettleReason.Released, this.say.released(line.value));
+  }
+
   private async passed(project: ProjectConfig, tree: Worktree, kind: string, result: string, review: string): Promise<TicketOutcome> {
-    const reviewNote = review === "" ? "" : ` Review: ${review}`;
     if (kind === BuildResult.PullRequest && this.r.config.autoMerge) {
       const error = await mergePullRequest(this.r.config, result);
       if (error !== "") {
-        return this.settle(TicketStatus.Review, `review passed but the merge failed (${clip(oneLine(error), 300)}): ${result}.${reviewNote}`);
+        return this.settle(TicketStatus.Review, SettleReason.MergeFailed, this.say.mergeFailed(clip(oneLine(error), 300), result, review));
       }
       if ((await pullRequestState(this.r.config, result)) === GitHubState.Merged) {
         await removeWorktree(this.r.config, project, tree);
-        const smoke = await this.postMerge(project);
-        return this.settle(TicketStatus.Done, `merged ${result}.${reviewNote}${smoke}`);
+        const post = await this.postMerge(project, result);
+        return this.settle(TicketStatus.Done, SettleReason.Merged, this.say.merged(result, review, post));
       }
     }
     if (kind === BuildResult.Doc && this.r.config.autoMerge) {
-      return this.settle(TicketStatus.Done, `document accepted: ${result}.${reviewNote}`);
+      await removeWorktree(this.r.config, project, tree);
+      return this.settle(TicketStatus.Done, SettleReason.Accepted, this.say.docAccepted(result, review));
     }
-    const where = project.publish === PublishMode.Branch && kind === BuildResult.Branch ? `branch ${result}` : result;
-    return this.settle(TicketStatus.Review, `review passed, ready for you to merge: ${where}.${reviewNote}`);
+    const where = project.publish === PublishMode.Branch && kind === BuildResult.Branch ? this.say.branch(result) : result;
+    return this.settle(TicketStatus.Review, SettleReason.ReadyToMerge, this.say.readyToMerge(where, review));
   }
 
   // A post-merge check is evidence for the ticket note only; it never undoes a merge.
-  private async postMerge(project: ProjectConfig): Promise<string> {
+  private async postMerge(project: ProjectConfig, result: string): Promise<string> {
     if (project.postMergeCommand === "") return "";
-    const result = await run("/bin/sh", ["-c", project.postMergeCommand], project.repoPath);
-    const last = tail(`${result.stdout}\n${result.stderr}`, 200);
-    this.log(`post-merge exit ${result.code}: ${last}`);
-    return ` Post-merge check (exit ${result.code}): ${last}`;
+    const env = {
+      ...process.env,
+      [`${Brand.envPrefix}TICKET`]: this.ticket.id,
+      [`${Brand.envPrefix}PROJECT`]: project.name,
+      [`${Brand.envPrefix}RESULT`]: result,
+    };
+    const out = await exec("/bin/sh", ["-c", project.postMergeCommand], { cwd: project.repoPath, env, input: "" });
+    const last = tail(`${out.stdout}\n${out.stderr}`, 300);
+    this.log(`post-merge exit ${out.code}: ${last}`);
+    return this.say.postMerge(out.code, last);
   }
 
   private async reject(file: StateFile, why: string): Promise<TicketOutcome> {
@@ -237,12 +286,9 @@ export class TicketPipeline {
     this.state.write(StateFile.Stage, `${stage} ${round}`);
     const tries = (Number.parseInt(this.state.read(StateFile.Tries), 10) || 0) + 1;
     if (tries > this.r.config.maxStageTries) {
-      const reason = clip(this.r.log.lastLineAbout(this.ticket.id), 300) || "no log line found";
+      const reason = clip(this.r.log.lastLineAbout(this.ticket.id), 300) || this.say.noReason;
       await this.notify(`${this.ticket.id} blocked: ${stage} stage cut off ${this.r.config.maxStageTries} times`);
-      await this.settle(
-        TicketStatus.Blocked,
-        `the ${stage} stage was cut off ${this.r.config.maxStageTries} times. Last log line: ${reason} (log: ${this.r.log.file})`,
-      );
+      await this.settle(TicketStatus.Blocked, SettleReason.CutOff, this.say.cutOff(stage, this.r.config.maxStageTries, reason, this.r.log.file));
       return StageOutcome.GaveUp;
     }
     this.state.write(StateFile.Tries, String(tries));
@@ -277,8 +323,8 @@ export class TicketPipeline {
     const ms = Math.max(1, this.r.config.heartbeatMinutes) * 60_000;
     const timer = setInterval(() => {
       if (this.r.slots.owner(this.slotKey) !== process.pid || this.r.slots.stage(this.slotKey) !== marker) return;
-      this.r.board.addNote(this.ticket.id, `still working: ${stage} stage, round ${round}.`).catch((error: unknown) => {
-        this.log(`heartbeat note failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.r.board.addNote(this.ticket.id, this.say.stillWorking(stage, round)).catch((error: unknown) => {
+        this.log(`heartbeat note failed: ${errorText(error)}`);
       });
     }, ms);
     timer.unref();

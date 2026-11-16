@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import { Brand } from "./brand.js";
-import { AgentType, BoardType, HumanGate, PublishMode } from "./enums.js";
+import { AgentType, BoardType, HumanGate, NoteLanguage, PublishMode } from "./enums.js";
 
 export interface AgentConfig {
   type: AgentType;
@@ -31,6 +32,8 @@ export interface BoardConfig {
   repos: string[];
   // GitHub: only issues opened by these logins run. Empty list: nothing runs.
   trustedAuthors: string[];
+  // Command: the executable that speaks the board protocol.
+  command: string;
 }
 
 export interface ToolPaths {
@@ -57,6 +60,10 @@ export interface Config {
   humanGates: HumanGate[];
   // Gets one message as its last argument when a ticket is blocked. Empty: log only.
   notifyCommand: string;
+  // Runs (through /bin/sh, in the config root) each time a worker finishes. Empty: none.
+  workerDoneCommand: string;
+  // Language of the notes the runner writes on tickets.
+  language: NoteLanguage;
   tools: ToolPaths;
 }
 
@@ -114,16 +121,17 @@ function oneOf<T extends string>(o: JsonObject, key: string, allowed: readonly T
   return match;
 }
 
-function agent(o: JsonObject, where: string, model: string): AgentConfig {
+function agent(o: JsonObject, where: string, model: string, root: string): AgentConfig {
   return {
     type: oneOf(o, "type", Object.values(AgentType), AgentType.ClaudeCode, where),
     model: str(o, "model", model, where),
-    command: str(o, "command", "", where),
+    command: inside(root, str(o, "command", "", where)),
     permissionMode: str(o, "permissionMode", "auto", where),
   };
 }
 
 function inside(root: string, path: string): string {
+  if (path === "~" || path.startsWith("~/")) return join(homedir(), path.slice(1));
   return path === "" || isAbsolute(path) ? path : resolve(root, path);
 }
 
@@ -137,7 +145,9 @@ export function parseConfig(raw: unknown, root: string): Config {
     dir: inside(root, str(boardRaw, "dir", Brand.ticketsDir, "board")),
     repos: strList(boardRaw, "repos", [], "board"),
     trustedAuthors: strList(boardRaw, "trustedAuthors", [], "board"),
+    command: inside(root, str(boardRaw, "command", "", "board")),
   };
+  if (board.type === BoardType.Command && board.command === "") throw new ConfigError("board.command is required for a command board");
 
   const projectsRaw = optObject(top, "projects", "config");
   const projects: ProjectConfig[] = Object.entries(projectsRaw).map(([name, value]) => {
@@ -168,8 +178,8 @@ export function parseConfig(raw: unknown, root: string): Config {
     stateDir: inside(root, str(top, "stateDir", Brand.stateDir, "config")),
     board,
     projects,
-    builder: agent(optObject(top, "builder", "config"), "builder", "sonnet"),
-    reviewer: agent(optObject(top, "reviewer", "config"), "reviewer", "opus"),
+    builder: agent(optObject(top, "builder", "config"), "builder", "sonnet", root),
+    reviewer: agent(optObject(top, "reviewer", "config"), "reviewer", "opus", root),
     maxSlots: num(top, "maxSlots", 3, "config"),
     maxRework: num(top, "maxRework", 1, "config"),
     maxStageTries: num(top, "maxStageTries", 3, "config"),
@@ -179,7 +189,9 @@ export function parseConfig(raw: unknown, root: string): Config {
     daemonIntervalMinutes: num(top, "daemonIntervalMinutes", 15, "config"),
     autoMerge: bool(top, "autoMerge", false, "config"),
     humanGates,
-    notifyCommand: str(top, "notifyCommand", "", "config"),
+    notifyCommand: inside(root, str(top, "notifyCommand", "", "config")),
+    workerDoneCommand: str(top, "workerDoneCommand", "", "config"),
+    language: oneOf(top, "language", Object.values(NoteLanguage), NoteLanguage.English, "config"),
     tools: {
       git: str(toolsRaw, "git", "git", "tools"),
       gh: str(toolsRaw, "gh", "gh", "tools"),
