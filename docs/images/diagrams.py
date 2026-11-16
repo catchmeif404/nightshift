@@ -57,7 +57,7 @@ def up(a, b, x):  # from b's top edge up to a's bottom edge (a above b)
 
 def diagram_usage():
     owner = card("owner", 0, 0, ["Owner", "asks in Telegram"], ["대표", "텔레그램으로 요청"])
-    pm = card("pm", 1, 0, ["PM bot · Hermes", "files tickets; woken", "when a worker ends"], ["한결 · Hermes PM 봇", "티켓 만들기, 작업자가", "끝나면 깨어나 보고"])
+    pm = card("pm", 1, 0, ["PM bot · Hermes", "cron every 30 min: files", "and follows up tickets"], ["한결 · Hermes PM 봇", "30분마다 cron: 티켓", "만들고 챙기고 보고"])
     notion = card("notion", 2, 0, ["Notion ticket DB", "assigned to", "Claude Code"], ["Notion 티켓 DB", "담당 = Claude Code"])
     board = card("board", 3, 0, ["notion_bridge.py", "connects our Notion", "tickets to nightshift"], ["notion_bridge.py", "우리 Notion 티켓과", "nightshift를 잇는 스크립트"])
     service = card("service", 2, 1, ["nightshift service", "launchd, every", "2 minutes and at login"], ["nightshift 서비스", "launchd, 2분마다,", "로그인할 때도"])
@@ -85,7 +85,7 @@ def diagram_usage():
         ("reviewer→pr", down(reviewer, pr, cx(reviewer)), ("PASS", "PASS", "beside"), False, "From the reviewer to the pull request: PASS, nightshift merges"),
         ("pr→post", left_to_right_back(post, pr, cy(pr)), ("merged", "머지 뒤", "above"), False, "From the merged pull request to the post-merge hook"),
     ]
-    title = ("How we run nightshift at catchmeif404", "catchmeif404에서 nightshift를 쓰는 방식")
+    title = ("Our product team: Hermes bots, a Notion board, nightshift as the developers", "우리 제품 팀: Hermes 봇, Notion 보드, 개발팀 nightshift")
     return title, cards, arrows, ROWS[3] + CARD_H + 64, None
 
 

@@ -55,19 +55,33 @@ What makes it hold up when nobody is watching:
 - **Humans decide human things.** Merging stops at the gates you configure, and `autoMerge` is off by default.
 - **Untrusted issues never run.** On GitHub only issues opened by `trustedAuthors` are picked up: an issue is a prompt.
 
-## How we run it
+## How we run it: a product team on one Mac
 
 > This is our own setup, shown as a real-world example. **You need none of it**: no Hermes, no Notion, no bridge
 > script. nightshift on its own, with a folder of markdown tickets or GitHub Issues, is the whole product; start with
 > [Quick start](#quick-start).
 
-nightshift builds our own products at catchmeif404. The owner asks for work in Telegram; a PM bot on
-[Hermes Agent](https://github.com/NousResearch/hermes-agent) files it as a ticket in Notion. nightshift runs as a launchd service that looks for
-work every 2 minutes, and a Notion hook kicks that service the moment a ticket is filed. It reads and updates Notion through a small bridge script (`notion_bridge.py`), has Claude Code `sonnet` build and
-`opus` review, merges what passed, runs a post-merge check and wakes the PM bot to report back. It replaced the bash runner we
-used before; `nightshift service uninstall` stops all code work.
+catchmeif404 is one person and a team of AI teammates. Notion is the team's board, bots on
+[Hermes Agent](https://github.com/NousResearch/hermes-agent) do the planning and the day-to-day work on cron
+schedules, and nightshift is the development team.
 
-![How catchmeif404 runs nightshift: owner, PM bot on Hermes, Notion ticket DB, the Notion bridge script, the nightshift service, nightshift, Claude Code sonnet building and opus reviewing, the merged pull request and the post-merge hook.](docs/images/usage.en.svg)
+| Who | What they do | Runs on |
+|---|---|---|
+| The owner | asks for things in Telegram, answers decision pages in Notion | a phone |
+| PM bot | every 30 minutes (a cron job): reads the board, roadmap and error reports, turns requests into tickets, hands work to teammates, follows up, reports back | Hermes Agent |
+| Marketing, research, ops, release and policy, support, design bots | the cards the PM hands them: drafts, research, a 5-minute error watch, release checks, support replies, mockups | Hermes Agent |
+| Developer and CTO | every code ticket: `sonnet` builds it on its own branch, `opus` reviews and merges; after a merge, a QA smoke test and, for our app, the release call | nightshift + Claude Code |
+| The board | tickets, decision pages, meeting notes, releases, metrics | Notion |
+
+A request goes like this. The owner writes "add sorting to the shelf" in Telegram. The PM bot files it in Notion as a
+ticket for the developers. A Notion hook kicks the nightshift service right away (it also checks every 2 minutes on its
+own); nightshift reads the ticket through a small bridge script (`notion_bridge.py`), the builder and the reviewer do
+their runs, the pull request is merged, and nightshift wakes the PM bot's cron job, which reads the result on the ticket
+and tells the owner. Anything only the owner can decide (money, legal text, anything public) becomes a decision page
+instead; the owner answers in a comment and the PM bot puts the ticket back in the queue. nightshift replaced the bash
+runner we used before; `nightshift service uninstall` stops all code work.
+
+![Our product team: the owner, a PM bot on Hermes running every 30 minutes, Notion ticket DB, the Notion bridge script, the nightshift service, nightshift, Claude Code sonnet building and opus reviewing, the merged pull request and the post-merge hook.](docs/images/usage.en.svg)
 
 ## Quick start
 
