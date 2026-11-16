@@ -216,9 +216,9 @@ nightshift is an independent project and is not affiliated with Anthropic, OpenA
 > It's early (0.1). Trying it and telling us where it breaks is the most useful thing you can do right now.
 >
 > <table>
-> <tr><td width="140">[![Open an issue](https://img.shields.io/github/issues/catchmeif404/nightshift?label=Issues&logo=github&style=flat-square&labelColor=black&color=2f6beb)](https://github.com/catchmeif404/nightshift/issues)</td><td>Where it breaks, what you need, how you run it. Every issue is read.</td></tr>
-> <tr><td width="140">[![Star](https://img.shields.io/github/stars/catchmeif404/nightshift?label=Star&logo=github&style=flat-square&labelColor=black&color=e3b341)](https://github.com/catchmeif404/nightshift)</td><td>If it's useful, a star helps others find it.</td></tr>
-> <tr><td width="140">[![Follow on GitHub](https://img.shields.io/github/followers/catchmeif404?label=Follow&logo=github&style=flat-square&labelColor=black&color=24292f)](https://github.com/catchmeif404)</td><td>Releases and our other projects from <a href="https://github.com/catchmeif404">catchmeif404</a>.</td></tr>
+> <tr><td width="140"><a href="https://github.com/catchmeif404/nightshift/issues"><img alt="Open an issue" src="https://img.shields.io/github/issues/catchmeif404/nightshift?label=Issues&logo=github&style=flat-square&labelColor=black&color=2f6beb"></a></td><td>Where it breaks, what you need, how you run it. Every issue is read.</td></tr>
+> <tr><td width="140"><a href="https://github.com/catchmeif404/nightshift"><img alt="Star" src="https://img.shields.io/github/stars/catchmeif404/nightshift?label=Star&logo=github&style=flat-square&labelColor=black&color=e3b341"></a></td><td>If it's useful, a star helps others find it.</td></tr>
+> <tr><td width="140"><a href="https://github.com/catchmeif404"><img alt="Follow on GitHub" src="https://img.shields.io/github/followers/catchmeif404?label=Follow&logo=github&style=flat-square&labelColor=black&color=24292f"></a></td><td>Releases and our other projects from <a href="https://github.com/catchmeif404">catchmeif404</a>.</td></tr>
 > </table>
 
 ## License

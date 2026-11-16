@@ -173,9 +173,9 @@ nightshift는 독립 프로젝트이며 Anthropic, OpenAI, Nous Research와 관�
 > 아직 0.1입니다. 써 보시고 어디서 막히는지 알려 주시는 게 지금 가장 큰 도움이 됩니다.
 >
 > <table>
-> <tr><td width="140">[![Open an issue](https://img.shields.io/github/issues/catchmeif404/nightshift?label=Issues&logo=github&style=flat-square&labelColor=black&color=2f6beb)](https://github.com/catchmeif404/nightshift/issues)</td><td>어디서 막혔는지, 뭐가 필요한지, 어떻게 쓰고 계신지. 이슈는 전부 읽습니다.</td></tr>
-> <tr><td width="140">[![Star](https://img.shields.io/github/stars/catchmeif404/nightshift?label=Star&logo=github&style=flat-square&labelColor=black&color=e3b341)](https://github.com/catchmeif404/nightshift)</td><td>쓸 만하다면 스타 하나가 다른 사람이 찾는 데 도움이 됩니다.</td></tr>
-> <tr><td width="140">[![Follow on GitHub](https://img.shields.io/github/followers/catchmeif404?label=Follow&logo=github&style=flat-square&labelColor=black&color=24292f)](https://github.com/catchmeif404)</td><td><a href="https://github.com/catchmeif404">catchmeif404</a>의 릴리스와 다른 프로젝트.</td></tr>
+> <tr><td width="140"><a href="https://github.com/catchmeif404/nightshift/issues"><img alt="Open an issue" src="https://img.shields.io/github/issues/catchmeif404/nightshift?label=Issues&logo=github&style=flat-square&labelColor=black&color=2f6beb"></a></td><td>어디서 막혔는지, 뭐가 필요한지, 어떻게 쓰고 계신지. 이슈는 전부 읽습니다.</td></tr>
+> <tr><td width="140"><a href="https://github.com/catchmeif404/nightshift"><img alt="Star" src="https://img.shields.io/github/stars/catchmeif404/nightshift?label=Star&logo=github&style=flat-square&labelColor=black&color=e3b341"></a></td><td>쓸 만하다면 스타 하나가 다른 사람이 찾는 데 도움이 됩니다.</td></tr>
+> <tr><td width="140"><a href="https://github.com/catchmeif404"><img alt="Follow on GitHub" src="https://img.shields.io/github/followers/catchmeif404?label=Follow&logo=github&style=flat-square&labelColor=black&color=24292f"></a></td><td><a href="https://github.com/catchmeif404">catchmeif404</a>의 릴리스와 다른 프로젝트.</td></tr>
 > </table>
 
 ## 라이선스
