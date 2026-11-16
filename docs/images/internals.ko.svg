@@ -58,9 +58,9 @@
 <text class="t m" x="980" y="389" font-size="14" text-anchor="middle">PASS, REWORK,</text>
 <text class="t m" x="980" y="409" font-size="14" text-anchor="middle">NEEDS_HUMAN, BLOCKED</text>
 <rect class="accent" x="608.5" y="336.5" width="199" height="95" rx="10"/>
-<text class="t" x="708" y="369" font-size="15" text-anchor="middle" font-weight="600">정리</text>
-<text class="t m" x="708" y="389" font-size="14" text-anchor="middle">티켓 옮기기: review,</text>
-<text class="t m" x="708" y="409" font-size="14" text-anchor="middle">blocked, done</text>
+<text class="t" x="708" y="369" font-size="15" text-anchor="middle" font-weight="600">티켓에 반영</text>
+<text class="t m" x="708" y="389" font-size="14" text-anchor="middle">review, blocked, done</text>
+<text class="t m" x="708" y="409" font-size="14" text-anchor="middle">중 하나로 옮김</text>
 <rect class="card" x="608.5" y="512.5" width="199" height="95" rx="10"/>
 <text class="t" x="708" y="545" font-size="15" text-anchor="middle" font-weight="600">머지</text>
 <text class="t m" x="708" y="565" font-size="14" text-anchor="middle">autoMerge 일 때,</text>

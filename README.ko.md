@@ -24,7 +24,7 @@ nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마�
 
 ## 동작 방식
 
-![nightshift 내부 구조: 보드가 배차에 티켓을 주고, 배차는 프로젝트마다 슬롯 하나에 작업자를 띄우고, 작업자는 티켓마다 worktree를 만들고, 개발·검토 단계가 코딩 에이전트(Claude Code, Codex, 아무 CLI)를 실행하고, 검토는 재작업으로 돌려보낼 수 있고, 정리 단계가 보드의 티켓을 옮기고 통과한 것을 머지합니다.](docs/images/internals.ko.svg)
+![nightshift 내부 구조: 보드가 배차에 티켓을 주고, 배차는 프로젝트마다 슬롯 하나에 작업자를 띄우고, 작업자는 티켓마다 worktree를 만들고, 개발·검토 단계가 코딩 에이전트(Claude Code, Codex, 아무 CLI)를 실행하고, 검토는 재작업으로 돌려보낼 수 있고, 마지막 단계가 보드의 티켓을 옮기고 통과한 것을 머지합니다.](docs/images/internals.ko.svg)
 
 ```
 할 일 티켓 ──► 그 프로젝트의 작업자 (프로젝트당 1명, 여러 프로젝트 동시)
@@ -32,7 +32,8 @@ nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마�
                ├─ 빌드  (개발 모델) 전용 git worktree 에서 ─► PR <url> | BRANCH <이름> | BLOCKED <사유>
                ├─ 검토  (검토 모델) 테스트 직접 실행, 작은 건 고침 ─► PASS | REWORK | NEEDS_HUMAN | BLOCKED
                │     REWORK ─► 검토 의견을 들고 다시 빌드, 한 번 더 검토
-               └─ 정리  PASS ─► 사람이 머지하도록 "review" (autoMerge 면 머지)
+               └─ 티켓에 반영
+                        PASS ─► 사람이 머지하도록 "review" (autoMerge 면 머지)
                         NEEDS_HUMAN / BLOCKED ─► "blocked", 사유를 티켓에 남김
 ```
 
@@ -49,6 +50,9 @@ nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마�
 - **믿을 수 없는 이슈는 돌리지 않습니다.** GitHub에서는 `trustedAuthors`가 연 이슈만 집습니다. 이슈는 곧 프롬프트이니까요.
 
 ## 우리가 쓰는 방식
+
+> 실제 사례로 보여 드리는 우리 회사 설정입니다. **여러분은 이 중 아무것도 필요 없습니다.** Hermes도, Notion도, 연결
+> 스크립트도요. 마크다운 티켓 폴더나 GitHub Issues와 nightshift만 있으면 됩니다. [빠른 시작](#빠른-시작)부터 보세요.
 
 catchmeif404의 제품은 nightshift로 만들고 있습니다. 대표가 텔레그램으로 요청하면 [Hermes Agent](https://github.com/NousResearch/hermes-agent)
 위의 PM 봇(한결)이 Notion에 티켓을 만듭니다. nightshift는 2분마다 일을 찾는 launchd 서비스로 돌고, 티켓이 생기면 Notion 훅이 그 서비스를

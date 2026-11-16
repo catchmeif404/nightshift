@@ -26,7 +26,7 @@ It grew out of the runner that builds our own products, and it now runs them. It
 
 ## How it works
 
-![Inside nightshift: the board feeds dispatch, which starts one worker per project in its own slot; the worker gives each ticket a worktree, a build stage and a review stage run coding agents (Claude Code, Codex or any CLI), review can send work back for rework, and settle moves the ticket on the board and merges what passed.](docs/images/internals.en.svg)
+![Inside nightshift: the board feeds dispatch, which starts one worker per project in its own slot; the worker gives each ticket a worktree, a build stage and a review stage run coding agents (Claude Code, Codex or any CLI), review can send work back for rework, and a last step updates the ticket on the board and merges what passed.](docs/images/internals.en.svg)
 
 ```
 ticket ready ──► worker for that project (one per project, a few projects at once)
@@ -34,7 +34,8 @@ ticket ready ──► worker for that project (one per project, a few projects 
                  ├─ build   (developer model) in its own git worktree ─► writes: PR <url> | BRANCH <name> | BLOCKED <why>
                  ├─ review  (reviewer model) runs the tests, fixes small things ─► writes: PASS | REWORK | NEEDS_HUMAN | BLOCKED
                  │     REWORK ─► build again with the review notes, then review once more
-                 └─ settle  PASS ─► "review" for you to merge (or merged, with autoMerge on)
+                 └─ update the ticket
+                            PASS ─► "review" for you to merge (or merged, with autoMerge on)
                             NEEDS_HUMAN / BLOCKED ─► "blocked", with the reason on the ticket
 ```
 
@@ -51,6 +52,10 @@ What makes it hold up when nobody is watching:
 - **Untrusted issues never run.** On GitHub only issues opened by `trustedAuthors` are picked up: an issue is a prompt.
 
 ## How we run it
+
+> This is our own setup, shown as a real-world example. **You need none of it**: no Hermes, no Notion, no bridge
+> script. nightshift on its own, with a folder of markdown tickets or GitHub Issues, is the whole product; start with
+> [Quick start](#quick-start).
 
 nightshift builds our own products at catchmeif404. The owner asks for work in Telegram; a PM bot on
 [Hermes Agent](https://github.com/NousResearch/hermes-agent) files it as a ticket in Notion. nightshift runs as a launchd service that looks for
