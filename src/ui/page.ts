@@ -3,28 +3,46 @@ import { NoteLanguage } from "../enums.js";
 
 // The console is one static page. Every value from the server reaches the DOM through textContent, never innerHTML.
 const STYLE = `
-:root { color-scheme: light dark; --bg: #fafafa; --fg: #1b1b1f; --mut: #66666f; --line: #d9d9e0; --card: #fff; --ok: #1a7f37; --warn: #9a6700; --bad: #cf222e; --accent: #3b5bdb; }
-@media (prefers-color-scheme: dark) { :root { --bg: #121216; --fg: #ececf1; --mut: #9a9aa6; --line: #2d2d36; --card: #1a1a20; --ok: #3fb950; --warn: #d29922; --bad: #f85149; --accent: #8da2ff; } }
+:root { color-scheme: dark; --bg: #0a0a0c; --panel: #111114; --card: #16161a; --fg: #f0f3f8; --mut: #9aa0ab; --line: #2a2d34; --ok: #3fb950; --warn: #d9a441; --bad: #ff6b63; --accent: #4c8dff; --accent-strong: #2f6beb; --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
 * { box-sizing: border-box; }
-body { margin: 0; font: 15px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--fg); }
-header, main { max-width: 980px; margin: 0 auto; padding: 16px; }
-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-h1 { font-size: 20px; margin: 0; } h2 { font-size: 16px; margin: 0 0 8px; }
-section { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-label { display: block; font-size: 13px; color: var(--mut); margin: 10px 0 2px; }
-input, select, textarea { width: 100%; font: inherit; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
-textarea { min-height: 64px; font-family: ui-monospace, monospace; font-size: 13px; }
-input.bad, select.bad, textarea.bad { border-color: var(--bad); }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 16px; }
-button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: inherit; cursor: pointer; }
-button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-button:disabled { opacity: .5; cursor: default; }
-.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+body { margin: 0; font: 16px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif; background: var(--bg); color: var(--fg); }
+header, main { max-width: 980px; margin: 0 auto; padding: 20px 16px; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.brand svg { width: 44px; height: 44px; flex: none; }
+h1 { font-size: 24px; font-weight: 800; letter-spacing: -.5px; margin: 0; color: var(--fg); }
+h2 { font-size: 18px; font-weight: 700; margin: 0 0 10px; color: var(--fg); }
+h3 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin: 20px 0 8px; color: var(--accent); }
+section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+section > h2 { padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+section > h2::before { content: ""; display: inline-block; width: 4px; height: 16px; background: var(--accent); border-radius: 2px; margin-right: 10px; vertical-align: -2px; }
+label { display: block; font-size: 14px; color: var(--mut); margin: 12px 0 4px; }
+input, select, textarea { width: 100%; font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; overflow-wrap: anywhere; }
+input, textarea { font-family: var(--mono); font-size: 14px; }
+select { appearance: auto; }
+textarea { min-height: 72px; }
+input:disabled, select:disabled, textarea:disabled { color: var(--mut); background: #0d0d10; border-style: dashed; cursor: not-allowed; opacity: 1; }
+input.bad, select.bad, textarea.bad { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 0 16px; }
+button { font: inherit; padding: 7px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button.primary { background: var(--accent-strong); color: #fff; border-color: var(--accent-strong); font-weight: 600; }
+button.primary:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+.row.flush { margin: 0 0 10px; }
+.mt { margin-top: 14px; }
 .mut { color: var(--mut); } .ok { color: var(--ok); } .warn { color: var(--warn); } .fail { color: var(--bad); }
-.note { border-left: 3px solid var(--warn); padding: 4px 10px; margin: 8px 0; background: rgba(154,103,0,.08); }
-table { border-collapse: collapse; width: 100%; } td, th { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-pre { margin: 0; max-height: 260px; overflow: auto; font: 12px/1.45 ui-monospace, monospace; white-space: pre-wrap; word-break: break-all; }
-.tag { display: inline-block; font-size: 12px; border: 1px solid var(--line); border-radius: 10px; padding: 0 8px; margin-right: 4px; }
+.result div, #doctor div { font-family: var(--mono); font-size: 14px; overflow-wrap: anywhere; padding: 2px 0; }
+.note { border: 1px solid var(--line); border-left: 3px solid var(--warn); border-radius: 6px; padding: 8px 12px; margin: 10px 0; background: rgba(217,164,65,.08); overflow-wrap: anywhere; }
+.note.fail { border-left-color: var(--bad); background: rgba(255,107,99,.08); }
+table { border-collapse: collapse; width: 100%; } td, th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { color: var(--mut); font-weight: 600; font-size: 13px; }
+td:first-child { font-family: var(--mono); font-size: 14px; }
+pre:empty { display: none; }
+pre { margin: 0; max-height: 260px; overflow: auto; font: 13px/1.5 var(--mono); white-space: pre-wrap; word-break: break-all; background: #08080a; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; color: #d4d8df; }
+.tag { display: inline-block; font-size: 12px; color: var(--accent); border: 1px solid var(--accent-strong); border-radius: 10px; padding: 0 8px; margin-right: 6px; }
 `;
 
 const SCRIPT = String.raw`
@@ -91,14 +109,14 @@ function renderStatus(s) {
   box.append(h("p", { class: "mut" }, t("board") + ": " + s.board + " · max " + s.maxSlots + " · poll " + s.pollSeconds + "s · " + t("refreshed") + new Date().toLocaleTimeString()));
   if (s.boardError) box.append(h("p", { class: "fail" }, s.boardError));
   s.limits.forEach(function (l) { box.append(h("div", { class: "note" }, t("limits") + ": " + l.agent + " → " + l.until + " (" + l.message + ")")); });
-  box.append(h("h2", {}, t("workers")));
+  box.append(h("h3", {}, t("workers")));
   if (s.workers.length === 0) box.append(h("p", { class: "mut" }, t("noWorkers")));
   else {
     var wt = h("table", {}, h("tr", {}, h("th", {}, "target"), h("th", {}, "pid"), h("th", {}, t("stage"))));
     s.workers.forEach(function (w) { wt.append(h("tr", {}, h("td", {}, w.target + (w.release ? " (release)" : "")), h("td", {}, w.pid), h("td", {}, w.stage || "-"))); });
     box.append(wt);
   }
-  box.append(h("h2", { style: "margin-top:12px" }, t("tickets")));
+  box.append(h("h3", {}, t("tickets")));
   ["working", "ready", "review", "blocked"].forEach(function (k) {
     var g = s.tickets[k];
     box.append(h("div", {}, h("strong", {}, k + ": " + g.count)));
@@ -111,7 +129,7 @@ function renderStatus(s) {
     });
     box.append(tb);
   });
-  box.append(h("h2", { style: "margin-top:12px" }, t("log")), h("pre", {}, s.log.join("\n")));
+  box.append(h("h3", {}, t("log")), h("pre", {}, s.log.join("\n")));
 }
 
 async function refreshStatus() {
@@ -130,11 +148,11 @@ function renderSettings(v) {
   var f = v.form, box = clear($("form"));
   v.problems.forEach(function (p) { box.append(h("div", { class: "note fail" }, t("problem") + p)); });
   box.append(h("div", { class: "note" }, t("nextDispatch")));
-  box.append(h("h2", {}, t("projects")));
+  box.append(h("h3", {}, t("projects")));
   var pg = h("div", { class: "grid" });
   f.projects.forEach(function (p, i) { pg.append(field("proj" + i, p.name, h("input", { value: p.repoPath }), "projects." + p.name + ".repoPath")); });
   box.append(pg);
-  box.append(h("h2", { style: "margin-top:12px" }, t("boardH")));
+  box.append(h("h3", {}, t("boardH")));
   var bg = h("div", { class: "grid" });
   bg.append(field("boardType", t("boardType"), opts(h("select", v.lockedBoard ? { disabled: "" } : {}), typeOptions(BOARD_TYPES, f.board.type, v.lockedBoard), f.board.type), "board.type"));
   bg.append(field("boardDir", t("boardDir"), h("input", { value: f.board.dir }), "board.dir"));
@@ -143,7 +161,7 @@ function renderSettings(v) {
   bg.append(field("boardRepos", t("repos"), repos, "board.repos"), field("boardTrusted", t("trusted"), trusted, "board.trustedAuthors"));
   box.append(bg);
   [["builder", "builder", v.lockedBuilder], ["reviewer", "reviewer", v.lockedReviewer]].forEach(function (a) {
-    box.append(h("h2", { style: "margin-top:12px" }, t(a[0])));
+    box.append(h("h3", {}, t(a[0])));
     var g = h("div", { class: "grid" });
     g.append(field(a[1] + "Type", t("agentType"), opts(h("select", a[2] ? { disabled: "" } : {}), typeOptions(AGENT_TYPES, f[a[1]].type, a[2]), f[a[1]].type), a[1] + ".type"));
     g.append(field(a[1] + "Model", t("model"), h("input", { value: f[a[1]].model }), a[1] + ".model"));
@@ -154,7 +172,7 @@ function renderSettings(v) {
   if (v.preserved.length) {
     var pt = h("table", {});
     v.preserved.forEach(function (p) { pt.append(h("tr", {}, h("td", {}, p.path), h("td", { class: p.secret ? "mut" : "" }, p.secret ? "•••••• (" + t("secretKept") + ")" : p.value))); });
-    box.append(h("h2", { style: "margin-top:12px" }, t("preserved")), pt);
+    box.append(h("h3", {}, t("preserved")), pt);
   }
 }
 
@@ -249,13 +267,13 @@ export function renderPage(nonce: string, csrf: string, language: NoteLanguage):
 <style nonce="${nonce}">${STYLE}</style>
 </head>
 <body>
-<header><div><h1 id="title">${Brand.name}</h1><div class="mut" id="local"></div></div><button id="lang" type="button"></button></header>
+<header><div class="brand"><svg viewBox="0 0 128 128" aria-hidden="true"><defs><mask id="crescent"><rect width="128" height="128" fill="#fff"/><circle cx="72" cy="46" r="38" fill="#000"/></mask></defs><circle cx="56" cy="64" r="44" fill="#4c8dff" mask="url(#crescent)"/><circle cx="98" cy="26" r="4" fill="#4c8dff" opacity=".55"/><circle cx="112" cy="50" r="2.5" fill="#4c8dff" opacity=".55"/></svg><div><h1 id="title">${Brand.name}</h1><div class="mut" id="local"></div></div></div><button id="lang" type="button"></button></header>
 <main>
 <section><h2 id="hStatus"></h2><div id="status"></div></section>
 <section><h2 id="hSettings"></h2><div id="form"></div>
 <div class="row"><button id="check" type="button"></button><button id="save" type="button" class="primary"></button><button id="reload" type="button"></button></div>
-<div id="result" style="margin-top:12px"></div></section>
-<section><h2 id="hDoctor"></h2><div class="row" style="margin:0 0 8px"><button id="runDoctor" type="button"></button></div><div id="doctor"></div></section>
+<div id="result" class="result mt"></div></section>
+<section><h2 id="hDoctor"></h2><div class="row flush"><button id="runDoctor" type="button"></button></div><div id="doctor"></div></section>
 </main>
 <script nonce="${nonce}">${SCRIPT}</script>
 </body>
