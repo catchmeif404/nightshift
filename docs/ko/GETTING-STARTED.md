@@ -95,4 +95,4 @@ git merge nightshift/t-1
   `NEEDS_HUMAN`이 되고, 결정할 내용이 적힌 채로 `blocked`가 됩니다.
 - `nightshift.rules.md`에 팀 규칙(테스트 명령, 커밋 방식, 건드리면 안 되는 곳)을 적으세요.
 - GitHub Issues와 PR로 옮기기: [사용법 → GitHub](USAGE.md#github-issues-와-pr).
-- 혼자 계속 돌게 하기: [사용법 → 계속 돌리기](USAGE.md#계속-돌리기).
+- 혼자 계속 돌게 하기: `nightshift service install` ([사용법 → 계속 돌리기](USAGE.md#계속-돌리기)).
