@@ -87,8 +87,27 @@ test("slack and discord: webhook bodies, Korean text, blocked event", async () =
       assert.equal(svc.seen.length, 1);
       assert.equal(svc.seen[0]?.url, "/hook/abc");
       const body = JSON.parse(svc.seen[0]?.body ?? "{}") as Record<string, string>;
-      assert.deepEqual(Object.keys(body), [field]);
+      assert.deepEqual(Object.keys(body), service === NotifyService.Discord ? [field, "allowed_mentions"] : [field]);
       assert.match(body[field] ?? "", /Touch work: 멈춤, 확인 필요$/);
+    } finally {
+      delete process.env[HOOK_ENV];
+      await svc.close();
+    }
+  }
+});
+
+test("a title cannot ping a whole Slack channel or Discord server", async () => {
+  for (const service of [NotifyService.Slack, NotifyService.Discord]) {
+    const svc = await fakeService();
+    process.env[HOOK_ENV] = `${svc.base}/h`;
+    try {
+      const box = sandbox({ notify: { service, webhookUrlEnv: HOOK_ENV } });
+      const id = await readyTicket(box, "Touch work <!channel> @everyone");
+      box.plan(["BUILD_BLOCKED"]);
+      await runPipeline(box, id);
+      const body = JSON.parse(svc.seen[0]?.body ?? "{}") as { text?: string; content?: string; allowed_mentions?: { parse: string[] } };
+      if (service === NotifyService.Slack) assert.match(body.text ?? "", /&lt;!channel&gt;/);
+      else assert.deepEqual(body.allowed_mentions, { parse: [] });
     } finally {
       delete process.env[HOOK_ENV];
       await svc.close();

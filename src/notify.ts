@@ -4,9 +4,29 @@ import { clip, mask } from "./log.js";
 
 const TIMEOUT_MS = 10_000;
 
+interface TelegramBody {
+  chat_id: string;
+  text: string;
+}
+
+interface SlackBody {
+  text: string;
+}
+
+// allowed_mentions with no parse types: "@everyone" or "<@id>" in a ticket title pings nobody.
+interface DiscordBody {
+  content: string;
+  allowed_mentions: { parse: string[] };
+}
+
 interface Request {
   url: string;
-  body: Record<string, string>;
+  body: TelegramBody | SlackBody | DiscordBody;
+}
+
+// Slack reads "<!channel>" and "<@U123>" in a message as mentions; escaped, they are plain text.
+function slackText(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 // The HTTP request one service wants. A secret that is missing from the environment is an error text, not a request.
@@ -21,7 +41,8 @@ function buildRequest(cfg: NotifyConfig, text: string, env: NodeJS.ProcessEnv): 
     case NotifyService.Discord: {
       const url = env[cfg.webhookUrlEnv] ?? "";
       if (url === "") return `environment variable ${cfg.webhookUrlEnv} is not set`;
-      return { url, body: cfg.service === NotifyService.Slack ? { text } : { content: text } };
+      const body = cfg.service === NotifyService.Slack ? { text: slackText(text) } : { content: text, allowed_mentions: { parse: [] } };
+      return { url, body };
     }
     case NotifyService.None:
       return "notifications are off";
