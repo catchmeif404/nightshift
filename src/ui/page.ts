@@ -172,7 +172,7 @@ function collect() {
 function showIssues(issues, checks, extra) {
   var box = clear($("result"));
   document.querySelectorAll(".bad").forEach(function (e) { e.classList.remove("bad"); });
-  (extra || []).forEach(function (m) { box.append(m); });
+  (extra || []).forEach(function (m) { if (m) box.append(m); });
   (issues || []).forEach(function (i) {
     box.append(h("div", { class: i.level === "fail" ? "fail" : "warn" }, (i.level === "fail" ? "FAIL " : "warn ") + i.field + ": " + i.message));
     var el = document.querySelector('[data-issue="' + i.field + '"]');
