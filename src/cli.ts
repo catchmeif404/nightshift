@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { Brand } from "./brand.js";
-import { add, daemon, doctor, init, runOnce, status, workSlot } from "./commands.js";
+import { add, daemon, doctor, init, logs, runOnce, status, workSlot } from "./commands.js";
 import { ConfigError, loadConfig } from "./config.js";
 import { BoardType, CliCommand, TicketKind } from "./enums.js";
 
@@ -11,13 +11,14 @@ const HELP = `${Brand.name}: tickets in, one model builds, another reviews, you 
 
 Usage: ${Brand.name} <command> [options]
 
-  init [--board local-md|github] [--repo owner/name] [--repo-path .]
+  init [--board local-md|github] [--repo owner/name] [--repo-path .] [--trusted a,b]
                       write ${Brand.configFile} and a rules file (github: also create the labels)
   add "<title>" --project <name> [--body "..."] [--release]
                       add a ticket to the local markdown board
   run                 start workers for ready and cut-off tickets, then exit
   daemon              run every daemonIntervalMinutes until stopped
   status              running workers and tickets by status
+  logs [-f] [-n 40]   the runner's log (-f: keep following)
   doctor              check tools, sign-ins and the config
 
 Options: --root <dir>  folder that holds ${Brand.configFile} (default: current folder)
@@ -37,6 +38,9 @@ async function main(argv: string[]): Promise<number> {
       board: { type: "string", default: BoardType.LocalMarkdown },
       repo: { type: "string", default: "" },
       "repo-path": { type: "string", default: "." },
+      trusted: { type: "string", default: "" },
+      follow: { type: "boolean", short: "f", default: false },
+      lines: { type: "string", short: "n", default: "40" },
       project: { type: "string", default: "" },
       body: { type: "string", default: "" },
       release: { type: "boolean", default: false },
@@ -54,14 +58,15 @@ async function main(argv: string[]): Promise<number> {
       const board = Object.values(BoardType).find((b) => b === values.board);
       if (board === undefined) throw new ConfigError(`--board must be one of: ${Object.values(BoardType).join(", ")}`);
       if (board === BoardType.GitHub && values.repo === "") throw new ConfigError("--repo owner/name is required for --board github");
-      await init(root, { board, repo: values.repo, repoPath: values["repo-path"] });
+      const trusted = values.trusted.split(",").map((t) => t.trim()).filter((t) => t !== "");
+      await init(root, { board, repo: values.repo, repoPath: values["repo-path"], trusted });
       return 0;
     }
     case CliCommand.Add: {
       const title = positionals[1] ?? "";
       if (title === "" || values.project === "") throw new ConfigError(`usage: ${Brand.name} add "<title>" --project <name>`);
       const id = add(loadConfig(root), title, values.project, values.release ? TicketKind.Release : TicketKind.Build, values.body);
-      console.log(`added ${id}`);
+      console.log(`added ${id}. Start it with "${Brand.name} run".`);
       return 0;
     }
     case CliCommand.Run:
@@ -75,6 +80,9 @@ async function main(argv: string[]): Promise<number> {
       return 0;
     case CliCommand.Status:
       await status(loadConfig(root));
+      return 0;
+    case CliCommand.Logs:
+      await logs(loadConfig(root), Math.max(1, Number.parseInt(values.lines, 10) || 40), values.follow);
       return 0;
     case CliCommand.Doctor:
       return (await doctor(root)) ? 0 : 1;

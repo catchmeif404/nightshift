@@ -9,10 +9,13 @@ nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(GitH
 확인합니다. 작은 문제는 직접 고치고, 큰 문제는 한 번 더 고치라고 돌려보내고, 사람이 정해야 하는 일(돈, 법률 문구, 데이터
 삭제, 외부 공개)은 머지하지 않고 멈춥니다.
 
-우리 제품을 만드는 러너에서 떼어 낸 도구입니다. 그 러너는 처음 12일 동안 **티켓 225개**를 만들고 검토했고,
-**84%**가 1회차 검토를 통과했습니다(통과는 AI 검토자의 판정입니다).
+우리 제품을 만드는 러너에서 나왔고, 지금은 그 러너 자리를 대신해 우리 제품을 만들고 있습니다. 이전 bash 러너는 처음
+12일 동안 **티켓 225개**를 만들고 검토했고, **84%**가 1회차 검토를 통과했습니다(통과는 AI 검토자의 판정입니다).
 
-> 상태: 초기(0.1). 기본 실행기는 아직 Claude Code 하나이고, 다른 CLI는 command 실행기로 붙일 수 있습니다.
+> 상태: 초기(0.1). 내장: Claude Code 에이전트, 로컬 마크다운·GitHub Issues·command 보드.
+> 다른 에이전트(Codex 등)와 트래커(Notion, Linear 등)는 아직 내장이 아니라 직접 쓴 작은 스크립트로 붙입니다.
+
+**문서:** [설치](docs/ko/INSTALL.md) · [처음 시작하기 (10분)](docs/ko/GETTING-STARTED.md) · [사용법·문제 해결](docs/ko/USAGE.md)
 
 ## 동작 방식
 
@@ -42,14 +45,17 @@ nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(GitH
 
 Node 20 이상, git, 로그인된 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI가 필요합니다.
 
+전체 따라 하기는 [처음 시작하기](docs/ko/GETTING-STARTED.md)에 있습니다.
+
 ```sh
-npm install -g nightshift          # 아직 배포 전: 이 저장소를 받아 npm install && npm run build && npm link
-cd ~/work
-nightshift init --repo-path ./my-app
-nightshift add "slugify 함수 추가" --project my-app --body "소문자, 대시, 기존 테스트 옆에 테스트"
+npm install -g nightshift          # npm 배포 전에는 docs/ko/INSTALL.md 의 소스 설치
+mkdir ~/nightshift-queue && cd ~/nightshift-queue
+nightshift init --repo-path ~/code/my-app
 nightshift doctor
-nightshift run                     # 또는 nightshift daemon
-nightshift status
+nightshift add "slugify 함수 추가" --project my-app --body "소문자, 대시, 기존 테스트 옆에 테스트"
+nightshift run                     # 작업자를 백그라운드로 띄우고 바로 끝남
+nightshift logs -f                 # 지켜보기
+nightshift status                  # 상태별 티켓
 ```
 
 로컬 보드에서는 티켓이 `.tickets/` 안의 파일이고, 러너가 `ready → working → review | blocked → done` 으로 옮기며
@@ -61,8 +67,8 @@ nightshift status
 nightshift init --board github --repo you/my-app --repo-path ./my-app
 ```
 
-설정 파일을 쓰고 `nightshift:*` 라벨을 만듭니다. `board.trustedAuthors`에 내 로그인을 넣고 이슈에
-`nightshift:ready` 라벨을 달면 됩니다. 작업자가 PR을 열고, 검토자가 검토하고, 이슈가 `nightshift:review`로 갑니다
+설정 파일을 쓰고, `nightshift:*` 라벨을 만들고, 로그인한 `gh` 사용자를 믿을 수 있는 작성자로 넣습니다(더하려면
+`--trusted a,b`). 그다음 이슈에 `nightshift:ready` 라벨을 달면 됩니다. 작업자가 PR을 열고, 검토자가 검토하고, 이슈가 `nightshift:review`로 갑니다
 (`autoMerge`면 머지되고 닫힙니다). 혼자 돌아야 하는 티켓에는 `nightshift:release`를 답니다.
 
 ### 다른 트래커 (command 보드)
