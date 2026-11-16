@@ -2,7 +2,7 @@
 
 **Tickets in. One model builds, another reviews. You only decide what a human must.**
 
-[English](https://unpkg.com/@catchmeif404/nightshift/README.md) | [한국어](https://unpkg.com/@catchmeif404/nightshift/README.ko.md)
+[English](README.md) | [한국어](README.ko.md)
 
 nightshift is an unattended dev queue that runs on your own machine. Put tickets on a board (a folder of markdown
 files, GitHub Issues or Notion) and walk away. For each ticket nightshift starts a developer run of a coding agent
@@ -22,11 +22,11 @@ It grew out of the runner that builds our own products, and it now runs them. It
 > Status: early (0.1). Agents: **Claude Code** (default) and **Codex**, in either role, mixed as you like.
 > Boards: **local markdown** (default), **GitHub Issues**, **Notion**, and any other tracker through a small script.
 
-**Docs:** [Install](https://unpkg.com/@catchmeif404/nightshift/docs/INSTALL.md) · [Getting started (10 minutes)](https://unpkg.com/@catchmeif404/nightshift/docs/GETTING-STARTED.md) · [Usage and troubleshooting](https://unpkg.com/@catchmeif404/nightshift/docs/USAGE.md)
+**Docs:** [Install](docs/INSTALL.md) · [Getting started (10 minutes)](docs/GETTING-STARTED.md) · [Usage and troubleshooting](docs/USAGE.md)
 
 ## How it works
 
-![Inside nightshift: the board feeds dispatch, which starts one worker per project in its own slot; the worker gives each ticket a worktree, a build stage and a review stage run coding agents (Claude Code, Codex or any CLI), review can send work back for rework, and a last step updates the ticket on the board and merges what passed.](https://unpkg.com/@catchmeif404/nightshift/docs/images/internals.en.svg)
+![Inside nightshift: the board feeds dispatch, which starts one worker per project in its own slot; the worker gives each ticket a worktree, a build stage and a review stage run coding agents (Claude Code, Codex or any CLI), review can send work back for rework, and a last step updates the ticket on the board and merges what passed.](docs/images/internals.en.svg)
 
 ```
 ticket ready ──► worker for that project (one per project, a few projects at once)
@@ -63,12 +63,12 @@ work every 2 minutes, and a Notion hook kicks that service the moment a ticket i
 `opus` review, merges what passed, runs a post-merge check and wakes the PM bot to report back. It replaced the bash runner we
 used before; `nightshift service uninstall` stops all code work.
 
-![How catchmeif404 runs nightshift: owner, PM bot on Hermes, Notion ticket DB, the Notion bridge script, the nightshift service, nightshift, Claude Code sonnet building and opus reviewing, the merged pull request and the post-merge hook.](https://unpkg.com/@catchmeif404/nightshift/docs/images/usage.en.svg)
+![How catchmeif404 runs nightshift: owner, PM bot on Hermes, Notion ticket DB, the Notion bridge script, the nightshift service, nightshift, Claude Code sonnet building and opus reviewing, the merged pull request and the post-merge hook.](docs/images/usage.en.svg)
 
 ## Quick start
 
 Needs Node 20+, git, and the [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI signed in.
-The full walk-through is [Getting started](https://unpkg.com/@catchmeif404/nightshift/docs/GETTING-STARTED.md).
+The full walk-through is [Getting started](docs/GETTING-STARTED.md).
 
 ```sh
 npm install -g @catchmeif404/nightshift
@@ -85,7 +85,7 @@ nightshift service install         # from now on, picks up new tickets on its ow
 With the local board, tickets are files in `.tickets/`; the runner moves them through
 `ready → working → review | blocked → done` and appends notes to each file. Finished work waits on a local branch
 (`nightshift/t-1`) for you to merge. `service install` registers a LaunchAgent (macOS) or systemd timer (Linux):
-see [running continuously](https://unpkg.com/@catchmeif404/nightshift/docs/USAGE.md#running-continuously).
+see [running continuously](docs/USAGE.md#running-continuously).
 
 ### GitHub Issues
 
@@ -101,8 +101,8 @@ This writes the config, creates the `nightshift:*` labels and trusts the signed-
 
 | key | default | what it does |
 |---|---|---|
-| `board.type` | `local-md` | `local-md` (folder of tickets), `github`, `notion` ([setup](https://unpkg.com/@catchmeif404/nightshift/docs/USAGE.md#notion-as-the-board)), or `command` (any tracker, see below) |
-| `board.notion` | | database id, token, property and status names: see [Notion as the board](https://unpkg.com/@catchmeif404/nightshift/docs/USAGE.md#notion-as-the-board) |
+| `board.type` | `local-md` | `local-md` (folder of tickets), `github`, `notion` ([setup](docs/USAGE.md#notion-as-the-board)), or `command` (any tracker, see below) |
+| `board.notion` | | database id, token, property and status names: see [Notion as the board](docs/USAGE.md#notion-as-the-board) |
 | `board.command` | none | for `command`: the executable that speaks the board protocol |
 | `board.repos`, `board.trustedAuthors` | `[]` | GitHub repos to read, and whose issues may run |
 | `projects.<name>.repoPath` | (required) | the repo a ticket of this project works in |

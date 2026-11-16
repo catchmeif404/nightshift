@@ -26,10 +26,10 @@ npm install -g @catchmeif404/nightshift
 nightshift --help
 ```
 
-From source (once the GitHub repository is public):
+From source:
 
 ```sh
-git clone <this repository> nightshift
+git clone https://github.com/catchmeif404/nightshift.git
 cd nightshift
 npm install
 npm run build
