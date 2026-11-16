@@ -133,6 +133,7 @@ export class TicketPipeline {
       resultFile: this.state.path(resultFile),
       reviewFile: this.state.path(StateFile.Review),
       humanGates: this.r.config.humanGates,
+      ticketSections: this.r.config.ticketSections,
     };
   }
 
