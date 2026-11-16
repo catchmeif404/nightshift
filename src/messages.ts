@@ -5,6 +5,7 @@ export interface Messages {
   claimed: string;
   unknownProject(project: string): string;
   worktreeFailed(error: string): string;
+  missingSections(labels: string[]): string;
   buildBlocked(reason: string): string;
   sentBack(round: number): string;
   stillNotRight(rounds: number, review: string): string;
@@ -32,6 +33,7 @@ const english: Messages = {
   claimed: "picked up by the developer run.",
   unknownProject: (p) => `project "${p}" is not in the config; add it and set the ticket ready again.`,
   worktreeFailed: (e) => `could not make a worktree: ${e}`,
+  missingSections: (l) => `the ticket body lacks these sections (a "Label: text" line each): ${l.join(", ")}. Add them and set the ticket ready again.`,
   buildBlocked: (r) => `the developer could not finish: ${r}`,
   sentBack: (round) => `review round ${round}: sent back for rework.`,
   stillNotRight: (rounds, review) => `still not right after ${rounds} rounds.${withReview(review, "Review")}`,
@@ -55,6 +57,7 @@ const korean: Messages = {
   claimed: "개발 실행이 받음.",
   unknownProject: (p) => `설정에 없는 프로젝트 "${p}". 설정에 넣고 다시 할 일로 두세요.`,
   worktreeFailed: (e) => `작업 폴더(worktree)를 만들지 못함: ${e}`,
+  missingSections: (l) => `티켓 본문에 빠진 항목: ${l.join(", ")} ("항목: 내용" 한 줄씩). 채운 뒤 다시 할 일로 두세요.`,
   buildBlocked: (r) => `개발 단계에서 막힘: ${r}`,
   sentBack: (round) => `${round}회차 검토: 재작업으로 돌려보냄.`,
   stillNotRight: (rounds, review) => `${rounds}회차까지 고쳐도 통과 못 함.${withReview(review, "검토")}`,

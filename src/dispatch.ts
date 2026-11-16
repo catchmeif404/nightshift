@@ -21,6 +21,43 @@ import {
   statePaths,
 } from "./state.js";
 
+const COLON = "[:：]";
+
+// Labels from `labels` that have no "Label: text" line in the ticket body (text after the colon; full-width colon allowed).
+export function missingSections(body: string, labels: string[]): string[] {
+  const lines = body.split(/\r?\n/).map((l) => l.replace(/^[\s>*+#-]+/, "").replace(/\*\*|__/g, ""));
+  return labels.filter((label) => {
+    const head = new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*${COLON}\\s*(.*)$`, "i");
+    return !lines.some((line) => (head.exec(line)?.[1] ?? "").trim() !== "");
+  });
+}
+
+// An empty form for `add`: one "Label:" line per configured section.
+export function sectionsTemplate(labels: string[]): string {
+  return labels.map((l) => `${l}:`).join("\n\n");
+}
+
+// Tickets that pass the ticketSections check; the others move to blocked with a note naming what is missing.
+export async function requireSections(r: Runner, tickets: Ticket[]): Promise<Ticket[]> {
+  const labels = r.config.ticketSections;
+  if (labels.length === 0) return tickets;
+  const ok: Ticket[] = [];
+  for (const ticket of tickets) {
+    const missing = ticket.kind === TicketKind.Release ? [] : missingSections(ticket.body, labels);
+    if (missing.length === 0) {
+      ok.push(ticket);
+      continue;
+    }
+    try {
+      await r.board.setStatus(ticket.id, TicketStatus.Blocked, SettleReason.Blocked, messagesFor(r.config.language).missingSections(missing));
+      r.log.line(`${ticket.id} blocked: missing sections ${missing.join(", ")}`);
+    } catch (error) {
+      r.log.line(`${ticket.id} could not be blocked: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  return ok;
+}
+
 export function openRunner(config: Config): Runner {
   const paths = statePaths(config.stateDir);
   return {
@@ -102,7 +139,7 @@ export async function dispatch(r: Runner, spawner: WorkerSpawner = spawnWorker):
       return [];
     }
     const live = r.slots.live();
-    const candidates = [...(await stuckTickets(r)), ...(await r.board.list(TicketStatus.Ready))];
+    const candidates = [...(await stuckTickets(r)), ...(await requireSections(r, await r.board.list(TicketStatus.Ready)))];
     const starts = planDispatch(candidates, live, r.config.maxSlots);
     for (const start of starts) {
       if (!r.slots.tryCreate(start.key, start.target, start.mode === WorkerMode.Release)) continue;
@@ -148,7 +185,7 @@ export async function work(r: Runner, key: string): Promise<void> {
   try {
     if (release) {
       const stuck = (await stuckTickets(r)).filter((t) => t.id === target);
-      const ready = await claim(r, (await r.board.list(TicketStatus.Ready)).filter((t) => t.id === target));
+      const ready = await claim(r, await requireSections(r, (await r.board.list(TicketStatus.Ready)).filter((t) => t.id === target)));
       for (const ticket of [...stuck, ...ready]) {
         if ((await runTicket(r, ticket, key)) === TicketOutcome.Limited) return;
       }
@@ -160,7 +197,7 @@ export async function work(r: Runner, key: string): Promise<void> {
       if ((await runTicket(r, ticket, key)) === TicketOutcome.Limited) return;
     }
     for (let batch = 0; batch < r.config.maxBatches; batch += 1) {
-      const ready = (await r.board.list(TicketStatus.Ready)).filter(mine);
+      const ready = await requireSections(r, (await r.board.list(TicketStatus.Ready)).filter(mine));
       if (ready.length === 0) break;
       r.log.line(`work ${target}: batch ${batch + 1}: ${ready.map((t) => t.id).join(" ")}`);
       // Claim each ticket just before it runs, so a stop (usage limit) never leaves claimed tickets nobody works on.

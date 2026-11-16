@@ -27,10 +27,20 @@ export interface StageContext {
   resultFile: string;
   reviewFile: string;
   humanGates: HumanGate[];
+  ticketSections: string[];
 }
 
 function ticketBlock(ticket: Ticket): string {
   return [`## Ticket ${ticket.id}: ${ticket.title}`, "", ticket.body === "" ? "(no description)" : ticket.body].join("\n");
+}
+
+function sectionsBlock(labels: string[], reviewer: boolean): string {
+  if (labels.length === 0) return "";
+  const list = labels.map((l) => `  - ${l}:`).join("\n");
+  const rule = reviewer
+    ? "The review grades the work by these items and runs the items that say how to check it itself, instead of trusting the description."
+    : "Deliver what these items ask, keep out of what they rule out, and expect the review to grade by them and run the check items itself.";
+  return `\n## Ticket form\nThis ticket body carries these items:\n${list}\n${rule}\n`;
 }
 
 function rulesBlock(rules: string): string {
@@ -60,7 +70,7 @@ export function buildPrompt(ctx: StageContext, reviewNotes: string): string {
   return `You are the developer for one ticket, round ${ctx.round}. You work alone and unattended: nobody will answer questions.
 
 ${ticketBlock(ctx.ticket)}
-${notes}
+${sectionsBlock(ctx.ticketSections, false)}${notes}
 ## How to work
 - Your working directory is a git worktree on branch \`${ctx.worktree.branch}\`, made for this ticket. Work only here.
 - Read the repository's own agent instructions (CLAUDE.md, AGENTS.md, CONTRIBUTING.md) first and follow them.
@@ -84,7 +94,7 @@ export function reviewPrompt(ctx: StageContext, result: string): string {
   return `You are the reviewer (the CTO) for one ticket, round ${ctx.round}. A separate developer run built it. You work unattended.
 
 ${ticketBlock(ctx.ticket)}
-
+${sectionsBlock(ctx.ticketSections, true)}
 ## What to review
 The developer's result: \`${result}\`. Your working directory is the ticket's worktree on branch \`${ctx.worktree.branch}\`;
 compare it with \`${ctx.project.baseBranch}\` (for a pull request, \`gh pr diff\` shows the same change).

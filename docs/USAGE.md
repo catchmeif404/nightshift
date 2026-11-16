@@ -134,6 +134,13 @@ how to write the pull request.
 `product-direction`. When a change touches one, the reviewer answers `NEEDS_HUMAN` and writes what you must decide,
 the options and its recommendation; the ticket goes to `blocked` with that text. Nothing behind a gate is merged.
 
+**Ticket form** (`ticketSections`, default `[]` = off): a list of labels, for example
+`["Deliverable", "Check", "Out of scope"]`. Before a ticket runs, its body must have a `Label: text` line for each
+label (text after the colon; a full-width `：` works too). A ticket that lacks one moves to `blocked` with a note
+naming what is missing (all boards; release tickets are not checked). Build and review prompts list the items, and the
+review grades by them and runs the check items itself. `add` pre-fills an empty form in the body. `doctor` reports an
+invalid list (empty or duplicate label, a colon in a label).
+
 **Release tickets** (`--release` on `add`, or the `nightshift:release` label) run alone, as one reviewer run that
 follows your rules file. Write the release steps there (tag, deploy, how to check it is live). The run answers `DONE`
 or `BLOCKED`.

@@ -5,7 +5,7 @@ import { boardLabels } from "./board/github.js";
 import { LocalMarkdownBoard } from "./board/localMarkdown.js";
 import { Brand } from "./brand.js";
 import { Config, configPath, hasProject, loadConfig } from "./config.js";
-import { dispatch, openRunner, work } from "./dispatch.js";
+import { dispatch, openRunner, sectionsTemplate, work } from "./dispatch.js";
 import { AgentType, BoardType, CheckLevel, PublishMode, TicketKind, TicketStatus } from "./enums.js";
 import { run } from "./exec.js";
 import { statePaths } from "./state.js";
@@ -109,7 +109,9 @@ export function add(config: Config, title: string, project: string, kind: Ticket
     throw new Error(`"add" works with the local markdown board; on GitHub, open an issue with the ${Brand.labelPrefix}${TicketStatus.Ready} label.`);
   }
   if (!hasProject(config, project)) throw new Error(`project "${project}" is not in ${Brand.configFile}`);
-  return new LocalMarkdownBoard(config.board.dir).create(title, project, kind, body);
+  const form = kind === TicketKind.Release ? "" : sectionsTemplate(config.ticketSections);
+  const full = body === "" ? form : form === "" ? body : `${body}\n\n${form}`;
+  return new LocalMarkdownBoard(config.board.dir).create(title, project, kind, full);
 }
 
 export async function runOnce(config: Config): Promise<void> {

@@ -73,6 +73,8 @@ export interface Config {
   workerDoneCommand: string;
   // Language of the notes the runner writes on tickets.
   language: NoteLanguage;
+  // Labels ("Label:" lines) every ticket body must carry before it runs. Empty: no check.
+  ticketSections: string[];
   tools: ToolPaths;
 }
 
@@ -184,6 +186,15 @@ function notionConfig(o: JsonObject, root: string): NotionBoardConfig {
   };
 }
 
+function sectionLabels(o: JsonObject): string[] {
+  const labels = strList(o, "ticketSections", [], "config").map((l) => l.trim());
+  const bad = labels.find((l) => l === "" || /[:：\r\n]/.test(l));
+  if (bad !== undefined) throw new ConfigError(`config.ticketSections: "${bad}" must be a non-empty label without a colon or line break`);
+  const dup = labels.find((l, i) => labels.findIndex((x) => x.toLowerCase() === l.toLowerCase()) !== i);
+  if (dup !== undefined) throw new ConfigError(`config.ticketSections: "${dup}" is listed twice`);
+  return labels;
+}
+
 export const DEFAULT_GATES: HumanGate[] = Object.values(HumanGate);
 
 export function parseConfig(raw: unknown, root: string): Config {
@@ -244,6 +255,7 @@ export function parseConfig(raw: unknown, root: string): Config {
     notifyCommand: inside(root, str(top, "notifyCommand", "", "config")),
     workerDoneCommand: str(top, "workerDoneCommand", "", "config"),
     language: oneOf(top, "language", Object.values(NoteLanguage), NoteLanguage.English, "config"),
+    ticketSections: sectionLabels(top),
     tools: {
       git: str(toolsRaw, "git", "git", "tools"),
       gh: str(toolsRaw, "gh", "gh", "tools"),
