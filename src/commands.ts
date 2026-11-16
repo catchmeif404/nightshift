@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, statSync, writeFileSync } from "node:fs";
+import { basename, join, resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { boardLabels } from "./board/github.js";
 import { LocalMarkdownBoard } from "./board/localMarkdown.js";
@@ -25,14 +25,20 @@ export interface InitOptions {
   board: BoardType;
   repo: string;
   repoPath: string;
+  // GitHub logins whose issues may run. Empty: the signed-in gh user.
+  trusted: string[];
+}
+
+function initProjectName(options: InitOptions): string {
+  return options.board === BoardType.GitHub ? options.repo : basename(resolve(options.repoPath)) || "my-app";
 }
 
 function initConfig(options: InitOptions): object {
-  const project = options.board === BoardType.GitHub ? options.repo : "my-app";
+  const project = initProjectName(options);
   return {
     board:
       options.board === BoardType.GitHub
-        ? { type: BoardType.GitHub, repos: [options.repo], trustedAuthors: [] }
+        ? { type: BoardType.GitHub, repos: [options.repo], trustedAuthors: options.trusted }
         : { type: BoardType.LocalMarkdown, dir: Brand.ticketsDir },
     projects: {
       [project]: {
@@ -50,7 +56,20 @@ function initConfig(options: InitOptions): object {
   };
 }
 
-export async function init(root: string, options: InitOptions): Promise<void> {
+async function signedInLogin(gh: string, root: string): Promise<string> {
+  const result = await run(gh, ["api", "user", "--jq", ".login"], root);
+  return result.code === 0 ? result.stdout.trim() : "";
+}
+
+export async function init(root: string, given: InitOptions): Promise<void> {
+  let options = given;
+  if (options.board === BoardType.GitHub && options.trusted.length === 0) {
+    const login = await signedInLogin("gh", root);
+    if (login !== "") {
+      options = { ...options, trusted: [login] };
+      console.log(`trusted author: ${login} (the signed-in gh user; add more with --trusted a,b)`);
+    }
+  }
   const path = configPath(root);
   if (existsSync(path)) {
     console.log(`${Brand.configFile} already exists; leaving it as it is.`);
@@ -75,9 +94,13 @@ export async function init(root: string, options: InitOptions): Promise<void> {
       );
       console.log(`${result.code === 0 ? "label" : "label FAILED"} ${label.name}${result.code === 0 ? "" : `: ${result.stderr.trim()}`}`);
     }
-    console.log(`\nAdd the GitHub logins whose issues may run to board.trustedAuthors in ${Brand.configFile}.`);
+    if (options.trusted.length === 0) {
+      console.log(`\nNo trusted author yet: add the GitHub logins whose issues may run to board.trustedAuthors in ${Brand.configFile}.`);
+    }
+    console.log(`\nNext: "${Brand.name} doctor", then label an issue ${Brand.labelPrefix}${TicketStatus.Ready} and "${Brand.name} run".`);
+    return;
   }
-  console.log(`\nNext: "${Brand.name} doctor", then add a ticket and "${Brand.name} run".`);
+  console.log(`\nNext: "${Brand.name} doctor", then "${Brand.name} add \"<what to do>\" --project ${initProjectName(options)}" and "${Brand.name} run".`);
 }
 
 export function add(config: Config, title: string, project: string, kind: TicketKind, body: string): string {
@@ -90,8 +113,42 @@ export function add(config: Config, title: string, project: string, kind: Ticket
 }
 
 export async function runOnce(config: Config): Promise<void> {
-  const starts = await dispatch(openRunner(config));
-  console.log(starts.length === 0 ? "nothing to start." : starts.map((s) => `started ${s.mode} worker: ${s.target}`).join("\n"));
+  const runner = openRunner(config);
+  const starts = await dispatch(runner);
+  if (starts.length > 0) {
+    for (const s of starts) console.log(`started ${s.mode} worker: ${s.target}`);
+    console.log(`Workers run in the background. Follow them with "${Brand.name} logs -f"; see results with "${Brand.name} status".`);
+    return;
+  }
+  const busy = runner.slots.live().length;
+  const ready = (await runner.board.list(TicketStatus.Ready)).length;
+  if (ready === 0) console.log("nothing to start: no ready tickets.");
+  else console.log(`nothing to start: ${ready} ready ticket(s) wait for a project that is already being worked on (${busy} worker(s) running).`);
+}
+
+export function logs(config: Config, lines: number, follow: boolean): Promise<void> {
+  const file = statePaths(config.stateDir).log;
+  if (!existsSync(file)) {
+    console.log(`no log yet (${file}).`);
+    return Promise.resolve();
+  }
+  const text = readFileSync(file, "utf8");
+  process.stdout.write(text.split("\n").slice(-(lines + 1)).join("\n"));
+  if (!follow) return Promise.resolve();
+  let offset = statSync(file).size;
+  return new Promise(() => {
+    setInterval(() => {
+      const size = statSync(file).size;
+      if (size < offset) offset = 0;
+      if (size === offset) return;
+      const fd = openSync(file, "r");
+      const chunk = Buffer.alloc(size - offset);
+      readSync(fd, chunk, 0, chunk.length, offset);
+      closeSync(fd);
+      offset = size;
+      process.stdout.write(chunk.toString("utf8"));
+    }, 1000);
+  });
 }
 
 export async function workSlot(config: Config, key: string): Promise<void> {
@@ -117,6 +174,7 @@ export async function status(config: Config): Promise<void> {
   const runner = openRunner(config);
   const live = runner.slots.live();
   console.log(`board: ${runner.board.name}`);
+  console.log(`log:   ${runner.paths.log}`);
   console.log(live.length === 0 ? "workers: none running" : "workers:");
   for (const slot of live) console.log(`  ${slot.target} (pid ${slot.pid})${slot.stage === "" ? "" : ` - ${slot.stage}`}`);
   for (const s of [TicketStatus.Working, TicketStatus.Ready, TicketStatus.Review, TicketStatus.Blocked]) {

@@ -123,6 +123,7 @@ export enum CliCommand {
   Work = "work",
   Daemon = "daemon",
   Status = "status",
+  Logs = "logs",
   Doctor = "doctor",
   Version = "version",
   Help = "help",

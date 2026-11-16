@@ -10,6 +10,8 @@
   "files": [
     "dist/src",
     "README.md",
+    "README.ko.md",
+    "docs",
     "LICENSE"
   ],
   "engines": {
@@ -18,10 +20,21 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/test/",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm test"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "typescript": "^5.7.0"
-  }
+  },
+  "keywords": [
+    "claude-code",
+    "ai-agents",
+    "coding-agent",
+    "dev-queue",
+    "code-review",
+    "automation",
+    "github-issues",
+    "cli"
+  ]
 }
