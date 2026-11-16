@@ -89,3 +89,6 @@ n and median across the 3 tasks. Pairs with a missing value are excluded from th
 None after the first measured run (2026-11-16T23:47:17Z). Before it, while validating the grader against a reference
 solution (not shown to any run), two harness bugs were fixed and committed in the same pre-run commit series: the grader's
 base ref (`main` -> `origin/main`) and t3's expected hidden-test count (10 -> 11). No measured run was discarded or repeated.
+
+Editorial note added in review (2026-11-17, after all runs; no rule or measure changed): the reference
+`docs/bench/REPORT.md`, "Observational logs" above means `bench/REPORT.md`, section 4 ("관찰 자료와 통제 실험의 구분").
