@@ -18,13 +18,9 @@
 <path class="ln" d="M 808 224 L 875 224" marker-end="url(#h)"/>
 <text class="lb" x="843" y="248" text-anchor="middle">reads</text>
 <path class="ln" d="M 708 256 L 708 331" marker-end="url(#h)"/>
-<text class="lb" x="720" y="299" text-anchor="start">hook: start now</text>
-<path class="ln" d="M 1152 384 L 1085 384" marker-end="url(#h)"/>
-<text class="lb" x="1116" y="368" text-anchor="middle">run</text>
+<text class="lb" x="720" y="299" text-anchor="start">hook: kickstart now</text>
 <path class="ln" d="M 808 384 L 875 384" marker-end="url(#h)"/>
 <text class="lb" x="844" y="368" text-anchor="middle">run</text>
-<path class="ln" d="M 708 432 L 708 507" stroke-dasharray="6 6" marker-end="url(#h)"/>
-<text class="lb" x="720" y="475" text-anchor="start">switch off</text>
 <path class="ln" d="M 947 336 L 947 261" marker-end="url(#h)"/>
 <text class="lb" x="935" y="300" text-anchor="end">calls</text>
 <path class="ln" d="M 1013 256 L 1013 331" marker-end="url(#h)"/>
@@ -54,22 +50,14 @@
 <text class="t" x="980" y="193" font-size="15" text-anchor="middle" font-weight="600">notion_board.py</text>
 <text class="t m" x="980" y="213" font-size="14" text-anchor="middle">command-board script</text>
 <text class="t m" x="980" y="233" font-size="14" text-anchor="middle">Notion ↔ nightshift</text>
-<rect class="card" x="1152.5" y="336.5" width="199" height="95" rx="10"/>
-<text class="t" x="1252" y="369" font-size="15" text-anchor="middle" font-weight="600">nightshift service</text>
-<text class="t m" x="1252" y="389" font-size="14" text-anchor="middle">launchd, every</text>
-<text class="t m" x="1252" y="409" font-size="14" text-anchor="middle">2 minutes</text>
 <rect class="card" x="608.5" y="336.5" width="199" height="95" rx="10"/>
-<text class="t" x="708" y="369" font-size="15" text-anchor="middle" font-weight="600">claude_dev_runner.sh</text>
-<text class="t m" x="708" y="389" font-size="14" text-anchor="middle">entry point; switch</text>
-<text class="t m" x="708" y="409" font-size="14" text-anchor="middle">nightshift.enabled</text>
+<text class="t" x="708" y="369" font-size="15" text-anchor="middle" font-weight="600">nightshift service</text>
+<text class="t m" x="708" y="389" font-size="14" text-anchor="middle">launchd, every</text>
+<text class="t m" x="708" y="409" font-size="14" text-anchor="middle">2 minutes and at login</text>
 <rect class="accent" x="880.5" y="336.5" width="199" height="95" rx="10"/>
 <text class="t" x="980" y="369" font-size="15" text-anchor="middle" font-weight="600">nightshift</text>
 <text class="t m" x="980" y="389" font-size="14" text-anchor="middle">dispatch; one worker</text>
 <text class="t m" x="980" y="409" font-size="14" text-anchor="middle">per project (max 5)</text>
-<rect class="dashed" x="608.5" y="512.5" width="199" height="95" rx="10"/>
-<text class="t" x="708" y="545" font-size="15" text-anchor="middle" font-weight="600">legacy bash runner</text>
-<text class="t m" x="708" y="565" font-size="14" text-anchor="middle">only when the switch</text>
-<text class="t m" x="708" y="585" font-size="14" text-anchor="middle">file is gone</text>
 <rect class="card" x="880.5" y="512.5" width="199" height="95" rx="10"/>
 <text class="t" x="980" y="545" font-size="15" text-anchor="middle" font-weight="600">Claude Code · sonnet</text>
 <text class="t m" x="980" y="565" font-size="14" text-anchor="middle">builds in its own</text>
