@@ -52,10 +52,10 @@ nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마�
 
 catchmeif404의 제품은 nightshift로 만들고 있습니다. 대표가 텔레그램으로 요청하면 [Hermes Agent](https://github.com/NousResearch/hermes-agent)
 위의 PM 봇(한결)이 Notion에 티켓을 만듭니다. nightshift는 2분마다 일을 찾는 launchd 서비스로 돌고, 티켓이 생기면 Notion 훅이 그 서비스를
-바로 깨웁니다. 작은 command 보드 스크립트로 Notion을 읽고 쓰며, Claude Code `sonnet`에게 개발을, `opus`에게 검토를 시키고, 통과한 것을 머지하고, 머지 뒤
+바로 깨웁니다. 작은 연결 스크립트(`notion_bridge.py`)로 Notion을 읽고 쓰며, Claude Code `sonnet`에게 개발을, `opus`에게 검토를 시키고, 통과한 것을 머지하고, 머지 뒤
 점검을 돌린 다음 PM 봇을 깨워 보고하게 합니다. 예전에 쓰던 bash 러너를 대신하고 있고, `nightshift service uninstall` 하나로 코드 작업 전체를 멈춥니다.
 
-![catchmeif404에서 nightshift를 쓰는 방식: 대표, Hermes 위의 PM 봇, Notion 티켓 DB, command 보드 스크립트, nightshift 서비스, nightshift, 개발하는 Claude Code sonnet과 검토하는 opus, 머지된 PR, 머지 뒤 훅.](docs/images/usage.ko.svg)
+![catchmeif404에서 nightshift를 쓰는 방식: 대표, Hermes 위의 PM 봇, Notion 티켓 DB, Notion 연결 스크립트, nightshift 서비스, nightshift, 개발하는 Claude Code sonnet과 검토하는 opus, 머지된 PR, 머지 뒤 훅.](docs/images/usage.ko.svg)
 
 ## 빠른 시작
 
