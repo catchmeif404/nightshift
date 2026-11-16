@@ -61,7 +61,7 @@ test("--sections, --gate-paths and --notify write settings the config loader acc
 });
 
 test("bad flag values stop init before anything is written", () => {
-  for (const args of [["--sections", "nope"], ["--notify", "email"], ["--notify", "telegram"], ["--notify", "slack", "--notify-chat-id", "1"], ["--notify", "none"]]) {
+  for (const args of [["--sections", "nope"], ["--notify", "email"], ["--notify", "telegram"], ["--notify", "slack", "--notify-chat-id", "1"], ["--notify", "none"], ["--notify", "telegram", "--notify-chat-id", "not a chat"]]) {
     const { root, code, out } = runInit(args);
     assert.notEqual(code, 0, args.join(" "));
     assert.match(out, /--sections|--notify/);

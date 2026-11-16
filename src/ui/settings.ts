@@ -3,7 +3,7 @@ import { chmodSync, closeSync, copyFileSync, existsSync, fsyncSync, openSync, re
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { Brand } from "../brand.js";
 import { Check, configChecks } from "../commands.js";
-import { Config, configPath, inside, parseConfig } from "../config.js";
+import { Config, TELEGRAM_CHAT_ID_PATTERN, configPath, inside, parseConfig } from "../config.js";
 import { AgentType, BoardType, CheckLevel, NotifyService } from "../enums.js";
 import { clip, mask } from "../log.js";
 
@@ -21,7 +21,6 @@ const LOGIN_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:\[bot\])?$/;
 const SECRET_KEY = /token|secret|passw(or)?d|api[_-]?key|credential|authorization/i;
 // Names of where a secret lives, not secrets themselves.
 const REFERENCE_KEYS = new Set(["tokenEnv", "tokenFile"]);
-const CHAT_ID_PATTERN = /^(-?\d{1,20}|@[A-Za-z0-9_]{5,32})$/;
 const KEPT = "•••••• (kept)";
 
 export interface AgentForm {
@@ -246,7 +245,7 @@ export function validateEdit(edit: SettingsForm, current: SettingsForm, root: st
   if (!Object.values(NotifyService).includes(edit.notify.service)) {
     issues.push(issue(CheckLevel.Fail, "notify.service", `must be one of: ${Object.values(NotifyService).join(", ")}`));
   }
-  if (typeof edit.notify.chatId !== "string" || (edit.notify.chatId !== current.notify.chatId && edit.notify.chatId !== "" && !CHAT_ID_PATTERN.test(edit.notify.chatId))) {
+  if (typeof edit.notify.chatId !== "string" || (edit.notify.chatId !== current.notify.chatId && edit.notify.chatId !== "" && !TELEGRAM_CHAT_ID_PATTERN.test(edit.notify.chatId))) {
     issues.push(issue(CheckLevel.Fail, "notify.chatId", "a Telegram chat id (a number, e.g. -1001234567890) or @channelname"));
   }
   if (!Array.isArray(edit.ticketSections) || edit.ticketSections.some((l) => typeof l !== "string")) {

@@ -4,7 +4,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { boardLabels } from "./board/github.js";
 import { LocalMarkdownBoard } from "./board/localMarkdown.js";
 import { Brand } from "./brand.js";
-import { Config, ConfigError, configPath, hasProject, loadConfig } from "./config.js";
+import { Config, ConfigError, TELEGRAM_CHAT_ID_PATTERN, configPath, hasProject, loadConfig } from "./config.js";
 import { dispatch, missingSections, openRunner, sectionsTemplate, work } from "./dispatch.js";
 import {
   AgentType, BoardType, CheckLevel, DEFAULT_GATE_PATHS, GATE_PATHS_DEFAULT_KEYWORD, NotifyService, PublishMode, SECTION_PRESET_LABELS, SectionPreset, TicketKind, TicketStatus,
@@ -55,6 +55,9 @@ export function initExtras(sections: string, gatePaths: string, notify: string, 
   }
   if (service === NotifyService.Telegram && notifyChatId === "") throw new ConfigError("--notify telegram needs --notify-chat-id <chat id>");
   if (service !== NotifyService.Telegram && notifyChatId !== "") throw new ConfigError("--notify-chat-id is only for --notify telegram");
+  if (notifyChatId !== "" && !TELEGRAM_CHAT_ID_PATTERN.test(notifyChatId)) {
+    throw new ConfigError("--notify-chat-id must be a Telegram chat id (a number, e.g. -1001234567890) or @channelname");
+  }
   return {
     sections: presets.filter((p, i) => presets.indexOf(p) === i).map((p) => SECTION_PRESET_LABELS[p]),
     gatePaths: globs.filter((g, i) => globs.indexOf(g) === i),
