@@ -22,5 +22,5 @@ Phase-2 plan input: {"cost_cv_median":0.19793895054323435,"cost_cv_max":0.504807
 | B | B0 | 4 | {"finished":4} | 16/16 | 20/36 | 178856 (n=4) | 0.10 | 262 | 0.00 | n/a |
 | B | B2 | 4 | {"finished":4} | 16/16 | 34/36 | 468535 (n=4) | 0.21 | 544 | 0.25 | n/a |
 
-Phase-2 plan input: {"cost_cv_median":0.127359710724209,"cost_cv_max":0.21908715901704937,"n_per_arm_cost":{"diff_10pct":{"by_median_cv":26,"by_max_cv":76},"diff_20pct":{"by_median_cv":7,"by_max_cv":19}},"n_per_arm_pass":{"diff_20pt":135,"diff_30pt":69},"mean_core_rate":1,"mean_detail_rate":0.8648148148148148,"n_per_arm_pass_detail":{"diff_20pt":42,"diff_30pt":25}}
+Phase-2 plan input: {"cost_cv_median":0.127359710724209,"cost_cv_max":0.21908715901704937,"n_per_arm_cost":{"diff_10pct":{"by_median_cv":26,"by_max_cv":76},"diff_20pct":{"by_median_cv":7,"by_max_cv":19}},"n_per_arm_pass":{"diff_20pt":38,"diff_30pt":21},"mean_core_rate":1,"mean_detail_rate":0.8648148148148148,"n_per_arm_pass_detail":{"diff_20pt":42,"diff_30pt":21}}
 

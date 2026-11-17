@@ -53,7 +53,7 @@ two-sided alpha 0.05, power 0.80, normal approximation `n = 2 (z_a + z_b)^2 CV^2
 | 10 % | 26 | 76 |
 | 20 % | 7 | 19 |
 
-Pass rates: the core rate is 100 % here, so a difference around it cannot be sized. Around the pooled detail rate (0.86): a 20-point difference needs about **42** runs per arm, a 30-point difference about **25**.
+Pass rates: the core rate is 100 % here, so a difference around it cannot be sized. Around the pooled detail rate (0.86): a 20-point difference needs about **42** runs per arm, a 30-point difference about **21** (the two rates are kept exactly 30 points apart inside 0.02-0.98; an earlier version clipped the upper rate at 0.98, which sized a 26.5-point difference and gave 25).
 (Table 2 gives larger numbers because the defective runs inflate the spread; they are not the right input.)
 
 ## Limits

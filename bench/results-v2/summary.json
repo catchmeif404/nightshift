@@ -448,14 +448,14 @@
         }
       },
       "n_per_arm_pass": {
-        "diff_20pt": 135,
-        "diff_30pt": 69
+        "diff_20pt": 38,
+        "diff_30pt": 21
       },
       "mean_core_rate": 1,
       "mean_detail_rate": 0.8648148148148148,
       "n_per_arm_pass_detail": {
         "diff_20pt": 42,
-        "diff_30pt": 25
+        "diff_30pt": 21
       }
     }
   }

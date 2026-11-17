@@ -6,7 +6,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { BENCH_ROOT, PRIVATE_ROOT } from "./common.mjs";
-import { cv, mean, nPerArmForProportions, nPerArmForRelativeDiff, sd } from "./stats.mjs";
+import { cv, mean, nPerArmForProportions, nPerArmForRelativeDiff, rateWindow, sd } from "./stats.mjs";
 
 export function load(dir) {
   return readdirSync(dir).filter((d) => existsSync(join(dir, d, "run.json"))).map((d) => JSON.parse(readFileSync(join(dir, d, "run.json"), "utf8")));
@@ -50,12 +50,12 @@ export function planPhase2(rows) {
   return {
     cost_cv_median: med, cost_cv_max: worst,
     n_per_arm_cost: Object.fromEntries([0.1, 0.2].map((d) => [`diff_${d * 100}pct`, { by_median_cv: nPerArmForRelativeDiff(med, d), by_max_cv: nPerArmForRelativeDiff(worst, d) }])),
-    // pass-rate difference: 20 and 30 points around the mean observed core rate (clamped inside 0..1)
-    n_per_arm_pass: p === null ? null : Object.fromEntries([0.2, 0.3].map((d) => [`diff_${d * 100}pt`, nPerArmForProportions(Math.max(0.02, p - d / 2), Math.min(0.98, p + d / 2))])),
+    // pass-rate difference: 20 and 30 points around the mean observed core rate (window shifted to stay inside 0.02..0.98)
+    n_per_arm_pass: p === null ? null : Object.fromEntries([0.2, 0.3].map((d) => [`diff_${d * 100}pt`, nPerArmForProportions(...rateWindow(p, d))])),
     mean_core_rate: p,
     // the core rate sits at the ceiling (about 1), so a difference around it is not estimable: the detail rate is reported too
     mean_detail_rate: pd,
-    n_per_arm_pass_detail: pd === null ? null : Object.fromEntries([0.2, 0.3].map((d) => [`diff_${d * 100}pt`, nPerArmForProportions(Math.max(0.02, pd - d / 2), Math.min(0.98, pd + d / 2))])),
+    n_per_arm_pass_detail: pd === null ? null : Object.fromEntries([0.2, 0.3].map((d) => [`diff_${d * 100}pt`, nPerArmForProportions(...rateWindow(pd, d))])),
   };
 }
 

@@ -29,3 +29,10 @@ export function nPerArmForProportions(p1, p2, power = Z.power80) {
   if (p1 === p2) return null;
   return Math.ceil(((Z.alpha05 + power) ** 2 * (p1 * (1 - p1) + p2 * (1 - p2))) / (p1 - p2) ** 2);
 }
+
+// Two pass rates exactly `d` apart around an observed rate p, kept inside [0.02, 0.98]: near the ceiling or the floor the
+// window is shifted, not clipped (clipping one end would size a smaller difference than the one named).
+export function rateWindow(p, d) {
+  const lo = Math.max(0.02, Math.min(p - d / 2, 0.98 - d));
+  return [lo, lo + d];
+}

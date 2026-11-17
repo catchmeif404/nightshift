@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cv, mean, nPerArmForProportions, nPerArmForRelativeDiff, sd } from "./stats.mjs";
+import { cv, mean, nPerArmForProportions, nPerArmForRelativeDiff, rateWindow, sd } from "./stats.mjs";
 import { weightedCost } from "./cost.mjs";
 
 test("sd and cv use the sample formula and return null when undefined", () => {
@@ -60,4 +60,11 @@ t2("question dialog regex matches both known footers", async () => {
   assert2.ok(re.test("  5. Chat about this\n\nEnter to select · ↑/↓ to navigate · Esc to cancel"));
   assert2.ok(re.test("Enter to select · Tab/Arrow keys to navigate"));
   assert2.ok(!re.test("Do you want to proceed?\n❯ 1. Yes"));
+});
+
+test("rate window keeps the full difference near the ceiling", () => {
+  const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} vs ${b}`);
+  const [a, b] = rateWindow(0.5, 0.2); close(a, 0.4); close(b, 0.6);
+  const [c, e] = rateWindow(1, 0.3); close(c, 0.68); close(e, 0.98);
+  const [f, g] = rateWindow(0, 0.2); close(f, 0.02); close(g, 0.22);
 });
