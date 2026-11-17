@@ -41,6 +41,7 @@ table { border-collapse: collapse; width: 100%; } td, th { text-align: left; pad
 th { color: var(--mut); font-weight: 600; font-size: 13px; }
 td:first-child { font-family: var(--mono); font-size: 14px; }
 td.id { white-space: nowrap; overflow-wrap: normal; }
+table.tickets { table-layout: fixed; } table.tickets td.id { width: 72px; } table.tickets td.why { width: 38%; }
 pre:empty { display: none; }
 pre { margin: 0; max-height: 260px; overflow: auto; font: 13px/1.5 var(--mono); white-space: pre-wrap; word-break: break-all; background: #08080a; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; color: #d4d8df; }
 .tag { display: inline-block; font-size: 12px; color: var(--accent); border: 1px solid var(--accent-strong); border-radius: 10px; padding: 0 8px; margin-right: 6px; }
@@ -113,7 +114,7 @@ var settings = null, lastStatus = null;
 function renderStatus(s) {
   lastStatus = s;
   var box = clear($("status"));
-  box.append(h("p", { class: "mut" }, t("board") + ": " + s.board + " · max " + s.maxSlots + " · poll " + s.pollSeconds + "s · " + t("refreshed") + new Date().toLocaleTimeString()));
+  box.append(h("p", { class: "mut" }, t("board") + ": " + s.board + " · max " + s.maxSlots + " · poll " + s.pollSeconds + "s · " + t("refreshed") + new Date().toLocaleTimeString(lang === "ko" ? "ko-KR" : "en-US")));
   if (s.boardError) box.append(h("p", { class: "fail" }, s.boardError));
   s.limits.forEach(function (l) { box.append(h("div", { class: "note" }, t("limits") + ": " + l.agent + " → " + l.until + " (" + l.message + ")")); });
   box.append(h("h3", {}, t("workers")));
@@ -128,11 +129,11 @@ function renderStatus(s) {
     var g = s.tickets[k];
     box.append(h("div", {}, h("strong", {}, k + ": " + g.count)));
     if (g.items.length === 0) return;
-    var tb = h("table", {});
+    var tb = h("table", { class: "tickets" });
     g.items.forEach(function (it) {
       var why = it.waiting.map(function (w) { return t(w.cause) + (w.detail ? " (" + w.detail + ")" : ""); });
       tb.append(h("tr", {}, h("td", { class: "id" }, it.id), h("td", {}, it.title, h("div", { class: "mut" }, it.project)),
-        h("td", {}, it.stage ? h("span", { class: "tag" }, it.stage) : null, why.length ? h("span", { class: "warn" }, t("waiting") + ": " + why.join(", ")) : null)));
+        h("td", { class: "why" }, it.stage ? h("span", { class: "tag" }, it.stage) : null, why.length ? h("span", { class: "warn" }, t("waiting") + ": " + why.join(", ")) : null)));
     });
     box.append(tb);
   });
