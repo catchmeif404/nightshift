@@ -42,6 +42,7 @@ th { color: var(--mut); font-weight: 600; font-size: 13px; }
 td:first-child { font-family: var(--mono); font-size: 14px; }
 td.id { white-space: nowrap; overflow-wrap: normal; }
 table.tickets { table-layout: fixed; } table.tickets td.id { width: 72px; } table.tickets td.why { width: 38%; }
+@media (max-width: 640px) { table.tickets { table-layout: auto; } table.tickets td.why { width: auto; } }
 pre:empty { display: none; }
 pre { margin: 0; max-height: 260px; overflow: auto; font: 13px/1.5 var(--mono); white-space: pre-wrap; word-break: break-all; background: #08080a; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; color: #d4d8df; }
 .tag { display: inline-block; font-size: 12px; color: var(--accent); border: 1px solid var(--accent-strong); border-radius: 10px; padding: 0 8px; margin-right: 6px; }
