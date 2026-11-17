@@ -13,6 +13,14 @@ export const MAX_REWORK_V2 = 1;
 export const PRIVATE_ROOT = process.env.BENCH_PRIVATE ?? join(homedir(), ".local/share/catchmeif404/nightshift-bench/v2");
 export const WORK_ROOT_V2 = process.env.BENCH_WORK_V2 ?? "/tmp/ns-bench2";
 export const Condition2 = { B0: "B0", B2: "B2", A2: "A2" };
+// TK-461 (third comparison): nightshift arms only. The build under test is this repository's own (reviewHandoff exists only there).
+export const Condition3 = { A2: "A2", A3: "A3", A4: "A4" };
+export const WORK_ROOT_V3 = process.env.BENCH_WORK_V3 ?? "/tmp/ns-bench3";
+export const RESULTS_V3 = process.env.BENCH_RESULTS_V3 ?? join(PRIVATE_ROOT, "..", "results-v3");
+export const NIGHTSHIFT_CLI_V3 = process.env.NIGHTSHIFT_CLI ?? join(BENCH_ROOT, "..", "dist", "src", "cli.js");
+export const Defect = { Build: "build", Missing: "missing", Hidden: "hidden" };
+export const ARM3 = { A2: { reviewer: "opus", handoff: false }, A3: { reviewer: "opus", handoff: true }, A4: { reviewer: "sonnet", handoff: false } };
+export const MAX_REVIEW_WALL_MS = 15 * 60 * 1000;
 export const MAX_WALL_MS = 20 * 60 * 1000;
 
 export const Condition = { On: "ON", Off: "OFF" };
