@@ -25,7 +25,7 @@ the same id; use new ids for a new sample. Never point it at an operational queu
 
 ## Second comparison, phase 1 (TK-458): interactive harness
 
-`PREREGISTRATION-v2.md` (draft, no measured run yet). Generic, task-independent tools:
+`PREREGISTRATION-v2.md` (frozen before the first measured run). Generic, task-independent tools:
 
 - `scripts/interactive.mjs` drives one interactive `claude` in a tmux window like a person typing one request (Stop-hook finish, one fixed
   nudge, permission/question dialogs, stall and time limits) and writes `interactive.json`.

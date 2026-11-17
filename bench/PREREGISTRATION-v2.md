@@ -1,8 +1,8 @@
-# TK-458 second comparison, phase 1: pre-registration (DRAFT, not frozen)
+# TK-458 second comparison, phase 1: pre-registration (FROZEN 2026-11-17, before the first measured run)
 
-**Status: no measured run has been made.** This file is committed before any run. The runs are **not started** because two
-inputs the owner must settle are missing (see "Open decisions"). When they are settled, freeze this file in its own commit
-(fill the `TBD` cells), then run. Anything that changes after the first run goes under "Deviations" at the bottom.
+**Status: frozen.** The owner settled the two open inputs on 2026-11-17 (the two tasks and the exact request and ticket wording;
+see "Tasks"). This file is committed in its own commit before any measured run. Anything that changes after the first
+measured run goes under "Deviations" at the bottom, with the reason.
 
 ## Question and non-claims
 
@@ -45,14 +45,27 @@ Task content, the owner's message text, the ticket text, the hidden tests and al
 are never copied into a run; they are split into **core** (behaviour knowable from the owner's usual-style request alone) and
 **detail** (only in the ticket's 완료 조건). A grader receives only a repository path (blind to the arm).
 
-| id | start point | candidate |
+| id | what it is (public description only) | hidden tests |
 |---|---|---|
-| t1 | TBD (private) | nightshift `ticketSections` (public PR #4, base `91a5f0b`) |
-| t2 | TBD (private) | nightshift `gatePaths` (public PR #5, base `848a977`) |
+| A | a small authenticated REST endpoint in a Java/Spring Boot service (rename a resource the caller owns); real HTTP against the booted app on an in-memory H2 database | core 2, detail 5 |
+| B | a Python report and dashboard change (add a per-candidate outbound search link, cleaned search words, KO/EN text, notification line); the grader reads the generated report, the dashboard HTML and the notification preview | core 4, detail 9 |
+
+Fixed by the owner on 2026-11-17 (no change during the experiment): the two tasks, the B0 request text and the B2/A2 ticket text
+per task. Which two tasks was **not** chosen by looking at results: they are the owner's decision after the earlier search found
+no other task with a stand-alone first message. The hidden-test split: *core* = behaviour that the usual-style request alone
+implies (the change works for the caller, shows up where asked, is URL-encoded, sends nothing to the external site);
+*detail* = things only the ticket's 완료 조건 states (trimming, length limits, rejecting other users' resources, cleaning rules,
+EN text, notification line).
+
+Grader validation (done before the first measured run, not counted): each grader gives 0 core / 0 detail (task A) and 1 of 4 /
+1 of 9 (task B; the "no request to the external site" check passes at the start by construction) on the start code, and full
+marks on the real merged change of that task. Known quirk: for task B the owner-fixed start commit is two merged pull requests
+older than the parent of the real change (one of them added a first manual search link); the ticket text matches either state and
+the start was kept as the owner fixed it. The result: task B asks all arms for slightly more than the original change did.
 
 ## Plan: 2 tasks x 3 arms x 4 repeats = 24 runs
 
-Order is a seeded shuffle (`node scripts/schedule-v2.mjs 458 t1,t2`), sequential, never concurrent, anon ids hide the arm.
+Order is a seeded shuffle (`node scripts/schedule-v2.mjs 458 <taskA>,<taskB>`, seed 458), sequential, never concurrent, anon ids hide the arm.
 A failed, stalled, timed-out or usage-limited run stays in the data and is not re-run. If a usage limit is reached, the run is
 recorded `usage_limit` and the schedule waits for the stated reset; no usage increase or new payment.
 
@@ -72,15 +85,19 @@ and `plan`: runs per arm for a 10 % and a 20 % difference in cost, `n = 2 (z_a +
 normal approximation), and for a pass-rate difference of 20 or 30 points around the observed core rate. With 4 repeats a CV is
 itself very uncertain; the report shows both the median and the largest observed CV.
 
-## Open decisions (why nothing was run)
+## Fixed conditions
 
-1. **The owner's request is not a standalone message.** The nightshift work of 2026-11-16 (tickets TK-449 to TK-452) came out
-   of one chat: the PM bot wrote the tickets from two short follow-up messages
-   that only make sense with the earlier turns of that chat. No other eligible task was found: most tickets originate from
-   Telegram or the PM bot and leave no owner message in `~/.claude/projects`. Using the follow-up verbatim makes B0 a test
-   of guessing the missing context, and the key names of the hidden tests cannot be derived from it. The owner has to give
-   (a) the two tasks and (b) for each, the message to type, before the core/detail split can be written honestly.
-2. The hidden tests for the nightshift candidates must be black-box (CLI and config), not the PR's unit tests (those use internal functions).
+Claude Code 2.1.326, model alias `sonnet` for B0/B2 and the A2 builder, `opus` for the A2 reviewer, nightshift 0.2.0 (the installed
+operating build), A2 `maxRework 1`, `maxSlots 1`, `maxStageTries 1`; rules = default rules plus the Building and Reviewing parts of the
+operating `rules.md`. One run at a time, never concurrent; scratch work under `/tmp/ns-bench2`; each run starts from a fresh
+clone of the start commit with `origin` removed. No new payment or limit increase.
+
+## Stop rules
+
+20 minutes per run (`timeout`); 3 minutes without progress (`stalled`); a usage-limit banner ends the run as `usage_limit` and the
+schedule waits for the stated reset (still no new payment); a run that errors is recorded as `error`. None of these is re-run or
+dropped. If the whole plan cannot finish (a limit that does not reset within a day, the machine unavailable), the rest is reported
+as **not run**, not estimated.
 
 ## Verification of the harness (done, not part of the measured data)
 
