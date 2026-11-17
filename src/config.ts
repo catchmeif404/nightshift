@@ -79,6 +79,8 @@ export interface Config {
   // How long to wait after a usage limit whose message names no reset time.
   usageLimitWaitMinutes: number;
   autoMerge: boolean;
+  // The developer writes a handoff (what changed, which files, test results) and the reviewer gets it with the list of changed files. Off: prompts are unchanged.
+  reviewHandoff: boolean;
   humanGates: HumanGate[];
   // Gets one message as its last argument when a ticket is blocked. Empty: log only.
   notifyCommand: string;
@@ -309,6 +311,7 @@ export function parseConfig(raw: unknown, root: string): Config {
     pollSeconds: Math.max(30, num(top, "pollSeconds", 120, "config")),
     usageLimitWaitMinutes: num(top, "usageLimitWaitMinutes", 60, "config"),
     autoMerge: bool(top, "autoMerge", false, "config"),
+    reviewHandoff: bool(top, "reviewHandoff", false, "config"),
     humanGates,
     notifyCommand: inside(root, str(top, "notifyCommand", "", "config")),
     workerDoneCommand: str(top, "workerDoneCommand", "", "config"),

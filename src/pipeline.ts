@@ -163,7 +163,22 @@ export class TicketPipeline {
       humanGates: this.r.config.humanGates,
       ticketSections: this.r.config.ticketSections,
       gatePaths: this.r.config.gatePaths,
+      reviewHandoff: this.r.config.reviewHandoff,
+      handoffFile: this.state.path(StateFile.Handoff),
+      handoffText: "",
+      changedFiles: [],
     };
+  }
+
+  // Files the branch changed, for the review handoff. A git failure leaves the list empty: the reviewer then looks for itself.
+  private async handoffFiles(project: ProjectConfig, tree: Worktree): Promise<string[]> {
+    try {
+      return await changedFiles(this.r.config, project, tree);
+    } catch (error) {
+      if (!(error instanceof GitError)) throw error;
+      this.log(`handoff: changed files unknown (${clip(oneLine(error.message), 200)})`);
+      return [];
+    }
   }
 
   async run(): Promise<TicketOutcome> {
@@ -180,7 +195,7 @@ export class TicketPipeline {
       round = Math.max(1, Number.parseInt(savedRound ?? "1", 10) || 1);
       this.log(`resuming at ${stage} r${round}`);
     } else {
-      this.state.remove(StateFile.Build, StateFile.Verdict, StateFile.Review, StateFile.ReviewPrevious);
+      this.state.remove(StateFile.Build, StateFile.Verdict, StateFile.Review, StateFile.ReviewPrevious, StateFile.Handoff);
       this.state.clearStage();
     }
 
@@ -218,7 +233,12 @@ export class TicketPipeline {
       const result = this.state.read(StateFile.Result);
       const resultKind = this.state.read(StateFile.ResultKind);
       if (!this.state.has(StateFile.Verdict)) {
-        const prompt = reviewPrompt(this.context(project, tree, round, rules, StateFile.Verdict), `${resultKind} ${result}`);
+        const reviewContext = this.context(project, tree, round, rules, StateFile.Verdict);
+        if (reviewContext.reviewHandoff) {
+          reviewContext.handoffText = this.state.read(StateFile.Handoff).trim();
+          reviewContext.changedFiles = await this.handoffFiles(project, tree);
+        }
+        const prompt = reviewPrompt(reviewContext, `${resultKind} ${result}`);
         const outcome = await this.runStage(Stage.Review, round, this.r.reviewer, this.r.config.reviewer.model, prompt, tree);
         if (outcome !== StageOutcome.Finished) return this.pausedOrSettled(outcome);
       }
@@ -230,7 +250,7 @@ export class TicketPipeline {
       switch (verdict) {
         case Verdict.Rework:
           if (!lastRound) {
-            this.state.remove(StateFile.ReviewPrevious, StateFile.Build, StateFile.Verdict, StateFile.ResultKind);
+            this.state.remove(StateFile.ReviewPrevious, StateFile.Build, StateFile.Verdict, StateFile.ResultKind, StateFile.Handoff);
             this.state.move(StateFile.Review, StateFile.ReviewPrevious);
             round += 1;
             stage = Stage.Build;

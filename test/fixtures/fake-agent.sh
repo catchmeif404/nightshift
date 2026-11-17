@@ -29,6 +29,7 @@ else
   review="$(printf '%s' "$prompt" | grep -oE 'findings for the developer to `[^`]+`|findings to `[^`]+`|short review to `[^`]+`' | head -n 1 | sed -E 's/.*`([^`]+)`/\1/' || true)"
   printf '%s\n%s\n' "$result" "$review" > "$memory"
 fi
+handoff="$(printf '%s' "$prompt" | grep -oE 'short handoff to `[^`]+`' | head -n 1 | sed -E 's/.*`([^`]+)`/\1/' || true)"
 branch="$(git rev-parse --abbrev-ref HEAD)"
 
 case "$action" in
@@ -36,6 +37,7 @@ case "$action" in
     echo "change $n" >> work.txt
     git add work.txt
     git -c user.name=fake -c user.email=fake@example.com commit -q -m "fake change $n"
+    [ -n "$handoff" ] && echo "HANDOFF-NOTE from build $n" > "$handoff"
     echo "BRANCH $branch" > "$result"
     ;;
   BUILD_PR)
