@@ -138,6 +138,18 @@ With the local board, tickets are files in `.tickets/`; the runner moves them th
 (`nightshift/t-1`) for you to merge. `service install` registers a LaunchAgent (macOS) or systemd timer (Linux):
 see [running continuously](docs/USAGE.md#running-continuously).
 
+### The console (`nightshift ui`)
+
+You can also configure nightshift from the dashboard. `nightshift ui` opens a local web console
+(127.0.0.1 only) that shows running workers and tickets by status, with why each ready ticket is still waiting, and
+lets you edit the settings: repository paths, board, builder and reviewer, concurrent workers, ticket form, gated
+paths and chat notifications. It checks your changes before saving and only writes `nightshift.json`: it never starts
+work. A doctor button runs the same checks as `nightshift doctor`. More in [the console](docs/USAGE.md#the-local-console-nightshift-ui).
+
+<p align="center">
+<img src="docs/images/console.en.png" alt="The nightshift console: a status card with no worker running and tickets grouped as ready, review and blocked, then a settings card with the repository path, board, builder and reviewer models, concurrent workers, ticket form labels, gated paths and chat notifications, and Check before saving / Save / Reload buttons." width="720">
+</p>
+
 ### GitHub Issues
 
 ```sh

@@ -132,6 +132,17 @@ nightshift ui                      # 로컬 웹 콘솔: 현황, 설정, doctor
 로컬 보드에서는 티켓이 `.tickets/` 안의 파일이고, 러너가 `ready → working → review | blocked → done` 으로 옮기며
 각 파일에 메모를 덧붙입니다.
 
+### 콘솔 (`nightshift ui`)
+
+설정은 대시보드에서도 할 수 있습니다. `nightshift ui`는 이 컴퓨터(127.0.0.1)에서만 열리는 웹 콘솔입니다. 돌고 있는
+작업자와 상태별 티켓(대기 중인 티켓은 왜 기다리는지까지)을 보여 주고, 저장소 경로, 보드, 작업자·검토자, 동시 작업 수,
+티켓 양식, 경로 승인, 채팅 알림을 고칠 수 있습니다. 저장 전에 값을 검사하고, 저장하면 `nightshift.json`만 씁니다.
+작업을 시작하지는 않습니다. doctor 버튼은 `nightshift doctor`와 같은 검사를 돌립니다. 자세한 건 [로컬 콘솔](docs/ko/USAGE.md#로컬-콘솔-nightshift-ui).
+
+<p align="center">
+<img src="docs/images/console.ko.png" alt="nightshift 콘솔: 실행 중인 워커 없음과 ready·review·blocked로 나뉜 티켓이 보이는 현황 카드, 그 아래 저장소 경로·보드·작업자와 검토자 모델·동시 작업 수·티켓 양식·경로 승인·채팅 알림과 저장 전 검사·저장·다시 불러오기 버튼이 있는 설정 카드" width="720">
+</p>
+
 ### GitHub Issues
 
 ```sh
