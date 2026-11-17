@@ -179,6 +179,7 @@ This writes the config, creates the `nightshift:*` labels and trusts the signed-
 | `maxStageTries` | 3 | cut-offs before a ticket is blocked (usage limits are not counted) |
 | `usageLimitWaitMinutes` | 60 | how long to wait after a usage limit whose message gives no reset time |
 | `autoMerge` | `false` | merge pull requests that pass review |
+| `reviewHandoff` | `false` | experimental: the developer writes a handoff (summary, changed files, test results) and the reviewer gets it with git's list of changed files, instead of surveying the repo again; off leaves the prompts unchanged |
 | `humanGates` | all five | `money`, `legal`, `destructive-data`, `outward-facing`, `product-direction` |
 | `ticketSections` | `[]` | labels such as `["Deliverable","Check","Out of scope"]`; a ticket body without a `Label: text` line for each is blocked before it runs, and the prompts list them |
 | `gatePaths` | `[]` | globs such as `["db/migration/**", "**/*.sql"]`; if the change against the base branch touches a file matching one, a passing review becomes `NEEDS_HUMAN` and nothing is merged, even with `autoMerge` |

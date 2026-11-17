@@ -16,8 +16,8 @@ function classify(lines) {
   return { role: "unknown", round: 0 };
 }
 
-export function collect(runRoot) {
-  const sessions = sessionFiles(realpathSync(runRoot)).map((file) => {
+export function collect(runRoot, { missingOk = false } = {}) {
+  const sessions = sessionFiles(missingOk ? runRoot : realpathSync(runRoot)).map((file) => {
     const lines = readJsonl(file);
     const { role, round } = classify(lines);
     const byId = new Map();

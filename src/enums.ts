@@ -84,6 +84,7 @@ export enum StateFile {
   Failed = "failed",
   Result = "result",
   ResultKind = "kind",
+  Handoff = "handoff",
 }
 
 // Why a ticket moved. Boards may act on it (e.g. file a decision page for NeedsHuman).

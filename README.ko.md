@@ -161,7 +161,7 @@ Notion은 내장 보드가 있습니다([설정](docs/ko/USAGE.md#notion을-보�
 사유(`needs-human`, `merged`, `cut-off` 등)를 보고 결정 요청 페이지를 여는 식으로 트래커 쪽 동작을 붙일 수 있습니다.
 `language: "ko"`로 두면 러너가 티켓에 남기는 메모가 한국어가 됩니다.
 
-설정 키 전체는 [영어 README](README.md#config-nightshiftjson)에 있습니다. 티켓 본문에 `결과물:`, `확인 방법:` 같은 항목을 꼭 넣게 하려면 `ticketSections`를 쓰세요(기본 꺼짐, [설명](docs/ko/USAGE.md)). 정해진 경로(예: `db/migration/**`)가 바뀌면 검토 결과와 상관없이 사람에게 넘기려면 `gatePaths`를 쓰세요(기본 꺼짐, 같은 문서). 설정만으로 Telegram·Slack·Discord 알림을 켜려면 `notify`를 쓰세요(기본 꺼짐, 비밀값은 환경변수 이름만, 같은 문서).
+설정 키 전체는 [영어 README](README.md#config-nightshiftjson)에 있습니다. 티켓 본문에 `결과물:`, `확인 방법:` 같은 항목을 꼭 넣게 하려면 `ticketSections`를 쓰세요(기본 꺼짐, [설명](docs/ko/USAGE.md)). 정해진 경로(예: `db/migration/**`)가 바뀌면 검토 결과와 상관없이 사람에게 넘기려면 `gatePaths`를 쓰세요(기본 꺼짐, 같은 문서). 실험 옵션 `reviewHandoff`(기본 꺼짐)를 켜면 개발자가 변경 요약·바뀐 파일·테스트 결과를 인계 파일로 남기고 검토자가 이를 받아 처음부터 다시 둘러보지 않습니다. 설정만으로 Telegram·Slack·Discord 알림을 켜려면 `notify`를 쓰세요(기본 꺼짐, 비밀값은 환경변수 이름만, 같은 문서).
 
 ## 안전
 

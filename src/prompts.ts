@@ -29,6 +29,12 @@ export interface StageContext {
   humanGates: HumanGate[];
   ticketSections: string[];
   gatePaths: string[];
+  // Review handoff (config reviewHandoff). Off: the prompts stay exactly as they were.
+  reviewHandoff: boolean;
+  handoffFile: string;
+  // The handoff the developer wrote and the files the branch changed against the base; read by the runner for the review.
+  handoffText: string;
+  changedFiles: string[];
 }
 
 function ticketBlock(ticket: Ticket): string {
@@ -72,6 +78,33 @@ function publishSteps(ctx: StageContext): string {
   ].join("\n");
 }
 
+function handoffWriteBlock(ctx: StageContext): string {
+  if (!ctx.reviewHandoff) return "";
+  return `
+## Handoff for the reviewer
+Before the result file, write a short handoff to \`${ctx.handoffFile}\` (plain text, under 40 lines) so the reviewer does not have to survey the repository again:
+- Summary: what you changed and why, in a few lines, and any decision a reviewer should look at first.
+- Files: every file you changed, one line each.
+- Tests: the exact commands you ran and what they printed (pass/fail counts), plus anything you could not run.
+`;
+}
+
+function handoffReadBlock(ctx: StageContext): string {
+  if (!ctx.reviewHandoff) return "";
+  const files = ctx.changedFiles.length === 0 ? "(none found)" : ctx.changedFiles.map((f) => `- ${f}`).join("\n");
+  const text = ctx.handoffText === "" ? "(the developer wrote no handoff)" : ctx.handoffText;
+  return `
+## Handoff from the developer
+Start from this instead of surveying the repository again: read the changed files and their diff, not the rest. You still run the tests yourself and still judge the change against the ticket.
+
+Files changed against \`${ctx.project.baseBranch}\` (from git):
+${files}
+
+Developer's handoff:
+${text}
+`;
+}
+
 export function buildPrompt(ctx: StageContext, reviewNotes: string): string {
   const notes = reviewNotes === "" ? "" : `\n## Review notes from the previous round (fix these first)\n\n${reviewNotes}\n`;
   return `You are the developer for one ticket, round ${ctx.round}. You work alone and unattended: nobody will answer questions.
@@ -84,7 +117,7 @@ ${sectionsBlock(ctx.ticketSections, false)}${notes}
 - Do not use subagents. Build it yourself in this run and finish only when it is done.
 - Keep the change to what the ticket asks. Run the tests, build and lint for what you touched.
 - Do not review your own work as final and do not merge: a separate reviewer run does that.
-${rulesBlock(ctx.rules)}
+${rulesBlock(ctx.rules)}${handoffWriteBlock(ctx)}
 ## When you are done
 The last thing you do is write exactly one line to \`${ctx.resultFile}\`:
 ${publishSteps(ctx)}
@@ -101,7 +134,7 @@ export function reviewPrompt(ctx: StageContext, result: string): string {
   return `You are the reviewer (the CTO) for one ticket, round ${ctx.round}. A separate developer run built it. You work unattended.
 
 ${ticketBlock(ctx.ticket)}
-${sectionsBlock(ctx.ticketSections, true)}
+${sectionsBlock(ctx.ticketSections, true)}${handoffReadBlock(ctx)}
 ## What to review
 The developer's result: \`${result}\`. Your working directory is the ticket's worktree on branch \`${ctx.worktree.branch}\`;
 compare it with \`${ctx.project.baseBranch}\` (for a pull request, \`gh pr diff\` shows the same change).

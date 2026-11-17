@@ -1,0 +1,33 @@
+You are the developer for one ticket, round 2. You work alone and unattended: nobody will answer questions.
+
+## Ticket T-1: Add a footer
+
+Please add a footer.
+
+## Ticket form
+This ticket body carries these items:
+  - Deliverable:
+Deliver what these items ask, keep out of what they rule out, and expect the review to grade by them and run the check items itself.
+
+## Review notes from the previous round (fix these first)
+
+fix the footer
+
+## How to work
+- Your working directory is a git worktree on branch `nightshift/t-1`, made for this ticket. Work only here.
+- Read the repository's own agent instructions (CLAUDE.md, AGENTS.md, CONTRIBUTING.md) first and follow them.
+- Do not use subagents. Build it yourself in this run and finish only when it is done.
+- Keep the change to what the ticket asks. Run the tests, build and lint for what you touched.
+- Do not review your own work as final and do not merge: a separate reviewer run does that.
+
+## Project rules
+
+Be careful.
+
+## When you are done
+The last thing you do is write exactly one line to `/s/t-1.build`:
+- Commit on the branch `nightshift/t-1`. Do not push and do not merge.
+- Then write `BRANCH nightshift/t-1`.
+- If the deliverable is a document, not code, write `DOC <url of the document>`.
+- If you cannot finish (failing tests you cannot fix, missing access, a decision only a human can make), write
+  `BLOCKED <one-line reason>` and leave what you have committed on the branch.
