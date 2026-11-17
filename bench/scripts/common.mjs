@@ -9,6 +9,10 @@ export const NIGHTSHIFT_CLI = process.env.NIGHTSHIFT_CLI ?? join(homedir(), ".lo
 export const MODEL = "sonnet";
 export const PERMISSION_MODE = "auto";
 export const MAX_REWORK = 2;
+export const MAX_REWORK_V2 = 1;
+export const PRIVATE_ROOT = process.env.BENCH_PRIVATE ?? join(homedir(), ".local/share/catchmeif404/nightshift-bench/v2");
+export const WORK_ROOT_V2 = process.env.BENCH_WORK_V2 ?? "/tmp/ns-bench2";
+export const Condition2 = { B0: "B0", B2: "B2", A2: "A2" };
 export const MAX_WALL_MS = 20 * 60 * 1000;
 
 export const Condition = { On: "ON", Off: "OFF" };

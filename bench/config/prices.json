@@ -1,0 +1,4 @@
+{
+  "note": "Price ratios relative to one uncached input token. Ratios only, no currency. Edit here, then rerun scripts/cost.mjs.",
+  "ratios": { "input": 1, "output": 5, "cache_write": 1.25, "cache_read": 0.1 }
+}
