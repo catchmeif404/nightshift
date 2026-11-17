@@ -24,6 +24,6 @@ for (const cell of schedule(Number(seed), tasks.split(","))) {
   const code = await new Promise((res) => child.on("exit", (c) => res(c ?? -1)));
   console.log(new Date().toISOString(), "end", cell.id, out.join("").trim().split("\n").pop(), code === 0 ? "" : `exit ${code}`);
   const rec = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : { outcome: "no_record" };
-  if (/limit/i.test(rec.error ?? "")) await new Promise((res) => setTimeout(res, limitWaitMs));
+  if (rec.usage_limit === true || /limit/i.test(rec.error ?? "")) await new Promise((res) => setTimeout(res, limitWaitMs));
 }
 console.log("plan pass done");

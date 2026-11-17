@@ -93,4 +93,11 @@ the decision rule. `node --test scripts/analyze3.test.mjs` (schedule and aggrega
 
 ## Deviations
 
-(none yet)
+All of these were found while running; none depends on a result of the model or of nightshift. Numbers: `REPORT-v3.md`.
+
+1. **Usage limit not recognised (harness defect).** r3-032, r3-033, r3-034 and r3-035 started inside the account's 5-hour limit window (resets 18:20 KST). `run-plan-v3.mjs` waited only when a run's error text contained "limit", which these did not carry, so each of the four stalled to its time
+   limit (15 or 20 minutes) and the plan went on to the next cell. They stay in the data, flagged in `harness-defects.json` (private results), are left out of the "valid" tables and are in the "as recorded" tables. The same four cells were run again as r3-057 to r3-060 after the reset,
+   in this order and not shuffled, with `run-v3.mjs` now marking a run the limit stopped (`usage_limit`) and the plan waiting; they are later in time than the originals. This changed `run-v3.mjs` and `run-plan-v3.mjs` after the first measured run.
+2. **Timeouts that are not harness defects.** r3-037, r3-052 and r3-056 (task B, 20 minutes) ran after the reset; the builder alone needed 800 to 970 s. They are results (rule above) and their cost and time are lower bounds. r3-034 (A3, task B) is one of the harness-defect runs of item 1.
+3. **Per-stage baseline.** The TK-458 A2 runs have stage numbers recomputed from the Claude logs of their scratch folders (the folders were deleted, the logs remain); the totals agree with the TK-458 `run.json` files.
+4. Reviewer fixes were not checked for correctness (not in the plan either); the report says so.

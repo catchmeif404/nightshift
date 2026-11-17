@@ -36,3 +36,13 @@ the same id; use new ids for a new sample. Never point it at an operational queu
   (`node --test scripts/stats.test.mjs`). Needs tmux and a signed-in `claude`.
 
 Results of phase 1: [REPORT-v2.md](REPORT-v2.md), aggregates in `results-v2/` (task and owner text stay private).
+
+## Third comparison (TK-461): handoff to the reviewer, Sonnet review
+
+`PREREGISTRATION-v3.md` (frozen before the first measured run), results in [REPORT-v3.md](REPORT-v3.md) and `results-v3/`. Arms A2 (reviewer opus), A3 (opus + the `reviewHandoff` option), A4 (reviewer sonnet);
+plus 36 reviews of planted-defect changes (build failure, missing requirement, hidden error) per the pre-registration. Needs this repository built (`npm run build`; `NIGHTSHIFT_CLI` defaults to `../dist/src/cli.js`), tmux is not needed.
+
+- `scripts/run-v3.mjs run <task> <A2|A3|A4> <id>` a full nightshift run, graded; `run-v3.mjs review <task> <build|missing|hidden> <arm> <id>` a planted-defect review (`plant-builder.mjs` is the stand-in developer).
+- `scripts/schedule-v3.mjs 461 <taskA>,<taskB>` the seeded order of the 56 cells; `scripts/run-plan-v3.mjs 461 <taskA>,<taskB>` runs it (resumable, sequential).
+- `scripts/stages.mjs` per-stage cost and time; `scripts/analyze3.mjs <taskA>,<taskB>` writes `results-v3/` (`runs.csv`, `reviews.csv`, `summary.json`, `summary.md`) from the private raw results; `node --test scripts/analyze3.test.mjs`.
+- Task data, planted patches and raw results are private (`$BENCH_PRIVATE`, `$BENCH_RESULTS_V3`).

@@ -82,6 +82,8 @@ async function runNightshift() {
   const log = findLog(q);
   record.verdicts = log === "" ? [] : [...readFileSync(log, "utf8").matchAll(/verdict r(\d+): (\w+)/g)].map((m) => ({ round: Number(m[1]), verdict: m[2] }));
   record.error = null;
+  // The account's usage limit stopped the run (nightshift logs "usage limit ... waiting"): not the model's or nightshift's result.
+  if (log !== "" && /dispatch: usage limit/.test(readFileSync(log, "utf8"))) { record.usage_limit = true; record.error = "usage limit"; if (record.outcome === "timeout") record.outcome = "usage_limit"; }
   await git("checkout", "-q", "-B", "result", "nightshift/t-1").catch(() => undefined);
 }
 

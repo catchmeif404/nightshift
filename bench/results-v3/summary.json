@@ -1,0 +1,2469 @@
+{
+  "runsValid": [
+    {
+      "task": "A",
+      "arm": "A2",
+      "n": 2,
+      "outcomes": {
+        "finished": 2
+      },
+      "core": {
+        "pass": 4,
+        "total": 4,
+        "n_used": 2
+      },
+      "detail": {
+        "pass": 10,
+        "total": 10,
+        "n_used": 2
+      },
+      "cost": {
+        "n_used": 2,
+        "mean": 216756.25,
+        "median": 216756.25,
+        "sd": 12029.0884295112,
+        "cv": 0.055495924244450615
+      },
+      "builder_cost": {
+        "n_used": 2,
+        "mean": 124029.65000000001,
+        "median": 124029.65000000001
+      },
+      "reviewer_cost": {
+        "n_used": 2,
+        "mean": 92726.6,
+        "median": 92726.6
+      },
+      "reviewer_share": 0.42735635293850427,
+      "reviewer_turns": {
+        "n_used": 2,
+        "mean": 7.5,
+        "median": 7.5
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 2,
+        "mean": 130.3655,
+        "median": 130.3655
+      },
+      "reviewer_span_s": {
+        "n_used": 2,
+        "mean": 76.8385,
+        "median": 76.8385
+      },
+      "wall_s": {
+        "n_used": 2,
+        "mean": 216.1055,
+        "median": 216.1055
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "A",
+      "arm": "A2-0458",
+      "n": 4,
+      "outcomes": {
+        "finished": 4
+      },
+      "core": {
+        "pass": 8,
+        "total": 8,
+        "n_used": 4
+      },
+      "detail": {
+        "pass": 20,
+        "total": 20,
+        "n_used": 4
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 213732.55,
+        "median": 209083.47499999998,
+        "sd": 15230.744839687477,
+        "cv": 0.07126076416384626
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 118348.0125,
+        "median": 119915.82500000001
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 95384.5375,
+        "median": 88995.125
+      },
+      "reviewer_share": 0.44477824415513056,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 7,
+        "median": 7
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 4,
+        "mean": 76.33625,
+        "median": 78.542
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 104.87875,
+        "median": 106.22550000000001
+      },
+      "wall_s": {
+        "n_used": 4,
+        "mean": 188.65275,
+        "median": 191.612
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "A",
+      "arm": "A3",
+      "n": 4,
+      "outcomes": {
+        "finished": 4
+      },
+      "core": {
+        "pass": 8,
+        "total": 8,
+        "n_used": 4
+      },
+      "detail": {
+        "pass": 20,
+        "total": 20,
+        "n_used": 4
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 245327.8,
+        "median": 242310.3,
+        "sd": 20374.490924110636,
+        "cv": 0.08305006984170012
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 146696.97499999998,
+        "median": 150897.775
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 98630.825,
+        "median": 101259.32500000001
+      },
+      "reviewer_share": 0.40199330457259824,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 7.5,
+        "median": 8
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 4,
+        "mean": 253.79975,
+        "median": 231.242
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 214.1015,
+        "median": 241.39249999999998
+      },
+      "wall_s": {
+        "n_used": 4,
+        "mean": 486.537,
+        "median": 500.9805
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "A",
+      "arm": "A4",
+      "n": 4,
+      "outcomes": {
+        "finished": 4
+      },
+      "core": {
+        "pass": 8,
+        "total": 8,
+        "n_used": 4
+      },
+      "detail": {
+        "pass": 20,
+        "total": 20,
+        "n_used": 4
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 185717.12499999997,
+        "median": 185421.05,
+        "sd": 4140.50068097647,
+        "cv": 0.02229466281570141
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 122722.2,
+        "median": 125928.1
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 62994.924999999996,
+        "median": 62283.850000000006
+      },
+      "reviewer_share": 0.33965121158438305,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 5,
+        "median": 5
+      },
+      "reviewer_models": [
+        "claude-sonnet-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 4,
+        "mean": 123.34225,
+        "median": 116.987
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 105.88525,
+        "median": 104.94550000000001
+      },
+      "wall_s": {
+        "n_used": 4,
+        "mean": 247.10125,
+        "median": 270.6015
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "B",
+      "arm": "A2",
+      "n": 2,
+      "outcomes": {
+        "finished": 1,
+        "timeout": 1
+      },
+      "core": {
+        "pass": 8,
+        "total": 8,
+        "n_used": 2
+      },
+      "detail": {
+        "pass": 17,
+        "total": 18,
+        "n_used": 2
+      },
+      "cost": {
+        "n_used": 2,
+        "mean": 434878.875,
+        "median": 434878.875,
+        "sd": 58222.35919010198,
+        "cv": 0.1338817830369479
+      },
+      "builder_cost": {
+        "n_used": 2,
+        "mean": 323756.55000000005,
+        "median": 323756.55000000005
+      },
+      "reviewer_cost": {
+        "n_used": 2,
+        "mean": 111122.325,
+        "median": 111122.325
+      },
+      "reviewer_share": 0.25003180108815365,
+      "reviewer_turns": {
+        "n_used": 2,
+        "mean": 6.5,
+        "median": 6.5
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 2,
+        "mean": 834.8109999999999,
+        "median": 834.8109999999999
+      },
+      "reviewer_span_s": {
+        "n_used": 2,
+        "mean": 211.65,
+        "median": 211.65
+      },
+      "wall_s": {
+        "n_used": 2,
+        "mean": 1077.3065,
+        "median": 1077.3065
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "B",
+      "arm": "A2-0458",
+      "n": 4,
+      "outcomes": {
+        "finished": 4
+      },
+      "core": {
+        "pass": 16,
+        "total": 16,
+        "n_used": 4
+      },
+      "detail": {
+        "pass": 32,
+        "total": 36,
+        "n_used": 4
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 445814.95,
+        "median": 452922.275,
+        "sd": 38305.99415176427,
+        "cv": 0.08592352982277573
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 190269.425,
+        "median": 189930.35
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 255545.52500000002,
+        "median": 249973.575
+      },
+      "reviewer_share": 0.5700524302419231,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 20.25,
+        "median": 19
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 4,
+        "mean": 286.784,
+        "median": 280.43600000000004
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 369.46,
+        "median": 374.7285
+      },
+      "wall_s": {
+        "n_used": 4,
+        "mean": 662.6722500000001,
+        "median": 667.966
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "B",
+      "arm": "A3",
+      "n": 4,
+      "outcomes": {
+        "finished": 4
+      },
+      "core": {
+        "pass": 16,
+        "total": 16,
+        "n_used": 4
+      },
+      "detail": {
+        "pass": 32,
+        "total": 36,
+        "n_used": 4
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 449783.1875,
+        "median": 421286.7,
+        "sd": 76013.62894231945,
+        "cv": 0.1690006008557611
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 268548.625,
+        "median": 260609.225
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 181234.5625,
+        "median": 176345
+      },
+      "reviewer_share": 0.40472332591857213,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 12.25,
+        "median": 12
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 4,
+        "mean": 500.2035,
+        "median": 449.179
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 379.78524999999996,
+        "median": 391.2105
+      },
+      "wall_s": {
+        "n_used": 4,
+        "mean": 889.8985,
+        "median": 849.8135
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "B",
+      "arm": "A4",
+      "n": 4,
+      "outcomes": {
+        "finished": 2,
+        "timeout": 2
+      },
+      "core": {
+        "pass": 16,
+        "total": 16,
+        "n_used": 4
+      },
+      "detail": {
+        "pass": 32,
+        "total": 36,
+        "n_used": 4
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 339821.8625,
+        "median": 333854.575,
+        "sd": 23548.67116453972,
+        "cv": 0.0692971046397573
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 255544.95,
+        "median": 254507.975
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 84276.9125,
+        "median": 85784.15
+      },
+      "reviewer_share": 0.24895288876694924,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 5.5,
+        "median": 5.5
+      },
+      "reviewer_models": [
+        "claude-sonnet-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 4,
+        "mean": 882.4915,
+        "median": 966.443
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 196.67525,
+        "median": 200.4295
+      },
+      "wall_s": {
+        "n_used": 4,
+        "mean": 1099.79925,
+        "median": 1191.462
+      },
+      "rework_mean": 0
+    }
+  ],
+  "runsAsRecorded": [
+    {
+      "task": "A",
+      "arm": "A2",
+      "n": 2,
+      "outcomes": {
+        "finished": 2
+      },
+      "core": {
+        "pass": 4,
+        "total": 4,
+        "n_used": 2
+      },
+      "detail": {
+        "pass": 10,
+        "total": 10,
+        "n_used": 2
+      },
+      "cost": {
+        "n_used": 2,
+        "mean": 216756.25,
+        "median": 216756.25,
+        "sd": 12029.0884295112,
+        "cv": 0.055495924244450615
+      },
+      "builder_cost": {
+        "n_used": 2,
+        "mean": 124029.65000000001,
+        "median": 124029.65000000001
+      },
+      "reviewer_cost": {
+        "n_used": 2,
+        "mean": 92726.6,
+        "median": 92726.6
+      },
+      "reviewer_share": 0.42735635293850427,
+      "reviewer_turns": {
+        "n_used": 2,
+        "mean": 7.5,
+        "median": 7.5
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 2,
+        "mean": 130.3655,
+        "median": 130.3655
+      },
+      "reviewer_span_s": {
+        "n_used": 2,
+        "mean": 76.8385,
+        "median": 76.8385
+      },
+      "wall_s": {
+        "n_used": 2,
+        "mean": 216.1055,
+        "median": 216.1055
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "A",
+      "arm": "A2-0458",
+      "n": 4,
+      "outcomes": {
+        "finished": 4
+      },
+      "core": {
+        "pass": 8,
+        "total": 8,
+        "n_used": 4
+      },
+      "detail": {
+        "pass": 20,
+        "total": 20,
+        "n_used": 4
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 213732.55,
+        "median": 209083.47499999998,
+        "sd": 15230.744839687477,
+        "cv": 0.07126076416384626
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 118348.0125,
+        "median": 119915.82500000001
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 95384.5375,
+        "median": 88995.125
+      },
+      "reviewer_share": 0.44477824415513056,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 7,
+        "median": 7
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 4,
+        "mean": 76.33625,
+        "median": 78.542
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 104.87875,
+        "median": 106.22550000000001
+      },
+      "wall_s": {
+        "n_used": 4,
+        "mean": 188.65275,
+        "median": 191.612
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "A",
+      "arm": "A3",
+      "n": 4,
+      "outcomes": {
+        "finished": 4
+      },
+      "core": {
+        "pass": 8,
+        "total": 8,
+        "n_used": 4
+      },
+      "detail": {
+        "pass": 20,
+        "total": 20,
+        "n_used": 4
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 245327.8,
+        "median": 242310.3,
+        "sd": 20374.490924110636,
+        "cv": 0.08305006984170012
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 146696.97499999998,
+        "median": 150897.775
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 98630.825,
+        "median": 101259.32500000001
+      },
+      "reviewer_share": 0.40199330457259824,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 7.5,
+        "median": 8
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 4,
+        "mean": 253.79975,
+        "median": 231.242
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 214.1015,
+        "median": 241.39249999999998
+      },
+      "wall_s": {
+        "n_used": 4,
+        "mean": 486.537,
+        "median": 500.9805
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "A",
+      "arm": "A4",
+      "n": 4,
+      "outcomes": {
+        "finished": 4
+      },
+      "core": {
+        "pass": 8,
+        "total": 8,
+        "n_used": 4
+      },
+      "detail": {
+        "pass": 20,
+        "total": 20,
+        "n_used": 4
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 185717.12499999997,
+        "median": 185421.05,
+        "sd": 4140.50068097647,
+        "cv": 0.02229466281570141
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 122722.2,
+        "median": 125928.1
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 62994.924999999996,
+        "median": 62283.850000000006
+      },
+      "reviewer_share": 0.33965121158438305,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 5,
+        "median": 5
+      },
+      "reviewer_models": [
+        "claude-sonnet-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 4,
+        "mean": 123.34225,
+        "median": 116.987
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 105.88525,
+        "median": 104.94550000000001
+      },
+      "wall_s": {
+        "n_used": 4,
+        "mean": 247.10125,
+        "median": 270.6015
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "B",
+      "arm": "A2",
+      "n": 2,
+      "outcomes": {
+        "finished": 1,
+        "timeout": 1
+      },
+      "core": {
+        "pass": 8,
+        "total": 8,
+        "n_used": 2
+      },
+      "detail": {
+        "pass": 17,
+        "total": 18,
+        "n_used": 2
+      },
+      "cost": {
+        "n_used": 2,
+        "mean": 434878.875,
+        "median": 434878.875,
+        "sd": 58222.35919010198,
+        "cv": 0.1338817830369479
+      },
+      "builder_cost": {
+        "n_used": 2,
+        "mean": 323756.55000000005,
+        "median": 323756.55000000005
+      },
+      "reviewer_cost": {
+        "n_used": 2,
+        "mean": 111122.325,
+        "median": 111122.325
+      },
+      "reviewer_share": 0.25003180108815365,
+      "reviewer_turns": {
+        "n_used": 2,
+        "mean": 6.5,
+        "median": 6.5
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 2,
+        "mean": 834.8109999999999,
+        "median": 834.8109999999999
+      },
+      "reviewer_span_s": {
+        "n_used": 2,
+        "mean": 211.65,
+        "median": 211.65
+      },
+      "wall_s": {
+        "n_used": 2,
+        "mean": 1077.3065,
+        "median": 1077.3065
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "B",
+      "arm": "A2-0458",
+      "n": 4,
+      "outcomes": {
+        "finished": 4
+      },
+      "core": {
+        "pass": 16,
+        "total": 16,
+        "n_used": 4
+      },
+      "detail": {
+        "pass": 32,
+        "total": 36,
+        "n_used": 4
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 445814.95,
+        "median": 452922.275,
+        "sd": 38305.99415176427,
+        "cv": 0.08592352982277573
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 190269.425,
+        "median": 189930.35
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 255545.52500000002,
+        "median": 249973.575
+      },
+      "reviewer_share": 0.5700524302419231,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 20.25,
+        "median": 19
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 4,
+        "mean": 286.784,
+        "median": 280.43600000000004
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 369.46,
+        "median": 374.7285
+      },
+      "wall_s": {
+        "n_used": 4,
+        "mean": 662.6722500000001,
+        "median": 667.966
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "B",
+      "arm": "A3",
+      "n": 5,
+      "outcomes": {
+        "finished": 4,
+        "timeout": 1
+      },
+      "core": {
+        "pass": 17,
+        "total": 20,
+        "n_used": 5
+      },
+      "detail": {
+        "pass": 33,
+        "total": 45,
+        "n_used": 5
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 449783.1875,
+        "median": 421286.7,
+        "sd": 76013.62894231945,
+        "cv": 0.1690006008557611
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 268548.625,
+        "median": 260609.225
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 181234.5625,
+        "median": 176345
+      },
+      "reviewer_share": 0.40472332591857213,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 12.25,
+        "median": 12
+      },
+      "reviewer_models": [
+        "claude-opus-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 5,
+        "mean": 400.7474,
+        "median": 412.913
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 379.78524999999996,
+        "median": 391.2105
+      },
+      "wall_s": {
+        "n_used": 5,
+        "mean": 952.4081999999999,
+        "median": 895.781
+      },
+      "rework_mean": 0
+    },
+    {
+      "task": "B",
+      "arm": "A4",
+      "n": 4,
+      "outcomes": {
+        "finished": 2,
+        "timeout": 2
+      },
+      "core": {
+        "pass": 16,
+        "total": 16,
+        "n_used": 4
+      },
+      "detail": {
+        "pass": 32,
+        "total": 36,
+        "n_used": 4
+      },
+      "cost": {
+        "n_used": 4,
+        "mean": 339821.8625,
+        "median": 333854.575,
+        "sd": 23548.67116453972,
+        "cv": 0.0692971046397573
+      },
+      "builder_cost": {
+        "n_used": 4,
+        "mean": 255544.95,
+        "median": 254507.975
+      },
+      "reviewer_cost": {
+        "n_used": 4,
+        "mean": 84276.9125,
+        "median": 85784.15
+      },
+      "reviewer_share": 0.24895288876694924,
+      "reviewer_turns": {
+        "n_used": 4,
+        "mean": 5.5,
+        "median": 5.5
+      },
+      "reviewer_models": [
+        "claude-sonnet-5-5"
+      ],
+      "builder_span_s": {
+        "n_used": 4,
+        "mean": 882.4915,
+        "median": 966.443
+      },
+      "reviewer_span_s": {
+        "n_used": 4,
+        "mean": 196.67525,
+        "median": 200.4295
+      },
+      "wall_s": {
+        "n_used": 4,
+        "mean": 1099.79925,
+        "median": 1191.462
+      },
+      "rework_mean": 0
+    }
+  ],
+  "reviewsValid": {
+    "cells": [
+      {
+        "task": "A",
+        "defect": "build",
+        "arm": "A2",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 84069.2,
+          "median": 84069.2
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 140.88150000000002,
+          "median": 140.88150000000002
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 7,
+          "median": 7
+        }
+      },
+      {
+        "task": "A",
+        "defect": "build",
+        "arm": "A3",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 88239.6,
+          "median": 88239.6
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 210.81550000000001,
+          "median": 210.81550000000001
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 6.5,
+          "median": 6.5
+        }
+      },
+      {
+        "task": "A",
+        "defect": "build",
+        "arm": "A4",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 73863.79999999999,
+          "median": 73863.79999999999
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 138.83350000000002,
+          "median": 138.83350000000002
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 6.5,
+          "median": 6.5
+        }
+      },
+      {
+        "task": "A",
+        "defect": "hidden",
+        "arm": "A2",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 1,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 103954.975,
+          "median": 103954.975
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 138.999,
+          "median": 138.999
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 9,
+          "median": 9
+        }
+      },
+      {
+        "task": "A",
+        "defect": "hidden",
+        "arm": "A3",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 92977.775,
+          "median": 92977.775
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 211.5855,
+          "median": 211.5855
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 7,
+          "median": 7
+        }
+      },
+      {
+        "task": "A",
+        "defect": "hidden",
+        "arm": "A4",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 1,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 69767.675,
+          "median": 69767.675
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 147.988,
+          "median": 147.988
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 6,
+          "median": 6
+        }
+      },
+      {
+        "task": "A",
+        "defect": "missing",
+        "arm": "A2",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 99925.875,
+          "median": 99925.875
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 161.088,
+          "median": 161.088
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 8,
+          "median": 8
+        }
+      },
+      {
+        "task": "A",
+        "defect": "missing",
+        "arm": "A3",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 88537.67499999999,
+          "median": 88537.67499999999
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 149.284,
+          "median": 149.284
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 6,
+          "median": 6
+        }
+      },
+      {
+        "task": "A",
+        "defect": "missing",
+        "arm": "A4",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 67072.15,
+          "median": 67072.15
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 119.5095,
+          "median": 119.5095
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 5,
+          "median": 5
+        }
+      },
+      {
+        "task": "B",
+        "defect": "build",
+        "arm": "A2",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 158860.59999999998,
+          "median": 158860.59999999998
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 168.7615,
+          "median": 168.7615
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 9,
+          "median": 9
+        }
+      },
+      {
+        "task": "B",
+        "defect": "build",
+        "arm": "A3",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 153559.825,
+          "median": 153559.825
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 227.055,
+          "median": 227.055
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 8.5,
+          "median": 8.5
+        }
+      },
+      {
+        "task": "B",
+        "defect": "build",
+        "arm": "A4",
+        "n": 2,
+        "returned": 1,
+        "fixed_and_passed": 1,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 122460.875,
+          "median": 122460.875
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 151.761,
+          "median": 151.761
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 9.5,
+          "median": 9.5
+        }
+      },
+      {
+        "task": "B",
+        "defect": "hidden",
+        "arm": "A2",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 169858.05,
+          "median": 169858.05
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 243.61849999999998,
+          "median": 243.61849999999998
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 10,
+          "median": 10
+        }
+      },
+      {
+        "task": "B",
+        "defect": "hidden",
+        "arm": "A3",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 162814.15000000002,
+          "median": 162814.15000000002
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 238.091,
+          "median": 238.091
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 9,
+          "median": 9
+        }
+      },
+      {
+        "task": "B",
+        "defect": "hidden",
+        "arm": "A4",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 146399.45,
+          "median": 146399.45
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 227.77749999999997,
+          "median": 227.77749999999997
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 9.5,
+          "median": 9.5
+        }
+      },
+      {
+        "task": "B",
+        "defect": "missing",
+        "arm": "A2",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 174805.975,
+          "median": 174805.975
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 251.99450000000002,
+          "median": 251.99450000000002
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 10,
+          "median": 10
+        }
+      },
+      {
+        "task": "B",
+        "defect": "missing",
+        "arm": "A3",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 145040,
+          "median": 145040
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 269.702,
+          "median": 269.702
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 7.5,
+          "median": 7.5
+        }
+      },
+      {
+        "task": "B",
+        "defect": "missing",
+        "arm": "A4",
+        "n": 2,
+        "returned": 1,
+        "fixed_and_passed": 0,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 134352,
+          "median": 134352
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 250.46249999999998,
+          "median": 250.46249999999998
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 8.5,
+          "median": 8.5
+        }
+      }
+    ],
+    "byArm": [
+      {
+        "arm": "A2",
+        "n": 12,
+        "returned": 6,
+        "fixed_and_passed": 5,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 12,
+          "mean": 131912.44583333333,
+          "median": 137279.95
+        },
+        "reviewer_span_s": {
+          "n_used": 12,
+          "mean": 184.22383333333335,
+          "median": 167.72
+        },
+        "reviewer_turns": {
+          "n_used": 12,
+          "mean": 8.833333333333334,
+          "median": 8.5
+        }
+      },
+      {
+        "arm": "A3",
+        "n": 12,
+        "returned": 6,
+        "fixed_and_passed": 6,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 12,
+          "mean": 121861.50416666667,
+          "median": 117855.675
+        },
+        "reviewer_span_s": {
+          "n_used": 12,
+          "mean": 217.75549999999998,
+          "median": 233.57049999999998
+        },
+        "reviewer_turns": {
+          "n_used": 12,
+          "mean": 7.416666666666667,
+          "median": 7.5
+        }
+      },
+      {
+        "arm": "A4",
+        "n": 12,
+        "returned": 4,
+        "fixed_and_passed": 6,
+        "passed": 2,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 12,
+          "mean": 102319.325,
+          "median": 92369.625
+        },
+        "reviewer_span_s": {
+          "n_used": 12,
+          "mean": 172.722,
+          "median": 175.994
+        },
+        "reviewer_turns": {
+          "n_used": 12,
+          "mean": 7.5,
+          "median": 7
+        }
+      }
+    ],
+    "byArmDefect": [
+      {
+        "defect": "build",
+        "arm": "A2",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 121464.90000000001,
+          "median": 121218.67499999999
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 154.82150000000001,
+          "median": 155.8875
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 8,
+          "median": 7.5
+        }
+      },
+      {
+        "defect": "build",
+        "arm": "A3",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 120899.7125,
+          "median": 124681.375
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 218.93525000000002,
+          "median": 226.92600000000002
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 7.5,
+          "median": 8
+        }
+      },
+      {
+        "defect": "build",
+        "arm": "A4",
+        "n": 4,
+        "returned": 1,
+        "fixed_and_passed": 3,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 98162.3375,
+          "median": 92369.625
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 145.29725,
+          "median": 138.83350000000002
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 8,
+          "median": 7.5
+        }
+      },
+      {
+        "defect": "hidden",
+        "arm": "A2",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 1,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 136906.5125,
+          "median": 138819.5
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 191.30875,
+          "median": 193.4975
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 9.5,
+          "median": 10
+        }
+      },
+      {
+        "defect": "hidden",
+        "arm": "A3",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 127895.9625,
+          "median": 122399.65000000001
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 224.83825,
+          "median": 233.57049999999998
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 8,
+          "median": 7.5
+        }
+      },
+      {
+        "defect": "hidden",
+        "arm": "A4",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 1,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 108083.5625,
+          "median": 105419.425
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 187.88275,
+          "median": 210.269
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 7.75,
+          "median": 7.5
+        }
+      },
+      {
+        "defect": "missing",
+        "arm": "A2",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 137365.925,
+          "median": 136011.2
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 206.54125,
+          "median": 204.233
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 9,
+          "median": 8.5
+        }
+      },
+      {
+        "defect": "missing",
+        "arm": "A3",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 116788.8375,
+          "median": 114529.6
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 209.493,
+          "median": 215.517
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 6.75,
+          "median": 6.5
+        }
+      },
+      {
+        "defect": "missing",
+        "arm": "A4",
+        "n": 4,
+        "returned": 1,
+        "fixed_and_passed": 2,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 100712.075,
+          "median": 96178.55
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 184.986,
+          "median": 178.0095
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 6.75,
+          "median": 6
+        }
+      }
+    ]
+  },
+  "reviewsAsRecorded": {
+    "cells": [
+      {
+        "task": "A",
+        "defect": "build",
+        "arm": "A2",
+        "n": 3,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 1,
+        "reviewer_cost": {
+          "n_used": 3,
+          "mean": 65586.2,
+          "median": 83672.45
+        },
+        "reviewer_span_s": {
+          "n_used": 3,
+          "mean": 96.49633333333334,
+          "median": 138.72
+        },
+        "reviewer_turns": {
+          "n_used": 3,
+          "mean": 5,
+          "median": 7
+        }
+      },
+      {
+        "task": "A",
+        "defect": "build",
+        "arm": "A3",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 88239.6,
+          "median": 88239.6
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 210.81550000000001,
+          "median": 210.81550000000001
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 6.5,
+          "median": 6.5
+        }
+      },
+      {
+        "task": "A",
+        "defect": "build",
+        "arm": "A4",
+        "n": 3,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 1,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 73863.79999999999,
+          "median": 73863.79999999999
+        },
+        "reviewer_span_s": {
+          "n_used": 3,
+          "mean": 93.50966666666666,
+          "median": 133.177
+        },
+        "reviewer_turns": {
+          "n_used": 3,
+          "mean": 4.333333333333333,
+          "median": 6
+        }
+      },
+      {
+        "task": "A",
+        "defect": "hidden",
+        "arm": "A2",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 1,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 103954.975,
+          "median": 103954.975
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 138.999,
+          "median": 138.999
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 9,
+          "median": 9
+        }
+      },
+      {
+        "task": "A",
+        "defect": "hidden",
+        "arm": "A3",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 92977.775,
+          "median": 92977.775
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 211.5855,
+          "median": 211.5855
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 7,
+          "median": 7
+        }
+      },
+      {
+        "task": "A",
+        "defect": "hidden",
+        "arm": "A4",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 1,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 69767.675,
+          "median": 69767.675
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 147.988,
+          "median": 147.988
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 6,
+          "median": 6
+        }
+      },
+      {
+        "task": "A",
+        "defect": "missing",
+        "arm": "A2",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 99925.875,
+          "median": 99925.875
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 161.088,
+          "median": 161.088
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 8,
+          "median": 8
+        }
+      },
+      {
+        "task": "A",
+        "defect": "missing",
+        "arm": "A3",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 88537.67499999999,
+          "median": 88537.67499999999
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 149.284,
+          "median": 149.284
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 6,
+          "median": 6
+        }
+      },
+      {
+        "task": "A",
+        "defect": "missing",
+        "arm": "A4",
+        "n": 2,
+        "returned": 0,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 67072.15,
+          "median": 67072.15
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 119.5095,
+          "median": 119.5095
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 5,
+          "median": 5
+        }
+      },
+      {
+        "task": "B",
+        "defect": "build",
+        "arm": "A2",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 158860.59999999998,
+          "median": 158860.59999999998
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 168.7615,
+          "median": 168.7615
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 9,
+          "median": 9
+        }
+      },
+      {
+        "task": "B",
+        "defect": "build",
+        "arm": "A3",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 153559.825,
+          "median": 153559.825
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 227.055,
+          "median": 227.055
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 8.5,
+          "median": 8.5
+        }
+      },
+      {
+        "task": "B",
+        "defect": "build",
+        "arm": "A4",
+        "n": 2,
+        "returned": 1,
+        "fixed_and_passed": 1,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 122460.875,
+          "median": 122460.875
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 151.761,
+          "median": 151.761
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 9.5,
+          "median": 9.5
+        }
+      },
+      {
+        "task": "B",
+        "defect": "hidden",
+        "arm": "A2",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 169858.05,
+          "median": 169858.05
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 243.61849999999998,
+          "median": 243.61849999999998
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 10,
+          "median": 10
+        }
+      },
+      {
+        "task": "B",
+        "defect": "hidden",
+        "arm": "A3",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 162814.15000000002,
+          "median": 162814.15000000002
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 238.091,
+          "median": 238.091
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 9,
+          "median": 9
+        }
+      },
+      {
+        "task": "B",
+        "defect": "hidden",
+        "arm": "A4",
+        "n": 3,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 1,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 146399.45,
+          "median": 146399.45
+        },
+        "reviewer_span_s": {
+          "n_used": 3,
+          "mean": 152.74566666666666,
+          "median": 213.04
+        },
+        "reviewer_turns": {
+          "n_used": 3,
+          "mean": 6.333333333333333,
+          "median": 9
+        }
+      },
+      {
+        "task": "B",
+        "defect": "missing",
+        "arm": "A2",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 174805.975,
+          "median": 174805.975
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 251.99450000000002,
+          "median": 251.99450000000002
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 10,
+          "median": 10
+        }
+      },
+      {
+        "task": "B",
+        "defect": "missing",
+        "arm": "A3",
+        "n": 2,
+        "returned": 2,
+        "fixed_and_passed": 0,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 145040,
+          "median": 145040
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 269.702,
+          "median": 269.702
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 7.5,
+          "median": 7.5
+        }
+      },
+      {
+        "task": "B",
+        "defect": "missing",
+        "arm": "A4",
+        "n": 2,
+        "returned": 1,
+        "fixed_and_passed": 0,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 2,
+          "mean": 134352,
+          "median": 134352
+        },
+        "reviewer_span_s": {
+          "n_used": 2,
+          "mean": 250.46249999999998,
+          "median": 250.46249999999998
+        },
+        "reviewer_turns": {
+          "n_used": 2,
+          "mean": 8.5,
+          "median": 8.5
+        }
+      }
+    ],
+    "byArm": [
+      {
+        "arm": "A2",
+        "n": 13,
+        "returned": 6,
+        "fixed_and_passed": 5,
+        "passed": 1,
+        "other": 1,
+        "reviewer_cost": {
+          "n_used": 13,
+          "mean": 123966.88846153846,
+          "median": 116588.5
+        },
+        "reviewer_span_s": {
+          "n_used": 13,
+          "mean": 170.64707692307695,
+          "median": 166.708
+        },
+        "reviewer_turns": {
+          "n_used": 13,
+          "mean": 8.23076923076923,
+          "median": 8
+        }
+      },
+      {
+        "arm": "A3",
+        "n": 12,
+        "returned": 6,
+        "fixed_and_passed": 6,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 12,
+          "mean": 121861.50416666667,
+          "median": 117855.675
+        },
+        "reviewer_span_s": {
+          "n_used": 12,
+          "mean": 217.75549999999998,
+          "median": 233.57049999999998
+        },
+        "reviewer_turns": {
+          "n_used": 12,
+          "mean": 7.416666666666667,
+          "median": 7.5
+        }
+      },
+      {
+        "arm": "A4",
+        "n": 14,
+        "returned": 4,
+        "fixed_and_passed": 6,
+        "passed": 2,
+        "other": 2,
+        "reviewer_cost": {
+          "n_used": 12,
+          "mean": 102319.325,
+          "median": 92369.625
+        },
+        "reviewer_span_s": {
+          "n_used": 14,
+          "mean": 148.44342857142857,
+          "median": 144.0725
+        },
+        "reviewer_turns": {
+          "n_used": 14,
+          "mean": 6.428571428571429,
+          "median": 6.5
+        }
+      }
+    ],
+    "byArmDefect": [
+      {
+        "defect": "build",
+        "arm": "A2",
+        "n": 5,
+        "returned": 2,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 1,
+        "reviewer_cost": {
+          "n_used": 5,
+          "mean": 102895.96,
+          "median": 84465.95
+        },
+        "reviewer_span_s": {
+          "n_used": 5,
+          "mean": 125.40240000000001,
+          "median": 143.043
+        },
+        "reviewer_turns": {
+          "n_used": 5,
+          "mean": 6.6,
+          "median": 7
+        }
+      },
+      {
+        "defect": "build",
+        "arm": "A3",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 120899.7125,
+          "median": 124681.375
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 218.93525000000002,
+          "median": 226.92600000000002
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 7.5,
+          "median": 8
+        }
+      },
+      {
+        "defect": "build",
+        "arm": "A4",
+        "n": 5,
+        "returned": 1,
+        "fixed_and_passed": 3,
+        "passed": 0,
+        "other": 1,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 98162.3375,
+          "median": 92369.625
+        },
+        "reviewer_span_s": {
+          "n_used": 5,
+          "mean": 116.81020000000001,
+          "median": 133.177
+        },
+        "reviewer_turns": {
+          "n_used": 5,
+          "mean": 6.4,
+          "median": 7
+        }
+      },
+      {
+        "defect": "hidden",
+        "arm": "A2",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 1,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 136906.5125,
+          "median": 138819.5
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 191.30875,
+          "median": 193.4975
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 9.5,
+          "median": 10
+        }
+      },
+      {
+        "defect": "hidden",
+        "arm": "A3",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 127895.9625,
+          "median": 122399.65000000001
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 224.83825,
+          "median": 233.57049999999998
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 8,
+          "median": 7.5
+        }
+      },
+      {
+        "defect": "hidden",
+        "arm": "A4",
+        "n": 5,
+        "returned": 2,
+        "fixed_and_passed": 1,
+        "passed": 1,
+        "other": 1,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 108083.5625,
+          "median": 105419.425
+        },
+        "reviewer_span_s": {
+          "n_used": 5,
+          "mean": 150.8426,
+          "median": 207.498
+        },
+        "reviewer_turns": {
+          "n_used": 5,
+          "mean": 6.2,
+          "median": 6
+        }
+      },
+      {
+        "defect": "missing",
+        "arm": "A2",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 137365.925,
+          "median": 136011.2
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 206.54125,
+          "median": 204.233
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 9,
+          "median": 8.5
+        }
+      },
+      {
+        "defect": "missing",
+        "arm": "A3",
+        "n": 4,
+        "returned": 2,
+        "fixed_and_passed": 2,
+        "passed": 0,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 116788.8375,
+          "median": 114529.6
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 209.493,
+          "median": 215.517
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 6.75,
+          "median": 6.5
+        }
+      },
+      {
+        "defect": "missing",
+        "arm": "A4",
+        "n": 4,
+        "returned": 1,
+        "fixed_and_passed": 2,
+        "passed": 1,
+        "other": 0,
+        "reviewer_cost": {
+          "n_used": 4,
+          "mean": 100712.075,
+          "median": 96178.55
+        },
+        "reviewer_span_s": {
+          "n_used": 4,
+          "mean": 184.986,
+          "median": 178.0095
+        },
+        "reviewer_turns": {
+          "n_used": 4,
+          "mean": 6.75,
+          "median": 6
+        }
+      }
+    ]
+  },
+  "harnessDefects": {
+    "r3-032": "usage limit (5-hour) reached; run plan did not detect it, cell stalled to timeout",
+    "r3-033": "usage limit (5-hour) reached; run plan did not detect it, cell stalled to timeout",
+    "r3-034": "usage limit (5-hour) reached; run plan did not detect it, cell stalled to timeout",
+    "r3-035": "usage limit (5-hour) reached; run plan did not detect it, cell stalled to timeout"
+  },
+  "counts": {
+    "full_runs": 21,
+    "reviews": 39,
+    "baseline": 8,
+    "harness_defect_runs": 4
+  }
+}
