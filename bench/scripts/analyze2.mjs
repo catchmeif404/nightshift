@@ -45,27 +45,55 @@ export function planPhase2(rows) {
   const med = median(cvs);
   const rates = present(rows.map((r) => (r.core.total ? r.core.pass / r.core.total : null)));
   const p = rates.length ? mean(rates) : null;
+  const drates = present(rows.map((r) => (r.detail.total ? r.detail.pass / r.detail.total : null)));
+  const pd = drates.length ? mean(drates) : null;
   return {
     cost_cv_median: med, cost_cv_max: worst,
     n_per_arm_cost: Object.fromEntries([0.1, 0.2].map((d) => [`diff_${d * 100}pct`, { by_median_cv: nPerArmForRelativeDiff(med, d), by_max_cv: nPerArmForRelativeDiff(worst, d) }])),
     // pass-rate difference: 20 and 30 points around the mean observed core rate (clamped inside 0..1)
     n_per_arm_pass: p === null ? null : Object.fromEntries([0.2, 0.3].map((d) => [`diff_${d * 100}pt`, nPerArmForProportions(Math.max(0.02, p - d / 2), Math.min(0.98, p + d / 2))])),
     mean_core_rate: p,
+    // the core rate sits at the ceiling (about 1), so a difference around it is not estimable: the detail rate is reported too
+    mean_detail_rate: pd,
+    n_per_arm_pass_detail: pd === null ? null : Object.fromEntries([0.2, 0.3].map((d) => [`diff_${d * 100}pt`, nPerArmForProportions(Math.max(0.02, pd - d / 2), Math.min(0.98, pd + d / 2))])),
   };
+}
+
+// replacements.json (private, next to results/): { aliases: {taskId: "A"}, "<newRunId>": { replaces: "<oldRunId>", ... } }
+// The replaced runs are harness defects (the harness, not the model or nightshift, ended or never started the session).
+export function readReplacements(resultsDir) {
+  const f = join(resultsDir, "..", "replacements.json");
+  const j = existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : {};
+  const replaced = new Set(Object.values(j).filter((v) => v && typeof v === "object" && "replaces" in v).map((v) => v.replaces));
+  return { aliases: j.aliases ?? {}, replaced };
+}
+
+export const f2 = (v, d = 2) => (v === null || v === undefined ? "n/a" : v.toFixed(d));
+
+export function table(rows) {
+  return ["| task | arm | n | outcomes | core | detail | weighted cost mean | CV | wall s (median) | interventions (mean) | rework (mean) |", `|${"---|".repeat(11)}`,
+    ...rows.map((r) => `| ${r.task} | ${r.arm} | ${r.n} | ${JSON.stringify(r.outcomes)} | ${r.core.pass}/${r.core.total} | ${r.detail.pass}/${r.detail.total} | ${f2(r.cost.mean, 0)} (n=${r.cost.n_used}) | ${f2(r.cost.cv)} | ${f2(r.wall_s_median, 0)} | ${f2(r.interventions_mean)} | ${f2(r.rework_mean)} |`)].join("\n");
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const dir = process.argv[2] ?? join(PRIVATE_ROOT, "results");
   const outDir = process.argv[3] ?? join(BENCH_ROOT, "results-v2");
-  const runs = load(dir).filter((r) => !/^smoke/.test(r.task));
-  const rows = summarize(runs);
-  const plan = planPhase2(rows);
+  const { aliases, replaced } = readReplacements(dir);
+  const all = load(dir).filter((r) => !/^smoke/.test(r.task) && !/^r-smoke/.test(r.anon_id)).map((r) => ({ ...r, task: aliases[r.task] ?? r.task, harness_defect: replaced.has(r.anon_id) }));
+  const views = { as_recorded: all, harness_defects_replaced: all.filter((r) => !r.harness_defect) };
   mkdirSync(outDir, { recursive: true });
-  writeFileSync(join(outDir, "summary.json"), `${JSON.stringify({ n_runs: runs.length, rows, plan }, null, 2)}\n`);
-  const f = (v, d = 2) => (v === null || v === undefined ? "n/a" : v.toFixed(d));
-  const md = ["| task | arm | n | outcomes | core | detail | weighted cost mean | CV | wall s (median) | interventions (mean) | rework (mean) |", `|${"---|".repeat(11)}`,
-    ...rows.map((r) => `| ${r.task} | ${r.arm} | ${r.n} | ${JSON.stringify(r.outcomes)} | ${r.core.pass}/${r.core.total} | ${r.detail.pass}/${r.detail.total} | ${f(r.cost.mean, 0)} (n=${r.cost.n_used}) | ${f(r.cost.cv)} | ${f(r.wall_s_median, 0)} | ${f(r.interventions_mean)} | ${f(r.rework_mean)} |`),
-    "", `Phase-2 plan input: ${JSON.stringify(plan)}`, ""].join("\n");
-  writeFileSync(join(outDir, "summary.md"), md);
-  console.log(md);
+  const out = {};
+  const md = [];
+  for (const [name, runs] of Object.entries(views)) {
+    const rows = summarize(runs);
+    out[name] = { n_runs: runs.length, rows, plan: planPhase2(rows) };
+    md.push(`## ${name} (${runs.length} runs)`, "", table(rows), "", `Phase-2 plan input: ${JSON.stringify(out[name].plan)}`, "");
+  }
+  writeFileSync(join(outDir, "summary.json"), `${JSON.stringify(out, null, 2)}\n`);
+  writeFileSync(join(outDir, "summary.md"), `${md.join("\n")}\n`);
+  const csv = ["run,task,arm,outcome,harness_defect,core_pass,core_total,detail_pass,detail_total,weighted_cost,input,output,cache_read,cache_write,total_s,interventions,rework_rounds",
+    ...all.sort((a, b) => a.anon_id.localeCompare(b.anon_id)).map((r) => [r.anon_id, r.task, r.arm, r.outcome, r.harness_defect, r.grade?.core.pass ?? "", r.grade?.core.total ?? "", r.grade?.detail.pass ?? "", r.grade?.detail.total ?? "",
+      r.weighted_cost ?? "", r.tokens?.input ?? "", r.tokens?.output ?? "", r.tokens?.cache_read ?? "", r.tokens?.cache_write ?? "", r.total_s ?? "", r.interventions?.length ?? "", r.rework_rounds ?? ""].join(","))];
+  writeFileSync(join(outDir, "runs.csv"), `${csv.join("\n")}\n`);
+  console.log(md.join("\n"));
 }

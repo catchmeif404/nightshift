@@ -51,3 +51,13 @@ test("summarize leaves missing cost out and reports n_used; plan uses the CV", (
   const plan = planPhase2(rows);
   assert.ok(plan.n_per_arm_cost.diff_10pct.by_max_cv > plan.n_per_arm_cost.diff_20pct.by_max_cv);
 });
+
+import { test as t2 } from "node:test";
+import assert2 from "node:assert/strict";
+t2("question dialog regex matches both known footers", async () => {
+  const src = (await import("node:fs")).readFileSync(new URL("./interactive.mjs", import.meta.url), "utf8");
+  const re = new RegExp(/const QUESTION_DIALOG = \/(.*)\/;/.exec(src)[1]);
+  assert2.ok(re.test("  5. Chat about this\n\nEnter to select · ↑/↓ to navigate · Esc to cancel"));
+  assert2.ok(re.test("Enter to select · Tab/Arrow keys to navigate"));
+  assert2.ok(!re.test("Do you want to proceed?\n❯ 1. Yes"));
+});

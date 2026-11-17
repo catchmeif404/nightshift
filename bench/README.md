@@ -32,5 +32,7 @@ the same id; use new ids for a new sample. Never point it at an operational queu
 - `scripts/run-v2.mjs <task> <B0|B2|A2> <id>` runs one cell; task data and raw results are private (`$BENCH_PRIVATE`, default
   `~/.local/share/catchmeif404/nightshift-bench/v2`), see the header of the file for the `task.json` format.
 - `scripts/schedule-v2.mjs` seeded run order; `scripts/cost.mjs` price-weighted cost (`config/prices.json`; also recomputes TK-454 into
-  `results/weighted-tk454.md`); `scripts/analyze2.mjs` per-arm spread (CV) and phase-2 sample sizes; `scripts/stats.test.mjs` tests
+  `results/weighted-tk454.md`); `scripts/analyze2.mjs` per-arm spread (CV) and phase-2 sample sizes; `scripts/run-plan-v2.mjs` the resumable sequential plan; `scripts/stats.test.mjs` tests
   (`node --test scripts/stats.test.mjs`). Needs tmux and a signed-in `claude`.
+
+Results of phase 1: [REPORT-v2.md](REPORT-v2.md), aggregates in `results-v2/` (task and owner text stay private).

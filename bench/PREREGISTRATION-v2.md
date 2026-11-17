@@ -108,4 +108,19 @@ dialog detection, the usage-limit banner, the 20-minute timeout, B2.
 
 ## Deviations
 
-(none yet)
+All of these were found while running; none depends on a result of the model or of nightshift. Details and numbers: `REPORT-v2.md`.
+
+1. **Harness defects fixed during the runs** (each fix is in the same PR, `interactive.mjs`, `run-v2.mjs`, `run-plan-v2.mjs`):
+   - Claude's multiple-choice question window (here: "what should the new DTO file be called", asked because the owner's global guide says to ask before naming files)
+     was not recognised (its footer reads `↑/↓ to navigate`, the regex knew `Tab/Arrow keys`), and the tail check looked at the last 16 screen lines, which are empty on a 50-row
+     pane. The planned handling (Esc + the fixed text once, 1 intervention) did not happen and the run ended `stalled`: r2-002, r2-005, r2-006, r2-012.
+   - The folder-trust dialog was answered with a blind Down+Enter; a lost key or a half-drawn dialog made Enter take the default "No, exit", so Claude ended before the request was
+     typed (`error`, "did not become ready", no session tokens): r2-016, r2-019, r2-020, r2-030, r2-031, r2-033. Now the cursor is checked on "Yes" before Enter.
+   - The plan runner waited for the child's stdout pipe, which a detached nightshift process kept open (r2-011 finished at 02:08 but the plan sat until 02:33). It now waits for the exit.
+   - `run.json` keeps the last screen and the interactive record only from r2-005 on.
+2. **Replacement runs.** For the 10 runs in item 1 the same task x arm cell was run again (r2-025 to r2-034; r2-030, r2-031 and r2-033 were themselves replacements that hit the trust-dialog defect and were
+   replaced again). 34 runs exist instead of 24. The originals are not deleted and not hidden: `REPORT-v2.md` shows the table **as recorded** (all 34) and the table with the defective runs replaced (24; 4 per cell).
+   The replacements ran after the main pass in a fixed order, not shuffled, with the fixed harness, so they are later in time than most of the originals.
+3. **Not exercised in any measured run:** the permission-dialog detection, the usage-limit banner and the 20-minute timeout never occurred (0 each).
+4. Interventions: every question window counts as 1 intervention (the fixed text), nothing else occurred.
+5. Ticket-writing cost: no record exists, **not measured**.

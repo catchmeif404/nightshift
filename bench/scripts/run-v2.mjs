@@ -52,7 +52,7 @@ record.started_at = new Date(t0).toISOString();
 async function runInteractiveArm() {
   const file = join(taskDir, arm === Condition2.B0 ? task.request_file : task.ticket_file);
   const rec = await runInteractive({ cwd: repo, promptFile: file, out: outDir, model: MODEL, baseRef: task.base, maxMin: MAX_WALL_MS / 60000 });
-  Object.assign(record, { outcome: rec.outcome, interventions: rec.interventions, unanswered_question: rec.unanswered_question ?? false, stops: rec.stops, wall_s: rec.wall_s ?? null, rework_rounds: null, error: rec.error ?? null });
+  Object.assign(record, { outcome: rec.outcome, interventions: rec.interventions, unanswered_question: rec.unanswered_question ?? false, stops: rec.stops, wall_s: rec.wall_s ?? null, rework_rounds: null, error: rec.error ?? null, screen_tail: rec.screen_tail ?? null, interactive: rec });
   // snapshot whatever is in the tree so the grader sees one commit range (the person did not have to commit)
   await git("add", "-A");
   await git("commit", "-q", "-m", "bench snapshot", "--allow-empty");

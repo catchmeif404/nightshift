@@ -22,7 +22,7 @@ export const DEFAULT_NUDGE = "알아서 판단해서 끝까지 진행해";
 
 const PERMISSION_DIALOG = /Do you want to (proceed|make this edit|create|run)|Allow this|❯ 1\. Yes|\(y\/n\)|Yes, and don't ask again/;
 const TRUST_DIALOG = /trust the files in this folder|Do you trust|Yes, proceed|Is this a project you (created|trust)/i;
-const QUESTION_DIALOG = /Enter to select · Tab\/Arrow keys to navigate|❯ \d\. .*\n(.*\n)*\s*\d\. Type something\./;
+const QUESTION_DIALOG = /Enter to select · (Tab\/Arrow keys|↑\/↓) to navigate|Chat about this|❯ \d\. .*\n(.*\n)*\s*\d\. Type something\./;
 const LIMIT = /(usage|rate) limit (reached|will reset)|limit reached|You've hit your/i;
 const READY = /\? for shortcuts|bypass permissions|auto mode|esc to interrupt|accept edits/;
 
@@ -78,9 +78,16 @@ export async function runInteractive({ cwd, promptFile, out, baseRef = "HEAD", m
     for (;;) {
       const p = await pane();
       if (TRUST_DIALOG.test(p) && /Enter to confirm|1\. Yes/.test(p)) {
-        // the dialog pre-selects "No, exit": move to "Yes, I trust this folder" first
-        if (/❯\s*(\d\.\s*)?No/.test(p)) { await tmux("send-keys", "-t", name, "Down"); await sleep(400); }
-        await tmux("send-keys", "-t", name, "Enter"); rec.trust_dialog_answered = true; await sleep(1500); continue; }
+        // the dialog pre-selects "No, exit": move to "Yes, I trust this folder" first. Answer ONCE per appearance and wait until
+        // the dialog is gone (a second Down would wrap back to "No, exit" and end the session).
+        // act only when the cursor line is on screen: Enter on a half-drawn dialog would take the default "No, exit"
+        if (!/❯\s*(\d\.\s*)?(No|Yes)/.test(p)) { await sleep(300); continue; }
+        // move the cursor to "Yes" and CHECK it got there before Enter (a key sent before the dialog takes input is lost)
+        for (let i = 0; i < 8 && /❯\s*(\d\.\s*)?No/.test(await pane()); i++) { await tmux("send-keys", "-t", name, "Down"); await sleep(600); }
+        if (!/❯\s*(\d\.\s*)?Yes/.test(await pane())) { await sleep(300); continue; }
+        await tmux("send-keys", "-t", name, "Enter"); rec.trust_dialog_answered = true;
+        for (let i = 0; i < 20 && TRUST_DIALOG.test(await pane()); i++) await sleep(500);
+        continue; }
       if (READY.test(p)) break;
       if (Date.now() - boot > 90000) { rec.error = "claude did not become ready in 90 s"; rec.screen_tail = p.slice(-500); return rec; }
       await sleep(1000);
@@ -119,7 +126,7 @@ export async function runInteractive({ cwd, promptFile, out, baseRef = "HEAD", m
         break;
       }
       if (LIMIT.test(p)) { rec.outcome = Outcome.UsageLimit; rec.screen_tail = p.slice(-400); break; }
-      if (QUESTION_DIALOG.test(p.split("\n").slice(-16).join("\n"))) {
+      if (QUESTION_DIALOG.test(p.trimEnd().split("\n").slice(-16).join("\n"))) {
         // Claude's multiple-choice question window does not fire Stop. A person would answer in words: Esc closes it,
         // then the fixed text goes in once. A second question window after that is left unanswered (outcome finished, flag set).
         await tmux("send-keys", "-t", name, "Escape");
@@ -131,7 +138,7 @@ export async function runInteractive({ cwd, promptFile, out, baseRef = "HEAD", m
         lastProgress = Date.now();
         continue;
       }
-      if (PERMISSION_DIALOG.test(p.split("\n").slice(-14).join("\n"))) {
+      if (PERMISSION_DIALOG.test(p.trimEnd().split("\n").slice(-14).join("\n"))) {
         rec.interventions.push({ kind: Intervention.Permission, at_s: (now - t0) / 1000 });
         await tmux("send-keys", "-t", name, "Enter");
         await sleep(1500);

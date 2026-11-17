@@ -1,0 +1,462 @@
+{
+  "as_recorded": {
+    "n_runs": 34,
+    "rows": [
+      {
+        "task": "A",
+        "arm": "A2",
+        "n": 4,
+        "outcomes": {
+          "finished": 4
+        },
+        "core": {
+          "pass": 8,
+          "total": 8,
+          "n_used": 4
+        },
+        "detail": {
+          "pass": 20,
+          "total": 20,
+          "n_used": 4
+        },
+        "cost": {
+          "n_used": 4,
+          "mean": 213732.55,
+          "sd": 15230.744839687477,
+          "cv": 0.07126076416384626
+        },
+        "wall_s_median": 191.612,
+        "interventions_mean": 0,
+        "rework_mean": 0,
+        "raw_tokens_mean": {
+          "input": 29.5,
+          "output": 9287.75,
+          "cache_read": 586443,
+          "cache_write": 86896
+        }
+      },
+      {
+        "task": "A",
+        "arm": "B0",
+        "n": 8,
+        "outcomes": {
+          "stalled": 1,
+          "error": 3,
+          "finished": 4
+        },
+        "core": {
+          "pass": 8,
+          "total": 16,
+          "n_used": 8
+        },
+        "detail": {
+          "pass": 16,
+          "total": 40,
+          "n_used": 8
+        },
+        "cost": {
+          "n_used": 5,
+          "mean": 156123.84,
+          "sd": 46838.19228670926,
+          "cv": 0.30000666321497893
+        },
+        "wall_s_median": 92.7495,
+        "interventions_mean": 0.5,
+        "rework_mean": null,
+        "raw_tokens_mean": {
+          "input": 20.4,
+          "output": 5128.8,
+          "cache_read": 633044.4,
+          "cache_write": 53724
+        }
+      },
+      {
+        "task": "A",
+        "arm": "B2",
+        "n": 6,
+        "outcomes": {
+          "stalled": 2,
+          "finished": 4
+        },
+        "core": {
+          "pass": 8,
+          "total": 12,
+          "n_used": 6
+        },
+        "detail": {
+          "pass": 20,
+          "total": 30,
+          "n_used": 6
+        },
+        "cost": {
+          "n_used": 6,
+          "mean": 123140.95,
+          "sd": 44753.64764213081,
+          "cv": 0.36343432174374823
+        },
+        "wall_s_median": 132.8985,
+        "interventions_mean": 0.5,
+        "rework_mean": null,
+        "raw_tokens_mean": {
+          "input": 15,
+          "output": 4098,
+          "cache_read": 435272,
+          "cache_write": 47287
+        }
+      },
+      {
+        "task": "B",
+        "arm": "A2",
+        "n": 4,
+        "outcomes": {
+          "finished": 4
+        },
+        "core": {
+          "pass": 16,
+          "total": 16,
+          "n_used": 4
+        },
+        "detail": {
+          "pass": 32,
+          "total": 36,
+          "n_used": 4
+        },
+        "cost": {
+          "n_used": 4,
+          "mean": 445814.95,
+          "sd": 38305.99415176427,
+          "cv": 0.08592352982277573
+        },
+        "wall_s_median": 667.966,
+        "interventions_mean": 0,
+        "rework_mean": 0,
+        "raw_tokens_mean": {
+          "input": 66.5,
+          "output": 20183.25,
+          "cache_read": 1903322,
+          "cache_write": 123600
+        }
+      },
+      {
+        "task": "B",
+        "arm": "B0",
+        "n": 5,
+        "outcomes": {
+          "finished": 4,
+          "error": 1
+        },
+        "core": {
+          "pass": 17,
+          "total": 20,
+          "n_used": 5
+        },
+        "detail": {
+          "pass": 21,
+          "total": 45,
+          "n_used": 5
+        },
+        "cost": {
+          "n_used": 4,
+          "mean": 178855.55,
+          "sd": 17147.102978686133,
+          "cv": 0.09587123787148978
+        },
+        "wall_s_median": 217.48,
+        "interventions_mean": 0,
+        "rework_mean": null,
+        "raw_tokens_mean": {
+          "input": 24,
+          "output": 6358.25,
+          "cache_read": 826690.5,
+          "cache_write": 51497
+        }
+      },
+      {
+        "task": "B",
+        "arm": "B2",
+        "n": 7,
+        "outcomes": {
+          "stalled": 1,
+          "finished": 4,
+          "error": 2
+        },
+        "core": {
+          "pass": 19,
+          "total": 28,
+          "n_used": 7
+        },
+        "detail": {
+          "pass": 37,
+          "total": 63,
+          "n_used": 7
+        },
+        "cost": {
+          "n_used": 5,
+          "mean": 389246.71,
+          "sd": 196494.53666190506,
+          "cv": 0.5048071868402049
+        },
+        "wall_s_median": 406.678,
+        "interventions_mean": 0.14285714285714285,
+        "rework_mean": null,
+        "raw_tokens_mean": {
+          "input": 45.2,
+          "output": 16261.6,
+          "cache_read": 1924797.6,
+          "cache_write": 92331
+        }
+      }
+    ],
+    "plan": {
+      "cost_cv_median": 0.19793895054323435,
+      "cost_cv_max": 0.5048071868402049,
+      "n_per_arm_cost": {
+        "diff_10pct": {
+          "by_median_cv": 62,
+          "by_max_cv": 401
+        },
+        "diff_20pct": {
+          "by_median_cv": 16,
+          "by_max_cv": 101
+        }
+      },
+      "n_per_arm_pass": {
+        "diff_20pt": 63,
+        "diff_30pt": 26
+      },
+      "mean_core_rate": 0.7825396825396825,
+      "mean_detail_rate": 0.6682539682539682,
+      "n_per_arm_pass_detail": {
+        "diff_20pt": 84,
+        "diff_30pt": 35
+      }
+    }
+  },
+  "harness_defects_replaced": {
+    "n_runs": 24,
+    "rows": [
+      {
+        "task": "A",
+        "arm": "A2",
+        "n": 4,
+        "outcomes": {
+          "finished": 4
+        },
+        "core": {
+          "pass": 8,
+          "total": 8,
+          "n_used": 4
+        },
+        "detail": {
+          "pass": 20,
+          "total": 20,
+          "n_used": 4
+        },
+        "cost": {
+          "n_used": 4,
+          "mean": 213732.55,
+          "sd": 15230.744839687477,
+          "cv": 0.07126076416384626
+        },
+        "wall_s_median": 191.612,
+        "interventions_mean": 0,
+        "rework_mean": 0,
+        "raw_tokens_mean": {
+          "input": 29.5,
+          "output": 9287.75,
+          "cache_read": 586443,
+          "cache_write": 86896
+        }
+      },
+      {
+        "task": "A",
+        "arm": "B0",
+        "n": 4,
+        "outcomes": {
+          "finished": 4
+        },
+        "core": {
+          "pass": 8,
+          "total": 8,
+          "n_used": 4
+        },
+        "detail": {
+          "pass": 16,
+          "total": 20,
+          "n_used": 4
+        },
+        "cost": {
+          "n_used": 4,
+          "mean": 171213.7375,
+          "sd": 37510.73133356585,
+          "cv": 0.21908715901704937
+        },
+        "wall_s_median": 91.8775,
+        "interventions_mean": 1,
+        "rework_mean": null,
+        "raw_tokens_mean": {
+          "input": 23,
+          "output": 6166.25,
+          "cache_read": 719860.5,
+          "cache_write": 54698.75
+        }
+      },
+      {
+        "task": "A",
+        "arm": "B2",
+        "n": 4,
+        "outcomes": {
+          "finished": 4
+        },
+        "core": {
+          "pass": 8,
+          "total": 8,
+          "n_used": 4
+        },
+        "detail": {
+          "pass": 20,
+          "total": 20,
+          "n_used": 4
+        },
+        "cost": {
+          "n_used": 4,
+          "mean": 149470.975,
+          "sd": 23743.192876222452,
+          "cv": 0.15884818357692823
+        },
+        "wall_s_median": 125.8285,
+        "interventions_mean": 0.75,
+        "rework_mean": null,
+        "raw_tokens_mean": {
+          "input": 18.5,
+          "output": 5695.5,
+          "cache_read": 553487.25,
+          "cache_write": 52501
+        }
+      },
+      {
+        "task": "B",
+        "arm": "A2",
+        "n": 4,
+        "outcomes": {
+          "finished": 4
+        },
+        "core": {
+          "pass": 16,
+          "total": 16,
+          "n_used": 4
+        },
+        "detail": {
+          "pass": 32,
+          "total": 36,
+          "n_used": 4
+        },
+        "cost": {
+          "n_used": 4,
+          "mean": 445814.95,
+          "sd": 38305.99415176427,
+          "cv": 0.08592352982277573
+        },
+        "wall_s_median": 667.966,
+        "interventions_mean": 0,
+        "rework_mean": 0,
+        "raw_tokens_mean": {
+          "input": 66.5,
+          "output": 20183.25,
+          "cache_read": 1903322,
+          "cache_write": 123600
+        }
+      },
+      {
+        "task": "B",
+        "arm": "B0",
+        "n": 4,
+        "outcomes": {
+          "finished": 4
+        },
+        "core": {
+          "pass": 16,
+          "total": 16,
+          "n_used": 4
+        },
+        "detail": {
+          "pass": 20,
+          "total": 36,
+          "n_used": 4
+        },
+        "cost": {
+          "n_used": 4,
+          "mean": 178855.55,
+          "sd": 17147.102978686133,
+          "cv": 0.09587123787148978
+        },
+        "wall_s_median": 261.8095,
+        "interventions_mean": 0,
+        "rework_mean": null,
+        "raw_tokens_mean": {
+          "input": 24,
+          "output": 6358.25,
+          "cache_read": 826690.5,
+          "cache_write": 51497
+        }
+      },
+      {
+        "task": "B",
+        "arm": "B2",
+        "n": 4,
+        "outcomes": {
+          "finished": 4
+        },
+        "core": {
+          "pass": 16,
+          "total": 16,
+          "n_used": 4
+        },
+        "detail": {
+          "pass": 34,
+          "total": 36,
+          "n_used": 4
+        },
+        "cost": {
+          "n_used": 4,
+          "mean": 468535.075,
+          "sd": 97822.14347893916,
+          "cv": 0.20878296780436162
+        },
+        "wall_s_median": 543.921,
+        "interventions_mean": 0.25,
+        "rework_mean": null,
+        "raw_tokens_mean": {
+          "input": 55,
+          "output": 20065.75,
+          "cache_read": 2367532,
+          "cache_write": 105118.5
+        }
+      }
+    ],
+    "plan": {
+      "cost_cv_median": 0.127359710724209,
+      "cost_cv_max": 0.21908715901704937,
+      "n_per_arm_cost": {
+        "diff_10pct": {
+          "by_median_cv": 26,
+          "by_max_cv": 76
+        },
+        "diff_20pct": {
+          "by_median_cv": 7,
+          "by_max_cv": 19
+        }
+      },
+      "n_per_arm_pass": {
+        "diff_20pt": 135,
+        "diff_30pt": 69
+      },
+      "mean_core_rate": 1,
+      "mean_detail_rate": 0.8648148148148148,
+      "n_per_arm_pass_detail": {
+        "diff_20pt": 42,
+        "diff_30pt": 25
+      }
+    }
+  }
+}
