@@ -4,6 +4,7 @@ import { openBoard } from "../board/index.js";
 import { Config } from "../config.js";
 import { StateFile, TicketKind, TicketStatus } from "../enums.js";
 import { mask } from "../log.js";
+import { UsageLog, formatTotal, totalUsage } from "../usage.js";
 import { SlotInfo, Slots, TicketState, UsageLimits, projectSlotKey, statePaths } from "../state.js";
 
 const LOG_LINES = 60;
@@ -42,6 +43,8 @@ export interface TicketView {
   stage: string;
   // Why a ready ticket has not started. Empty cause list: not waiting.
   waiting: WaitReason[];
+  // Weighted tokens and time the stages used so far ("217k · 3m27s"). Empty: no stage has finished.
+  usage: string;
 }
 
 export interface LimitView {
@@ -106,6 +109,11 @@ function logTail(file: string): string[] {
   return lines.filter((l) => l !== "").slice(-LOG_LINES).map(mask);
 }
 
+function usageText(dir: string, ticketId: string): string {
+  const entries = new UsageLog(dir, ticketId).read();
+  return entries.length === 0 ? "" : formatTotal(totalUsage(entries));
+}
+
 // What "status" and "logs" show, as data. Reads only: nothing is cleaned up, started or moved.
 export async function snapshot(config: Config): Promise<StatusSnapshot> {
   const paths = statePaths(config.stateDir);
@@ -134,6 +142,7 @@ export async function snapshot(config: Config): Promise<StatusSnapshot> {
           project: t.project,
           status,
           stage: new TicketState(paths.results, t.id).firstLine(StateFile.Stage),
+          usage: usageText(paths.usage, t.id),
           waiting: status === TicketStatus.Ready ? waitReasons(t, live, limits, config.maxSlots, projects) : [],
         })),
       };

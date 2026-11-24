@@ -68,6 +68,11 @@ export class CodexAgent implements Agent {
     return join(this.sessionsDir, `codex-${safeId(sessionId)}`);
   }
 
+  // Its sessions have no token usage nightshift can read.
+  usageFile(): string {
+    return "";
+  }
+
   hasSession(sessionId: string): boolean {
     return existsSync(this.mapping(sessionId));
   }

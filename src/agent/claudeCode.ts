@@ -19,10 +19,15 @@ export class ClaudeCodeAgent implements Agent {
     return process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), ".claude");
   }
 
-  hasSession(sessionId: string): boolean {
+  usageFile(sessionId: string): string {
     const projects = join(this.configDir(), "projects");
-    if (!existsSync(projects)) return false;
-    return readdirSync(projects).some((dir) => existsSync(join(projects, dir, `${sessionId}.jsonl`)));
+    if (!existsSync(projects)) return "";
+    const dir = readdirSync(projects).find((d) => existsSync(join(projects, d, `${sessionId}.jsonl`)));
+    return dir === undefined ? "" : join(projects, dir, `${sessionId}.jsonl`);
+  }
+
+  hasSession(sessionId: string): boolean {
+    return this.usageFile(sessionId) !== "";
   }
 
   async run(request: AgentRequest): Promise<AgentResult> {

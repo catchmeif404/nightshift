@@ -21,6 +21,8 @@ export interface Agent {
   run(request: AgentRequest): Promise<AgentResult>;
   // Whether a run with this session id left a session that can be resumed.
   hasSession(sessionId: string): boolean;
+  // The session file whose usage can be summed; "" when this agent keeps none that can be read.
+  usageFile(sessionId: string): string;
 }
 
 // Variables a nested agent must not inherit from a parent agent session.

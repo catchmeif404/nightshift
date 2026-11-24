@@ -176,6 +176,21 @@ or `BLOCKED`.
   `~/.claude/CLAUDE.md` (if it says "answer in Korean", the run summaries will be in Korean).
 - Check that unattended use fits the terms of the service you use.
 
+### Tokens and time per ticket
+
+Every time a developer, reviewer or release stage finishes, nightshift appends a line to `<stateDir>/usage/<ticket>.jsonl`:
+stage, round, model, input / output / cache read / cache write tokens, a weighted total, and seconds. Nothing to turn on.
+
+- Weighted total = input x1 + output x5 + cache write x1.25 + cache read x0.1 (the same formula as `bench/`).
+  Tokens are summed from the Claude Code session file, each message counted once by its id; seconds run from the first
+  to the last timestamp in that file.
+- Codex and `command` agents have no session file nightshift can read, and a Claude Code session file may be missing:
+  then only the time (wall clock of the run) is recorded and the tokens stay "unknown". The stage never fails for it.
+- When a ticket settles, one line is added to its board note, e.g.
+  `build r1 sonnet 2m10s 124k · review r1 opus 1m17s 93k · total 217k` (`language: "ko"` writes
+  `개발 r1 sonnet 2m10s 124k · 검토 r1 opus 1m17s 93k · 합계 217k`). Stages with unknown tokens say so and are left out of the total.
+- `nightshift status` and the console show the running total (`217k · 3m27s`) on each ticket line.
+
 ## Codex instead of (or with) Claude Code
 
 The defaults are Claude Code `sonnet` for building and `opus` for reviewing. Either role can be the

@@ -166,6 +166,19 @@ git이 바뀐 파일을 못 가져오면 통과시키지 않고 사람에게 넘
   ("한국어로 답해"라고 돼 있으면 실행 요약도 한국어).
 - 쓰는 서비스의 약관이 무인 실행을 허용하는지 확인하세요.
 
+### 티켓별 토큰과 시간
+
+개발·검토·출시 단계가 끝날 때마다 `<stateDir>/usage/<티켓>.jsonl`에 한 줄이 쌓입니다: 단계, 라운드, 모델,
+input / output / cache read / cache write 토큰, 가중 합계, 소요 초. 따로 켤 것은 없습니다.
+
+- 가중 합계 = input x1 + output x5 + cache write x1.25 + cache read x0.1 (`bench/`와 같은 식). 토큰은 Claude Code 세션
+  파일에서 합산하며 메시지 id로 중복을 제거합니다. 소요 시간은 그 파일의 첫~마지막 timestamp입니다.
+- Codex와 `command` 에이전트는 nightshift가 읽을 세션 파일이 없고, Claude Code도 세션 파일이 없을 수 있습니다. 그
+  경우 시간(실행 벽시계)만 기록하고 토큰은 "알 수 없음"으로 둡니다. 이 때문에 단계가 실패하지는 않습니다.
+- 티켓이 끝나면 보드 메모에 한 줄이 붙습니다. 예: `개발 r1 sonnet 2m10s 124k · 검토 r1 opus 1m17s 93k · 합계 217k`
+  (`language: "en"`이면 영어). 토큰을 모르는 단계는 그렇게 표시하고 합계에서 뺍니다.
+- `nightshift status`와 콘솔의 티켓 줄에 지금까지의 합계(`217k · 3m27s`)가 나옵니다.
+
 ## Claude Code 대신 (또는 함께) Codex
 
 기본은 Claude Code `sonnet`이 만들고 `opus`가 검토합니다. 두 역할 모두 [Codex CLI](https://github.com/openai/codex)로
