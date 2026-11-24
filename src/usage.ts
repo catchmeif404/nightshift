@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, readFileSync, rmSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { NoteLanguage, Stage } from "./enums.js";
 import { safeId } from "./state.js";
@@ -30,6 +30,8 @@ export interface SessionUsage {
 export interface StageUsage {
   stage: Stage;
   round: number;
+  // The agent session the stage ran in. A rerun that resumes it (a stage whose result was rejected) replaces the entry.
+  session: string;
   // The model the stage was configured with.
   model: string;
   known: boolean;
@@ -112,6 +114,17 @@ export class UsageLog {
     appendFileSync(this.file, `${JSON.stringify(entry)}\n`);
   }
 
+  // Adds a finished stage run. A resumed session's file already holds the earlier run's tokens, so an entry of the
+  // same session is replaced instead of counted twice. Its span covers both runs too; wall-clock seconds are added.
+  record(entry: StageUsage): void {
+    const entries = this.read();
+    const index = entries.findIndex((e) => e.session !== "" && e.session === entry.session);
+    const previous = entries[index];
+    if (previous === undefined) return this.append(entry);
+    entries[index] = { ...entry, seconds: entry.known && previous.known ? entry.seconds : previous.seconds + entry.seconds };
+    writeFileSync(this.file, entries.map((e) => `${JSON.stringify(e)}\n`).join(""));
+  }
+
   clear(): void {
     rmSync(this.file, { force: true });
   }
@@ -128,6 +141,7 @@ export class UsageLog {
         entries.push({
           stage,
           round: num(e.round),
+          session: typeof e.session === "string" ? e.session : "",
           model: typeof e.model === "string" ? e.model : "",
           known: e.known === true,
           tokens: { input: num(t.input), output: num(t.output), cacheRead: num(t.cacheRead), cacheWrite: num(t.cacheWrite) },

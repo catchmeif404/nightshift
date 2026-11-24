@@ -153,13 +153,14 @@ export class TicketPipeline {
       const entry: StageUsage = {
         stage,
         round,
+        session: sessionId,
         model,
         known: session.known,
         tokens: session.tokens,
         weighted: weighted(session.tokens),
         seconds: session.known && session.seconds > 0 ? session.seconds : wallSeconds,
       };
-      this.usage.append(entry);
+      this.usage.record(entry);
     } catch (error) {
       this.log(`usage record failed: ${errorText(error)}`);
     }
