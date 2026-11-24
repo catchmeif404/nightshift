@@ -27,6 +27,7 @@ import { Messages, messagesFor } from "./messages.js";
 import { RESUME_PROMPT, StageContext, buildPrompt, releasePrompt, reviewPrompt } from "./prompts.js";
 import { Slots, StatePaths, TicketState, UsageLimits } from "./state.js";
 import { detectLimit } from "./limits.js";
+import { StageUsage, UsageLog, readSessionUsage, usageNote, weighted } from "./usage.js";
 
 export interface Runner {
   config: Config;
@@ -109,6 +110,7 @@ function errorText(error: unknown): string {
 export class TicketPipeline {
   private readonly state: TicketState;
   private readonly say: Messages;
+  private readonly usage: UsageLog;
 
   constructor(
     private readonly r: Runner,
@@ -117,6 +119,7 @@ export class TicketPipeline {
   ) {
     this.state = new TicketState(r.paths.results, ticket.id);
     this.say = messagesFor(r.config.language);
+    this.usage = new UsageLog(r.paths.usage, ticket.id);
   }
 
   private log(message: string): void {
@@ -126,10 +129,41 @@ export class TicketPipeline {
   private async settle(status: TicketStatus, reason: SettleReason, note: string): Promise<TicketOutcome> {
     await this.r.board.setStatus(this.ticket.id, status, reason, clip(mask(note), 3000));
     this.log(`-> ${status} (${reason}): ${clip(oneLine(note), 200)}`);
+    await this.noteUsage();
     const link = this.state.firstLine(StateFile.Result);
     this.state.clearStage();
     await this.announce(reason, link);
     return TicketOutcome.Settled;
+  }
+
+  // One line on the board with what the stages cost. A failure is only logged: the ticket has already moved.
+  private async noteUsage(): Promise<void> {
+    try {
+      const line = usageNote(this.usage.read(), this.r.config.language);
+      if (line !== "") await this.r.board.addNote(this.ticket.id, line);
+    } catch (error) {
+      this.log(`usage note failed: ${errorText(error)}`);
+    }
+  }
+
+  // Records what a finished stage used. Never fails the stage: unreadable usage is stored as unknown, with the wall-clock time.
+  private recordUsage(stage: Stage, round: number, agent: Agent, model: string, sessionId: string, wallSeconds: number): void {
+    try {
+      const session = readSessionUsage(agent.usageFile(sessionId));
+      const entry: StageUsage = {
+        stage,
+        round,
+        session: sessionId,
+        model,
+        known: session.known,
+        tokens: session.tokens,
+        weighted: weighted(session.tokens),
+        seconds: session.known && session.seconds > 0 ? session.seconds : wallSeconds,
+      };
+      this.usage.record(entry);
+    } catch (error) {
+      this.log(`usage record failed: ${errorText(error)}`);
+    }
   }
 
   // The built-in Telegram / Slack / Discord message. A failure is only logged: the ticket has already moved.
@@ -197,6 +231,7 @@ export class TicketPipeline {
     } else {
       this.state.remove(StateFile.Build, StateFile.Verdict, StateFile.Review, StateFile.ReviewPrevious, StateFile.Handoff);
       this.state.clearStage();
+      this.usage.clear();
     }
 
     let tree: Worktree;
@@ -375,6 +410,7 @@ export class TicketPipeline {
 
     const gitDir = await gitCommonDir(this.r.config, tree);
     const heartbeat = this.heartbeat(stage, round, marker);
+    const startedAt = Date.now();
     const result = await agent.run({
       prompt: resume ? RESUME_PROMPT : prompt,
       model,
@@ -400,6 +436,7 @@ export class TicketPipeline {
       return StageOutcome.Failed;
     }
     this.state.remove(StateFile.Failed);
+    this.recordUsage(stage, round, agent, model, sessionId, Math.round((Date.now() - startedAt) / 1000));
     return StageOutcome.Finished;
   }
 

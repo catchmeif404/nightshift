@@ -9,6 +9,7 @@ import { dispatch, missingSections, openRunner, sectionsTemplate, work } from ".
 import {
   AgentType, BoardType, CheckLevel, DEFAULT_GATE_PATHS, GATE_PATHS_DEFAULT_KEYWORD, NotifyService, PublishMode, SECTION_PRESET_LABELS, SectionPreset, TicketKind, TicketStatus,
 } from "./enums.js";
+import { UsageLog, formatTotal, totalUsage } from "./usage.js";
 import { run } from "./exec.js";
 import { missingEnv } from "./notify.js";
 import { statePaths } from "./state.js";
@@ -235,7 +236,10 @@ export async function status(config: Config): Promise<void> {
   for (const s of [TicketStatus.Working, TicketStatus.Ready, TicketStatus.Review, TicketStatus.Blocked]) {
     const tickets = await runner.board.list(s);
     console.log(`${s}: ${tickets.length}`);
-    for (const t of tickets.slice(0, 10)) console.log(`  ${t.id}  ${t.title}  [${t.project}]`);
+    for (const t of tickets.slice(0, 10)) {
+      const entries = new UsageLog(runner.paths.usage, t.id).read();
+      console.log(`  ${t.id}  ${t.title}  [${t.project}]${entries.length === 0 ? "" : `  ${formatTotal(totalUsage(entries))}`}`);
+    }
   }
 }
 

@@ -26,6 +26,7 @@ export interface StatePaths {
   sessions: string;
   dispatchLock: string;
   limits: string;
+  usage: string;
 }
 
 export function statePaths(stateDir: string): StatePaths {
@@ -38,8 +39,9 @@ export function statePaths(stateDir: string): StatePaths {
     sessions: join(stateDir, "sessions"),
     dispatchLock: join(stateDir, "dispatch.lock"),
     limits: join(stateDir, "limits"),
+    usage: join(stateDir, "usage"),
   };
-  for (const dir of [paths.root, paths.results, paths.slots, paths.worktrees, paths.sessions, paths.limits]) {
+  for (const dir of [paths.root, paths.results, paths.slots, paths.worktrees, paths.sessions, paths.limits, paths.usage]) {
     mkdirSync(dir, { recursive: true, mode: 0o700 });
   }
   return paths;

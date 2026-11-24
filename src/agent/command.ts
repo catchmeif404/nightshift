@@ -21,6 +21,11 @@ export class CommandAgent implements Agent {
     return join(this.sessionsDir, safeId(sessionId));
   }
 
+  // Its sessions have no token usage nightshift can read.
+  usageFile(): string {
+    return "";
+  }
+
   hasSession(sessionId: string): boolean {
     return existsSync(this.marker(sessionId));
   }

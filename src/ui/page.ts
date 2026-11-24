@@ -134,7 +134,7 @@ function renderStatus(s) {
     g.items.forEach(function (it) {
       var why = it.waiting.map(function (w) { return t(w.cause) + (w.detail ? " (" + w.detail + ")" : ""); });
       tb.append(h("tr", {}, h("td", { class: "id" }, it.id), h("td", {}, it.title, h("div", { class: "mut" }, it.project)),
-        h("td", { class: "why" }, it.stage ? h("span", { class: "tag" }, it.stage) : null, why.length ? h("span", { class: "warn" }, t("waiting") + ": " + why.join(", ")) : null)));
+        h("td", { class: "why" }, it.stage ? h("span", { class: "tag" }, it.stage) : null, it.usage ? h("span", { class: "tag" }, it.usage) : null, why.length ? h("span", { class: "warn" }, t("waiting") + ": " + why.join(", ")) : null)));
     });
     box.append(tb);
   });
