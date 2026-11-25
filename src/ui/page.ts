@@ -58,7 +58,7 @@ var STR = {
     tickets: "Tickets", waiting: "Waiting because", log: "Recent log", board: "Board", noTickets: "none",
     settings: "Settings", testCommand: "Runner check command (empty: off)", projects: "Projects: repository path", boardH: "Board", boardType: "Board type", boardDir: "Ticket folder (inside the config root)",
     repos: "GitHub repositories (owner/name, one per line)", trusted: "Trusted GitHub logins (one per line)",
-    builder: "Developer", reviewer: "Reviewer", agentType: "Executor", model: "Model (empty: the executor's default)", maxSlots: "Concurrent workers (1-16)",
+    builder: "Developer", reviewer: "Reviewer", agentType: "Executor", model: "Model (empty: the executor's default)", maxSlots: "Concurrent workers (1-16)", staleHours: "Stuck-ticket alert after (hours in review or blocked, 0 = off)", stageTimeout: "Stage time limit (minutes per agent run, 0 = no limit)",
     extras: "Ticket form, gated paths, notifications", sections: "Ticket form: required labels (one per line, empty = off)",
     gates: "Gated paths: globs that always need a human (one per line, empty = off)", notifyService: "Chat notifications", notifyOff: "none (off)",
     chatId: "Telegram chat id (Telegram only)", notifyHint: "The bot token or webhook URL is never set here: export the environment variable named in the file where the runner runs.",
@@ -71,7 +71,7 @@ var STR = {
     "report-title": "Morning report (last 24 hours)", "report-none": "none: no ticket moved in this period.", "report-passed": "Passed (merged or waiting for review)",
     "report-reworked": "Passed after rework", "report-blocked": "Blocked", "report-needs-human": "Needs a human decision", "report-unknown": "tokens unknown",
     "report-totals": "Totals", "report-tickets": "tickets", "report-first": "first-pass", "report-tokens": "tokens", "report-wait": "waited for usage limits",
-    "report-todo": "To do now", "report-todo-none": "nothing waits for you.", "report-merge": "review and merge", "report-unblock": "read why it is blocked, fix it and set it ready again", "report-decide": "decide, then set it ready again or close it",
+    "report-stale": "Stuck tickets", "report-stale-for": "stuck", "report-todo": "To do now", "report-todo-none": "nothing waits for you.", "report-merge": "review and merge", "report-unblock": "read why it is blocked, fix it and set it ready again", "report-decide": "decide, then set it ready again or close it",
     "preflight-failed": "cannot publish", "project-busy": "the project already has a worker", "no-free-slot": "all worker slots are busy", "unknown-project": "project is not in the config", "next-dispatch": "starts at the next dispatch",
     "dependency-missing": "predecessor is not on the board", "dependency-self": "depends on itself", "dependency-cycle": "predecessors wait for each other", "dependency-blocked": "predecessor is blocked", "dependency-pending": "waiting for predecessor",
   },
@@ -81,7 +81,7 @@ var STR = {
     tickets: "티켓", waiting: "대기 원인", log: "최근 로그", board: "보드", noTickets: "없음",
     settings: "설정", testCommand: "러너 확인 명령 (비우면 끔)", projects: "프로젝트: 저장소 경로", boardH: "보드", boardType: "보드 종류", boardDir: "티켓 폴더 (설정 root 안)",
     repos: "GitHub 저장소 (owner/name, 한 줄에 하나)", trusted: "신뢰할 GitHub 로그인 (한 줄에 하나)",
-    builder: "개발자", reviewer: "검토자", agentType: "실행기", model: "모델 (비우면 실행기 기본값)", maxSlots: "동시 작업 수 (1-16)",
+    builder: "개발자", reviewer: "검토자", agentType: "실행기", model: "모델 (비우면 실행기 기본값)", maxSlots: "동시 작업 수 (1-16)", staleHours: "멈춘 티켓 알림 기준 (리뷰·막힘 상태로 머문 시간, 0 = 끔)", stageTimeout: "단계 시간 제한 (에이전트 한 번 실행당 분, 0 = 제한 없음)",
     extras: "티켓 양식, 경로 승인, 알림", sections: "티켓 양식: 필수 항목 이름 (한 줄에 하나, 비우면 꺼짐)",
     gates: "경로 승인: 항상 사람이 봐야 하는 글롭 (한 줄에 하나, 비우면 꺼짐)", notifyService: "채팅 알림", notifyOff: "없음 (꺼짐)",
     chatId: "Telegram 채팅 ID (Telegram만)", notifyHint: "봇 토큰이나 웹훅 URL은 여기서 정하지 않습니다. 파일에 적힌 환경변수를 러너가 도는 곳에서 export 하세요.",
@@ -94,7 +94,7 @@ var STR = {
     "report-title": "아침 보고 (지난 24시간)", "report-none": "없음: 이 기간에 움직인 티켓이 없습니다.", "report-passed": "통과 (머지됨 또는 리뷰 대기)",
     "report-reworked": "재작업 후 통과", "report-blocked": "막힘", "report-needs-human": "사람 판단 필요", "report-unknown": "토큰 알 수 없음",
     "report-totals": "합계", "report-tickets": "티켓", "report-first": "1회 통과", "report-tokens": "토큰", "report-wait": "사용 한도로 기다린 시간",
-    "report-todo": "지금 할 일", "report-todo-none": "기다리는 일이 없습니다.", "report-merge": "검토하고 머지", "report-unblock": "막힌 사유를 읽고 고친 뒤 다시 할 일로 두기", "report-decide": "결정한 뒤 다시 할 일로 두거나 닫기",
+    "report-stale": "멈춘 티켓", "report-stale-for": "멈춘 지", "report-todo": "지금 할 일", "report-todo-none": "기다리는 일이 없습니다.", "report-merge": "검토하고 머지", "report-unblock": "막힌 사유를 읽고 고친 뒤 다시 할 일로 두기", "report-decide": "결정한 뒤 다시 할 일로 두거나 닫기",
     "preflight-failed": "게시할 수 없음", "project-busy": "이 프로젝트에 이미 워커가 있음", "no-free-slot": "워커 슬롯이 모두 사용 중", "unknown-project": "설정에 없는 프로젝트", "next-dispatch": "다음 배차에 시작",
     "dependency-missing": "선행 티켓이 보드에 없음", "dependency-self": "자기 자신에 의존함", "dependency-cycle": "선행 티켓끼리 서로 기다림", "dependency-blocked": "선행 티켓이 막힘", "dependency-pending": "선행 티켓을 기다림",
   },
@@ -143,6 +143,14 @@ function renderReport(box, r) {
   if (total.tickets > 0) {
     var first = total.judged === 0 ? "-" : total.firstPass + "/" + total.judged + " (" + Math.round(total.firstPass / total.judged * 100) + "%)";
     card.append(h("p", {}, h("strong", {}, t("report-totals") + ": "), total.tickets + " " + t("report-tickets") + " · " + t("report-first") + " " + first + " · " + fmtTokens(total.tokens) + " " + t("report-tokens") + " · " + t("report-wait") + " " + fmtDuration(total.limitWaitSeconds)));
+  }
+  if (r.stale && r.stale.length) {
+    card.append(h("div", {}, h("strong", {}, t("report-stale") + " (" + r.stale.length + ")")));
+    var st = h("table", { class: "tickets" });
+    r.stale.forEach(function (row) {
+      st.append(h("tr", {}, h("td", { class: "id" }, row.ticket), h("td", {}, row.title, h("div", { class: "mut" }, row.project), row.reason ? h("div", { class: "warn" }, row.reason) : null), h("td", { class: "why" }, row.status + " · " + t("report-stale-for") + " " + fmtDuration(row.stuckSeconds))));
+    });
+    card.append(st);
   }
   card.append(h("div", {}, h("strong", {}, t("report-todo"))));
   if (!r.todo.length) card.append(h("p", { class: "mut" }, t("report-todo-none")));
@@ -220,7 +228,10 @@ function renderSettings(v) {
     box.append(g);
     if (a[2]) box.append(h("div", { class: "mut" }, t("locked")));
   });
-  box.append(h("div", { class: "grid" }, field("maxSlots", t("maxSlots"), h("input", { type: "number", min: "1", max: "16", value: f.maxSlots }), "maxSlots")));
+  box.append(h("div", { class: "grid" },
+    field("maxSlots", t("maxSlots"), h("input", { type: "number", min: "1", max: "16", value: f.maxSlots }), "maxSlots"),
+    field("staleHours", t("staleHours"), h("input", { type: "number", min: "0", step: "1", value: f.staleHours }), "staleHours"),
+    field("stageTimeoutMinutes", t("stageTimeout"), h("input", { type: "number", min: "0", step: "1", value: f.stageTimeoutMinutes }), "stageTimeoutMinutes")));
   box.append(h("h3", {}, t("extras")));
   var sections = h("textarea", {}); sections.value = f.ticketSections.join("\n");
   var gates = h("textarea", {}); gates.value = f.gatePaths.join("\n");
@@ -245,6 +256,8 @@ function collect() {
     builder: { type: $("builderType").value, model: $("builderModel").value.trim() },
     reviewer: { type: $("reviewerType").value, model: $("reviewerModel").value.trim() },
     maxSlots: Number($("maxSlots").value),
+    staleHours: Number($("staleHours").value),
+    stageTimeoutMinutes: Number($("stageTimeoutMinutes").value),
     ticketSections: lines($("ticketSections").value),
     gatePaths: lines($("gatePaths").value),
     notify: { service: $("notifyService").value, chatId: $("notifyChatId").value.trim() },

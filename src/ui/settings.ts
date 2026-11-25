@@ -15,6 +15,8 @@ export const UI_BOARD_TYPES: readonly BoardType[] = [BoardType.LocalMarkdown, Bo
 export const UI_AGENT_TYPES: readonly AgentType[] = [AgentType.ClaudeCode, AgentType.Codex];
 
 const MAX_SLOTS_LIMIT = 16;
+const MAX_STALE_HOURS = 24 * 365;
+const MAX_STAGE_TIMEOUT_MINUTES = 24 * 60;
 const MAX_COMMAND_CHARS = 1000;
 const MODEL_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/@[\]-]{0,79}$/;
 const REPO_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
@@ -35,6 +37,10 @@ export interface SettingsForm {
   builder: AgentForm;
   reviewer: AgentForm;
   maxSlots: number;
+  // Hours a ticket in review or blocked may sit before it is reported as stuck. 0: off.
+  staleHours: number;
+  // Minutes one agent run of a stage may take. 0: no limit.
+  stageTimeoutMinutes: number;
   ticketSections: string[];
   gatePaths: string[];
   // The secret is never here: only where to send. The environment variable names stay in the file as they are.
@@ -128,6 +134,8 @@ function formFrom(raw: JsonObject, defaults: Config): SettingsForm {
     builder: agentForm(raw.builder, { type: defaults.builder.type, model: defaults.builder.model }),
     reviewer: agentForm(raw.reviewer, { type: defaults.reviewer.type, model: defaults.reviewer.model }),
     maxSlots: typeof raw.maxSlots === "number" ? raw.maxSlots : defaults.maxSlots,
+    staleHours: typeof raw.staleHours === "number" ? raw.staleHours : defaults.staleHours,
+    stageTimeoutMinutes: typeof raw.stageTimeoutMinutes === "number" ? raw.stageTimeoutMinutes : defaults.stageTimeoutMinutes,
     ticketSections: texts(raw.ticketSections, []),
     gatePaths: texts(raw.gatePaths, []),
     notify: {
@@ -139,7 +147,7 @@ function formFrom(raw: JsonObject, defaults: Config): SettingsForm {
 
 const EDITED_PATHS = new Set([
   "board.type", "board.dir", "board.repos", "board.trustedAuthors",
-  "builder.type", "builder.model", "reviewer.type", "reviewer.model", "maxSlots",
+  "builder.type", "builder.model", "reviewer.type", "reviewer.model", "maxSlots", "staleHours", "stageTimeoutMinutes",
   "ticketSections", "gatePaths", "notify.service", "notify.chatId",
 ]);
 
@@ -215,6 +223,12 @@ export function validateEdit(edit: SettingsForm, current: SettingsForm, root: st
   const issues: Issue[] = [];
   if (!Number.isInteger(edit.maxSlots) || edit.maxSlots < 1 || edit.maxSlots > MAX_SLOTS_LIMIT) {
     issues.push(issue(CheckLevel.Fail, "maxSlots", `a whole number from 1 to ${MAX_SLOTS_LIMIT}`));
+  }
+  if (!Number.isInteger(edit.staleHours) || edit.staleHours < 0 || edit.staleHours > MAX_STALE_HOURS) {
+    issues.push(issue(CheckLevel.Fail, "staleHours", `a whole number of hours from 0 (off) to ${MAX_STALE_HOURS}`));
+  }
+  if (!Number.isInteger(edit.stageTimeoutMinutes) || edit.stageTimeoutMinutes < 0 || edit.stageTimeoutMinutes > MAX_STAGE_TIMEOUT_MINUTES) {
+    issues.push(issue(CheckLevel.Fail, "stageTimeoutMinutes", `a whole number of minutes from 0 (no limit) to ${MAX_STAGE_TIMEOUT_MINUTES}`));
   }
   checkAgent("builder", edit.builder, current.builder, issues);
   checkAgent("reviewer", edit.reviewer, current.reviewer, issues);
@@ -311,6 +325,8 @@ export function applyEdit(raw: JsonObject, edit: SettingsForm, current: Settings
     if (edit[key].model !== current[key].model) set([key, "model"], edit[key].model);
   }
   if (edit.maxSlots !== current.maxSlots) set(["maxSlots"], edit.maxSlots);
+  if (edit.staleHours !== current.staleHours) set(["staleHours"], edit.staleHours);
+  if (edit.stageTimeoutMinutes !== current.stageTimeoutMinutes) set(["stageTimeoutMinutes"], edit.stageTimeoutMinutes);
   if (!sameList(edit.ticketSections, current.ticketSections)) set(["ticketSections"], edit.ticketSections);
   if (!sameList(edit.gatePaths, current.gatePaths)) set(["gatePaths"], edit.gatePaths);
   if (edit.notify.service !== current.notify.service) set(["notify", "service"], edit.notify.service);

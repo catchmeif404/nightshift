@@ -3,12 +3,13 @@ import { IncomingMessage, Server, ServerResponse, createServer } from "node:http
 import { AddressInfo } from "node:net";
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
-import { parseConfig } from "../src/config.js";
+import { ConfigError, parseConfig } from "../src/config.js";
 import { dispatch } from "../src/dispatch.js";
-import { JournalKind, NoteLanguage, ReportGroup, SettleReason, TicketStatus, TodoKind } from "../src/enums.js";
+import { JournalKind, NoteLanguage, ReportGroup, SettleReason, StateFile, TicketStatus, TodoKind } from "../src/enums.js";
+import { TicketState } from "../src/state.js";
 import { TicketPipeline } from "../src/pipeline.js";
 import {
-  DailyReportOutcome, Journal, JournalRecord, SettledRecord, buildReport, dailyReportDue, parseSince, readReport, renderReport, reportJson, sendDailyReport,
+  DailyReportOutcome, Journal, JournalRecord, SettledRecord, buildReport, dailyReportDue, findStale, parseSince, readReport, renderReport, reportJson, sendDailyReport, sendStaleAlerts,
 } from "../src/report.js";
 import { snapshot } from "../src/ui/snapshot.js";
 import { Sandbox, readyTicket, sandbox } from "./helpers.js";
@@ -248,4 +249,157 @@ test("a ticket the reviewer edited shows the size of the edit in both languages"
   assert.match(renderReport(data, NoteLanguage.English), /T-1 Title of T-1 - .* · reviewer edit \+12\/-3\n/);
   assert.match(renderReport(data, NoteLanguage.Korean), /T-1 Title of T-1 - .* · 검토자 수정 \+12\/-3\n/);
   assert.doesNotMatch(renderReport(data, NoteLanguage.English).split("\n").filter((l) => l.includes("T-2 Title"))[0] ?? "", /reviewer edit/);
+});
+
+const STALE_HOOK_ENV = "TEST_NS_STALE_HOOK";
+
+function staleRecords(): JournalRecord[] {
+  return [
+    settled("T-1", 30, { status: TicketStatus.Review, reason: SettleReason.ReadyToMerge, note: "review passed, ready for you to merge" }),
+    settled("T-2", 25, { status: TicketStatus.Blocked, reason: SettleReason.Blocked, note: "the developer could not finish: no access\nsecond line" }),
+    settled("T-3", 30),
+    settled("T-4", 2, { status: TicketStatus.Review, reason: SettleReason.ReadyToMerge }),
+  ];
+}
+
+test("a ticket is stuck only in review or blocked, only past staleHours, and 0 turns it off", () => {
+  const rows = findStale(staleRecords(), NOW, 24);
+  assert.deepEqual(rows.map((r) => r.ticket), ["T-1", "T-2"], "oldest first; done and recent tickets are not stuck");
+  assert.equal(rows[0]?.stuckSeconds, 30 * 3600);
+  assert.equal(rows[0]?.status, TicketStatus.Review);
+  assert.equal(rows[1]?.reason, "the developer could not finish: no access second line");
+  assert.deepEqual(findStale(staleRecords(), NOW, 0), []);
+
+  // The boundary: exactly staleHours is not over it yet, one second more is.
+  const edge = [settled("T-9", 24, { status: TicketStatus.Blocked, reason: SettleReason.Blocked })];
+  assert.deepEqual(findStale(edge, NOW, 24), []);
+  assert.deepEqual(findStale(edge, NOW + 1000, 24).map((r) => r.ticket), ["T-9"]);
+});
+
+test("a ticket that moved again is not stuck: a later record decides, and so does a stage in progress", () => {
+  const moved = [...staleRecords(), settled("T-1", 1, { status: TicketStatus.Done })];
+  assert.deepEqual(findStale(moved, NOW, 24).map((r) => r.ticket), ["T-2"]);
+  assert.deepEqual(findStale(staleRecords(), NOW, 24, (t) => t === "T-2").map((r) => r.ticket), ["T-1"]);
+});
+
+test("the report and its JSON show the stuck tickets as their own section, in both languages", () => {
+  const records = staleRecords();
+  const data = buildReport(records, NOW - 24 * HOUR, NOW, findStale(records, NOW, 24), 24);
+  const en = renderReport(data, NoteLanguage.English);
+  assert.match(en, /Stuck tickets \(2\): in review or blocked for over 24h/);
+  assert.match(en, /- \[demo\] T-1 Title of T-1 - review · stuck 30h00m\n {4}review passed, ready for you to merge/);
+  assert.match(en, /- \[demo\] T-2 Title of T-2 - blocked · stuck 25h00m/);
+  assert.match(renderReport(data, NoteLanguage.Korean), /멈춘 티켓 \(2\): 24시간 넘게 리뷰 또는 막힘 상태[\s\S]*T-1 Title of T-1 - review · 멈춘 지 30h00m/);
+  const json = JSON.parse(reportJson(data)) as { stale: Array<{ ticket: string; at: string; stuckSeconds: number }>; staleHours: number };
+  assert.deepEqual(json.stale.map((s) => s.ticket), ["T-1", "T-2"]);
+  assert.equal(json.staleHours, 24);
+  assert.match(json.stale[0]?.at ?? "", /^\d{4}-\d{2}-\d{2}T/);
+  // Off: no section.
+  assert.doesNotMatch(renderReport(buildReport(records, NOW - 24 * HOUR, NOW), NoteLanguage.English), /Stuck tickets/);
+});
+
+test("staleHours and stageTimeoutMinutes default to 24 and 0 and refuse negatives", () => {
+  const config = parseConfig({}, "/w");
+  assert.equal(config.staleHours, 24);
+  assert.equal(config.stageTimeoutMinutes, 0);
+  assert.equal(parseConfig({ staleHours: 0, stageTimeoutMinutes: 45 }, "/w").stageTimeoutMinutes, 45);
+  assert.throws(() => parseConfig({ staleHours: -1 }, "/w"), ConfigError);
+  assert.throws(() => parseConfig({ stageTimeoutMinutes: -5 }, "/w"), ConfigError);
+});
+
+test("readReport and the console snapshot list stuck tickets from the state directory only", async () => {
+  const box = sandbox({ staleHours: 24 });
+  const journal = new Journal(box.runner.paths.journal);
+  const now = Date.now();
+  journal.append(settled("T-1", 0, { at: now - 30 * HOUR, status: TicketStatus.Review, reason: SettleReason.ReadyToMerge }));
+  journal.append(settled("T-2", 0, { at: now - 1 * HOUR, status: TicketStatus.Blocked, reason: SettleReason.Blocked }));
+  const data = readReport(box.runner.paths, now - 24 * HOUR, now, box.config.staleHours);
+  assert.deepEqual(data.stale.map((s) => s.ticket), ["T-1"]);
+  assert.deepEqual((await snapshot(box.config)).report.stale.map((s) => s.ticket), ["T-1"]);
+  assert.deepEqual(readReport(box.runner.paths, now - 24 * HOUR, now).stale, [], "staleHours 0 by default for callers that pass none");
+});
+
+test("a stuck ticket is announced once with the stale event, and again only after it moved", async () => {
+  const svc = await fakeService();
+  process.env[STALE_HOOK_ENV] = `${svc.base}/hook`;
+  try {
+    const box = sandbox({ notify: { service: "slack", webhookUrlEnv: STALE_HOOK_ENV } });
+    const journal = new Journal(box.runner.paths.journal);
+    const now = Date.now();
+    journal.append(settled("T-1", 0, { at: now - 30 * HOUR, status: TicketStatus.Review, reason: SettleReason.ReadyToMerge, note: "ready for you to merge" }));
+
+    const first = await sendStaleAlerts(box.config, box.runner.paths, now);
+    assert.deepEqual(first.sent, ["T-1"]);
+    assert.equal(svc.seen.length, 1);
+    const text = (JSON.parse(svc.seen[0]?.body ?? "{}") as { text: string }).text;
+    assert.match(text, /^T-1 Title of T-1: stuck, nobody has touched it\nreview for 30h00m: ready for you to merge$/);
+
+    // Dispatch rounds later: still stuck, still one message.
+    assert.deepEqual((await sendStaleAlerts(box.config, box.runner.paths, now + HOUR)).sent, []);
+    assert.equal(svc.seen.length, 1);
+    assert.equal(new TicketState(box.runner.paths.results, "T-1").firstLine(StateFile.Stale), String(now - 30 * HOUR));
+
+    // It moves (the runner picks it up) and settles blocked, then sits another day: a new notice.
+    new TicketState(box.runner.paths.results, "T-1").remove(StateFile.Stale);
+    journal.append(settled("T-1", 0, { at: now + HOUR, status: TicketStatus.Blocked, reason: SettleReason.Blocked }));
+    assert.deepEqual((await sendStaleAlerts(box.config, box.runner.paths, now + 26 * HOUR)).sent, ["T-1"]);
+    assert.equal(svc.seen.length, 2);
+    // Even with the mark left over, a new settle time is a new stuck period.
+    journal.append(settled("T-1", 0, { at: now + 27 * HOUR, status: TicketStatus.Review, reason: SettleReason.ReadyToMerge }));
+    assert.deepEqual((await sendStaleAlerts(box.config, box.runner.paths, now + 60 * HOUR)).sent, ["T-1"]);
+  } finally {
+    delete process.env[STALE_HOOK_ENV];
+    await svc.close();
+  }
+});
+
+test("no stale notice when staleHours is 0, the event is not wanted, or the send fails (then it is tried again)", async () => {
+  const svc = await fakeService(500);
+  process.env[STALE_HOOK_ENV] = `${svc.base}/hook`;
+  try {
+    const now = Date.now();
+    const old = settled("T-1", 0, { at: now - 30 * HOUR, status: TicketStatus.Blocked, reason: SettleReason.Blocked });
+    for (const over of [{ staleHours: 0 }, { notify: { service: "slack", webhookUrlEnv: STALE_HOOK_ENV, events: ["review"] } }]) {
+      const box = sandbox({ notify: { service: "slack", webhookUrlEnv: STALE_HOOK_ENV }, ...over });
+      new Journal(box.runner.paths.journal).append(old);
+      assert.deepEqual(await sendStaleAlerts(box.config, box.runner.paths, now), { sent: [], failures: [] });
+    }
+    assert.equal(svc.seen.length, 0);
+
+    const box = sandbox({ notify: { service: "slack", webhookUrlEnv: STALE_HOOK_ENV } });
+    new Journal(box.runner.paths.journal).append(old);
+    const failed = await sendStaleAlerts(box.config, box.runner.paths, now);
+    assert.match(failed.failures.join(), /T-1: slack: slack answered HTTP 500/);
+    assert.equal(new TicketState(box.runner.paths.results, "T-1").has(StateFile.Stale), false);
+    await sendStaleAlerts(box.config, box.runner.paths, now);
+    assert.equal(svc.seen.length, 2, "a failed send is tried again");
+  } finally {
+    delete process.env[STALE_HOOK_ENV];
+    await svc.close();
+  }
+});
+
+test("dispatch sends the stale notice, and a settled ticket's pipeline clears the mark", async () => {
+  const svc = await fakeService();
+  process.env[STALE_HOOK_ENV] = `${svc.base}/hook`;
+  try {
+    const box = sandbox({ notify: { service: "slack", webhookUrlEnv: STALE_HOOK_ENV } });
+    new Journal(box.runner.paths.journal).append(settled("T-1", 0, { at: Date.now() - 30 * HOUR, status: TicketStatus.Review, reason: SettleReason.ReadyToMerge }));
+    await dispatch(box.runner, () => process.pid);
+    await dispatch(box.runner, () => process.pid);
+    assert.equal(svc.seen.length, 1);
+    assert.match(readFileSync(box.runner.paths.log, "utf8"), /dispatch: stale notice sent for T-1/);
+
+    const id = await readyTicket(box, "Touch work");
+    const state = new TicketState(box.runner.paths.results, id);
+    state.write(StateFile.Stale, "123");
+    box.plan(["BUILD", "REVIEW PASS"]);
+    const ticket = (await box.board.list(TicketStatus.Working)).find((t) => t.id === id);
+    assert.ok(ticket);
+    await new TicketPipeline(box.runner, ticket, "slot-test").run();
+    assert.equal(state.has(StateFile.Stale), false);
+  } finally {
+    delete process.env[STALE_HOOK_ENV];
+    await svc.close();
+  }
 });

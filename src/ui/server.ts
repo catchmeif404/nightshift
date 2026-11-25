@@ -93,6 +93,8 @@ export function parseForm(value: unknown): SettingsForm {
   const notify = asRecord(o.notify, "edit.notify");
   if (!Array.isArray(o.projects)) throw new SettingsError("edit.projects must be a list", 400);
   if (typeof o.maxSlots !== "number") throw new SettingsError("edit.maxSlots must be a number", 400);
+  if (typeof o.staleHours !== "number") throw new SettingsError("edit.staleHours must be a number", 400);
+  if (typeof o.stageTimeoutMinutes !== "number") throw new SettingsError("edit.stageTimeoutMinutes must be a number", 400);
   return {
     projects: o.projects.map((p, i) => {
       const r = asRecord(p, `edit.projects[${i}]`);
@@ -111,6 +113,8 @@ export function parseForm(value: unknown): SettingsForm {
     builder: asAgent(o.builder, "edit.builder"),
     reviewer: asAgent(o.reviewer, "edit.reviewer"),
     maxSlots: o.maxSlots,
+    staleHours: o.staleHours,
+    stageTimeoutMinutes: o.stageTimeoutMinutes,
     ticketSections: asStrings(o.ticketSections, "edit.ticketSections"),
     gatePaths: asStrings(o.gatePaths, "edit.gatePaths"),
     notify: { service: asEnum(Object.values(NotifyService), notify.service, "edit.notify.service"), chatId: asString(notify.chatId, "edit.notify.chatId") },

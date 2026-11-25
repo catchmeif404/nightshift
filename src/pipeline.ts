@@ -158,6 +158,7 @@ export class TicketPipeline {
     const link = this.state.firstLine(StateFile.Result);
     this.journalSettled(status, reason, link, note);
     this.state.clearStage();
+    this.state.remove(StateFile.Stale);
     await this.announce(reason, link);
     return TicketOutcome.Settled;
   }
@@ -279,6 +280,8 @@ export class TicketPipeline {
       return this.settle(TicketStatus.Blocked, SettleReason.Misconfigured, this.say.unknownProject(this.ticket.project));
     }
     const project = projectNamed(this.r.config, this.ticket.project);
+    // The ticket moves again: a later stuck period gets its own notice.
+    this.state.remove(StateFile.Stale);
     let stage = this.ticket.kind === TicketKind.Release ? Stage.Release : Stage.Build;
     let round = 1;
     const saved = this.state.firstLine(StateFile.Stage);
@@ -517,8 +520,14 @@ export class TicketPipeline {
     const tries = (Number.parseInt(this.state.read(StateFile.Tries), 10) || 0) + 1;
     if (tries > this.r.config.maxStageTries) {
       const reason = clip(this.r.log.lastLineAbout(this.ticket.id), 300) || this.say.noReason;
-      await this.notify(`${this.ticket.id} blocked: ${stage} stage cut off ${this.r.config.maxStageTries} times`);
-      await this.settle(TicketStatus.Blocked, SettleReason.CutOff, this.say.cutOff(stage, this.r.config.maxStageTries, reason, this.r.log.file));
+      const limitMinutes = Number.parseFloat(this.state.read(StateFile.TimedOut)) || 0;
+      if (limitMinutes > 0) {
+        await this.notify(`${this.ticket.id} blocked: ${stage} stage passed its time limit of ${limitMinutes} min ${this.r.config.maxStageTries} times`);
+        await this.settle(TicketStatus.Blocked, SettleReason.CutOff, this.say.stageTimedOut(stage, this.r.config.maxStageTries, limitMinutes, this.r.log.file));
+      } else {
+        await this.notify(`${this.ticket.id} blocked: ${stage} stage cut off ${this.r.config.maxStageTries} times`);
+        await this.settle(TicketStatus.Blocked, SettleReason.CutOff, this.say.cutOff(stage, this.r.config.maxStageTries, reason, this.r.log.file));
+      }
       return StageOutcome.GaveUp;
     }
     this.state.write(StateFile.Tries, String(tries));
@@ -540,6 +549,7 @@ export class TicketPipeline {
       sessionId,
       mode: resume ? SessionMode.Resume : SessionMode.New,
       writableDirs: gitDir === "" ? [this.r.paths.results] : [this.r.paths.results, gitDir],
+      timeoutMinutes: this.r.config.stageTimeoutMinutes,
     });
     clearInterval(heartbeat);
     this.log(`${stage} r${round}: exit ${result.exitCode}: ${tail(result.output, 600)}`);
@@ -559,10 +569,16 @@ export class TicketPipeline {
         await this.r.board.addNote(this.ticket.id, this.say.usageLimit(agent.name, until));
         return StageOutcome.Limited;
       }
+      if (result.timedOut) {
+        this.state.write(StateFile.TimedOut, String(this.r.config.stageTimeoutMinutes));
+        this.log(`${stage} r${round}: passed the time limit of ${this.r.config.stageTimeoutMinutes} min, process group killed (try ${tries})`);
+      } else {
+        this.state.remove(StateFile.TimedOut);
+      }
       this.state.touch(StateFile.Failed);
       return StageOutcome.Failed;
     }
-    this.state.remove(StateFile.Failed);
+    this.state.remove(StateFile.Failed, StateFile.TimedOut);
     const edit = stage === Stage.Review ? await this.reviewerEdit(tree, reviewBase) : NO_DIFF;
     this.recordUsage(stage, round, agent, model, sessionId, Math.round((Date.now() - startedAt) / 1000), edit);
     if (edit.files > 0) {

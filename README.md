@@ -193,6 +193,8 @@ This writes the config, creates the `nightshift:*` labels and trusts the signed-
 | `maxSlots` | 3 | projects worked at the same time |
 | `maxRework` | 1 | extra build-and-review rounds after a REWORK |
 | `maxStageTries` | 3 | cut-offs before a ticket is blocked (usage limits are not counted) |
+| `staleHours` | 24 | a ticket left in review or blocked longer than this is listed as stuck in `report`, `status` and the console, and told once on the `stale` notify event (0: off) |
+| `stageTimeoutMinutes` | 0 | one agent run of a stage may take this long; past it the process group is killed and the run counts as cut off (0: no limit) |
 | `usageLimitWaitMinutes` | 60 | how long to wait after a usage limit whose message gives no reset time |
 | `autoMerge` | `false` | merge pull requests that pass review |
 | `reviewHandoff` | `false` | experimental: the developer writes a handoff (summary, changed files, test results) and the reviewer gets it with git's list of changed files, instead of surveying the repo again; off leaves the prompts unchanged |

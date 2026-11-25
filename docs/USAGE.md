@@ -206,7 +206,7 @@ the ticket is held for a human rather than passed. `doctor` reports an empty glo
 ```
 
 - `service`: `telegram`, `slack` or `discord` (default `none` = off).
-- `events` (default all four): `review` (passed review, waiting for you to merge), `blocked` (stopped: blocked, needs a human, cut off, merge failed, misconfigured), `merged` (merged, document accepted, release done), `daily-report` (the [morning report](#the-morning-report-nightshift-report); only sent when `dailyReportAt` is set).
+- `events` (default all five): `review` (passed review, waiting for you to merge), `blocked` (stopped: blocked, needs a human, cut off, merge failed, misconfigured), `merged` (merged, document accepted, release done), `daily-report` (the [morning report](#the-morning-report-nightshift-report); only sent when `dailyReportAt` is set), `stale` (a ticket sits in review or blocked for more than `staleHours`; see [Stuck tickets](#stuck-tickets-and-the-stage-time-limit)).
 - Secrets never go in the config, only the **name** of an environment variable: `botTokenEnv` for Telegram (default `NIGHTSHIFT_TELEGRAM_BOT_TOKEN`, plus `chatId`, and `apiUrl` if you need another API host), `webhookUrlEnv` for Slack and Discord (an incoming-webhook URL; defaults `NIGHTSHIFT_SLACK_WEBHOOK_URL` / `NIGHTSHIFT_DISCORD_WEBHOOK_URL`). Export the variable where the runner runs (for the installed service, in its environment).
 - The message is one or two lines in the `language` setting: `<ticket> <title>: <what happened>`, then the pull request link when the ticket has one.
 - A failed send (network, HTTP error, variable not set) is only written to the log; the ticket and the run carry on. `doctor` warns when the variable is missing.
@@ -283,6 +283,31 @@ The first dispatch after that time sends the last 24 hours once; the date is wri
 a send that worked, so a restart or a second worker never sends it twice, and a failed send is tried again at the next
 dispatch. For the chat service the event `daily-report` must be in `notify.events` (it is by default). `nightshift ui`
 shows the same summary of the last 24 hours as a card at the top of the status section.
+
+## Stuck tickets and the stage time limit
+
+**`staleHours`** (default `24`, `0` turns it off): a ticket that the runner left in `review` or `blocked` and that has not
+moved for more than this many hours is **stuck**. The age comes from the runner's own record in `stateDir`
+(`journal.jsonl`, the time of the ticket's last result); nothing is read from the board, so a ticket you merged, closed
+or moved by hand stays listed until the runner settles it again (or you remove its line). A ticket that is worked on
+again (a stage is in progress) is not stuck.
+
+- `nightshift report` (and `--send`, the morning report, the console card) get an extra **Stuck tickets** section, apart
+  from the period's groups and whatever the period: `[project] ticket title - status · stuck 30h00m` and the last reason.
+- `nightshift status` prints the same section.
+- The chat service gets one message per stuck ticket with the `stale` event (it is in `notify.events` by default). It is
+  checked at every dispatch; the ticket's `<stateDir>/results/<ticket>.stale` file remembers that it was told, so it is
+  never told twice for the same stuck period, and it is cleared when the ticket moves (the runner picks it up or settles
+  it again). A failed send is tried again at the next dispatch. `notifyCommand` is not used for this.
+
+**`stageTimeoutMinutes`** (default `0` = no limit): how long **one agent run** of a stage (build, review, release) may
+take. A run that passes it has its whole process group killed and is handled like a cut-off run: the next dispatch
+resumes the same session, and after `maxStageTries` cut-offs the ticket is `blocked` with the note "time limit of N min
+exceeded". Time spent waiting for a usage limit is never counted: the wait happens between runs, and a run that failed
+with a usage limit message is not counted as a try. The limit is per run, not per ticket. With `0` nothing changes: no
+timer, and the agent runs as before.
+
+Both can be changed in `nightshift ui` (Settings).
 
 ## Codex instead of (or with) Claude Code
 

@@ -8,6 +8,7 @@
 #   EXIT <code>    exit with <code> without writing anything
 #   GARBAGE        write a result the runner must reject
 #   RELEASE_DONE / RELEASE_BLOCKED  answer a release run
+#   SLEEP         sleep for a long time (a run that has to be cut off by the stage time limit)
 #   LIMIT          fail the way Claude Code does at its usage limit
 # Every run appends "<session mode> <session id> <first prompt line>" to $FAKE_CALLS_FILE,
 # and saves its prompt to $FAKE_CALLS_FILE.<n>.
@@ -47,6 +48,7 @@ case "$action" in
     git -c user.name=fake -c user.email=fake@example.com commit -q -m "fake change $n"
     echo "PR https://example.com/pr/$n" > "$result"
     ;;
+  SLEEP) sleep 60 ;;
   BUILD_BLOCKED) echo "BLOCKED missing access to the staging database" > "$result" ;;
   RELEASE_DONE) echo "DONE v1.2.3 tagged, health check 200" > "$result" ;;
   RELEASE_BLOCKED) echo "BLOCKED the deploy workflow failed" > "$result" ;;

@@ -4,7 +4,8 @@ import { chmodSync, existsSync, mkdtempSync, readFileSync, realpathSync } from "
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { PublishMode, SettleReason, TicketKind, TicketStatus } from "../src/enums.js";
+import { PublishMode, SettleReason, StateFile, TicketKind, TicketStatus } from "../src/enums.js";
+import { TicketState } from "../src/state.js";
 import { parseNumstat, worktreeFor } from "../src/git.js";
 import { TicketOutcome, TicketPipeline, outputTail } from "../src/pipeline.js";
 import { UsageLog, reviewerEdits } from "../src/usage.js";
@@ -223,4 +224,51 @@ test("a reviewer who changes the code is counted in the note, the usage file and
   await runPipeline(quiet, quietId);
   assert.deepEqual(reviewerEdits(new UsageLog(quiet.runner.paths.usage, quietId).read()), { files: 0, added: 0, removed: 0 });
   assert.doesNotMatch(ticketFile(quiet, quietId), /reviewer changed code/);
+});
+
+test("a run past stageTimeoutMinutes is killed, resumed in the same session, and blocks after maxStageTries with the time-limit reason", async () => {
+  const box = sandbox({ maxStageTries: 2, stageTimeoutMinutes: 0.02 });
+  const id = await readyTicket(box, "Sleeps forever");
+  box.plan(["SLEEP", "SLEEP"]);
+
+  const started = Date.now();
+  assert.equal(await runPipeline(box, id), TicketOutcome.Paused);
+  assert.ok(Date.now() - started < 20_000, "the 60 second sleep was cut at the limit");
+  assert.equal(await ticketStatus(box, id), TicketStatus.Working);
+  assert.equal(await runPipeline(box, id), TicketOutcome.Paused);
+  assert.equal(await runPipeline(box, id), TicketOutcome.Settled);
+  assert.equal(await ticketStatus(box, id), TicketStatus.Blocked);
+
+  const calls = box.calls().map((line) => line.split(" ").slice(0, 2));
+  assert.equal(calls.length, 2, "no third run once the tries are used up");
+  assert.equal(calls[0]?.[0], "new");
+  assert.deepEqual(calls[1], ["resume", calls[0]?.[1]]);
+  assert.match(ticketFile(box, id), /time limit of 0\.02 min exceeded/);
+  assert.match(readFileSync(box.runner.paths.log, "utf8"), /passed the time limit of 0\.02 min, process group killed/);
+});
+
+test("the time-limit note reads in Korean and a finished run forgets an earlier timeout", async () => {
+  const box = sandbox({ maxStageTries: 3, stageTimeoutMinutes: 0.02, language: "ko" });
+  const id = await readyTicket(box, "Slow once");
+  box.plan(["SLEEP", "BUILD", "REVIEW PASS", "SLEEP", "SLEEP", "SLEEP"]);
+  assert.equal(await runPipeline(box, id), TicketOutcome.Paused);
+  assert.equal(new TicketState(box.runner.paths.results, id).has(StateFile.TimedOut), true);
+  assert.equal(await runPipeline(box, id), TicketOutcome.Settled);
+  assert.equal(await ticketStatus(box, id), TicketStatus.Review);
+
+  const slow = await readyTicket(box, "Always slow");
+  for (let i = 0; i < 3; i += 1) assert.equal(await runPipeline(box, slow), TicketOutcome.Paused);
+  assert.equal(await runPipeline(box, slow), TicketOutcome.Settled);
+  assert.match(ticketFile(box, slow), /시간 제한 0\.02분 초과/);
+});
+
+test("stageTimeoutMinutes 0 leaves a slow run alone, and a failing run is still just cut off", async () => {
+  const box = sandbox({ maxStageTries: 3 });
+  assert.equal(box.config.stageTimeoutMinutes, 0);
+  const id = await readyTicket(box, "Normal");
+  box.plan(["EXIT 1", "BUILD", "REVIEW PASS"]);
+  assert.equal(await runPipeline(box, id), TicketOutcome.Paused);
+  assert.equal(new TicketState(box.runner.paths.results, id).has(StateFile.TimedOut), false);
+  assert.equal(await runPipeline(box, id), TicketOutcome.Settled);
+  assert.equal(await ticketStatus(box, id), TicketStatus.Review);
 });

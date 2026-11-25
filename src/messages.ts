@@ -18,6 +18,10 @@ export interface ReportWords {
   sent: string;
   // The "reviewer edit +12/-3" mark on a ticket row.
   reviewerEdit(added: number, removed: number): string;
+  // The stuck-ticket section: its heading, one row and the second line of the chat notice.
+  staleHeader(count: number, hours: number): string;
+  staleRow(project: string, ticket: string, title: string, status: string, stuck: string): string;
+  staleNotice(status: string, stuck: string, reason: string): string;
 }
 
 // Every note the runner writes on a ticket, in each supported language.
@@ -41,6 +45,8 @@ export interface Messages {
   readyToMerge(where: string, review: string): string;
   branch(name: string): string;
   cutOff(stage: Stage, times: number, reason: string, log: string): string;
+  // The stage ran past stageTimeoutMinutes on every try.
+  stageTimedOut(stage: Stage, times: number, minutes: number, log: string): string;
   stillWorking(stage: Stage, round: number): string;
   usageLimit(agent: string, until: string): string;
   postMerge(code: number, tail: string): string;
@@ -76,6 +82,7 @@ const NOTICE_EN: Record<NotifyEvent, string> = {
   [NotifyEvent.Blocked]: "stopped, needs you",
   [NotifyEvent.Merged]: "merged",
   [NotifyEvent.DailyReport]: "morning report",
+  [NotifyEvent.Stale]: "stuck, nobody has touched it",
 };
 
 const NOTICE_KO: Record<NotifyEvent, string> = {
@@ -83,6 +90,7 @@ const NOTICE_KO: Record<NotifyEvent, string> = {
   [NotifyEvent.Blocked]: "멈춤, 확인 필요",
   [NotifyEvent.Merged]: "머지 완료",
   [NotifyEvent.DailyReport]: "아침 보고",
+  [NotifyEvent.Stale]: "멈춰 있음, 아무도 손대지 않음",
 };
 
 const REPORT_EN: ReportWords = {
@@ -104,6 +112,9 @@ const REPORT_EN: ReportWords = {
   sendNothing: "nothing to send with: set notify.service or notifyCommand in the config.",
   sent: "report sent.",
   reviewerEdit: (added, removed) => `reviewer edit +${added}/-${removed}`,
+  staleHeader: (count, hours) => `Stuck tickets (${count}): in review or blocked for over ${hours}h`,
+  staleRow: (project, ticket, title, status, stuck) => `- [${project}] ${ticket} ${title} - ${status} · stuck ${stuck}`,
+  staleNotice: (status, stuck, reason) => `${status} for ${stuck}${reason === "" ? "" : `: ${reason}`}`,
 };
 
 const REPORT_KO: ReportWords = {
@@ -125,6 +136,9 @@ const REPORT_KO: ReportWords = {
   sendNothing: "보낼 곳이 없습니다: 설정에 notify.service 또는 notifyCommand 를 넣으세요.",
   sent: "보고를 보냈습니다.",
   reviewerEdit: (added, removed) => `검토자 수정 +${added}/-${removed}`,
+  staleHeader: (count, hours) => `멈춘 티켓 (${count}): ${hours}시간 넘게 리뷰 또는 막힘 상태`,
+  staleRow: (project, ticket, title, status, stuck) => `- [${project}] ${ticket} ${title} - ${status} · 멈춘 지 ${stuck}`,
+  staleNotice: (status, stuck, reason) => `${status} 상태로 ${stuck} 동안 멈춤${reason === "" ? "" : `: ${reason}`}`,
 };
 
 const english: Messages = {
@@ -152,6 +166,7 @@ const english: Messages = {
   readyToMerge: (where, review) => `review passed, ready for you to merge: ${where}.${withReview(review, "Review")}`,
   branch: (name) => `branch ${name}`,
   cutOff: (stage, n, reason, log) => `the ${stage} stage was cut off ${n} times. Last log line: ${reason} (log: ${log})`,
+  stageTimedOut: (stage, n, minutes, log) => `time limit of ${minutes} min exceeded: the ${stage} stage ran past it ${n} times (log: ${log})`,
   stillWorking: (stage, round) => `still working: ${stage} stage, round ${round}.`,
   usageLimit: (agent, until) => `${agent} hit its usage limit; waiting until ${until}, then resuming the same session (not counted as a try).`,
   postMerge: (code, tail) => ` Post-merge check (exit ${code}): ${tail}`,
@@ -207,6 +222,7 @@ const korean: Messages = {
   readyToMerge: (where, review) => `검토 통과, 머지만 남음: ${where}.${withReview(review, "검토")}`,
   branch: (name) => `브랜치 ${name}`,
   cutOff: (stage, n, reason, log) => `${stage} 단계가 ${n}번 끊김. 마지막 로그: ${reason} (로그: ${log})`,
+  stageTimedOut: (stage, n, minutes, log) => `시간 제한 ${minutes}분 초과: ${stage} 단계가 ${n}번 제한을 넘김 (로그: ${log})`,
   stillWorking: (stage, round) => `생존 신호: ${stage} 단계 진행 중 (${round}회차).`,
   usageLimit: (agent, until) => `${agent} 사용량 한도. ${until}까지 기다렸다가 같은 세션으로 이어 갑니다 (시도 횟수로 세지 않음).`,
   postMerge: (code, tail) => ` 머지 뒤 점검 (exit ${code}): ${tail}`,

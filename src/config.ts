@@ -79,6 +79,10 @@ export interface Config {
   maxBatches: number;
   resumeCooldownMinutes: number;
   heartbeatMinutes: number;
+  // A ticket in review or blocked that has not moved for this many hours is reported as stuck. 0: off.
+  staleHours: number;
+  // One agent run of a stage may take this many minutes before its process group is killed and the run counts as cut off. 0: no limit.
+  stageTimeoutMinutes: number;
   // How often "daemon" and the installed service look for work.
   pollSeconds: number;
   // How long to wait after a usage limit whose message names no reset time.
@@ -293,6 +297,8 @@ function envVars(o: JsonObject): Record<string, string> {
 }
 
 export const DEFAULT_TEST_TIMEOUT_MINUTES = 15;
+export const DEFAULT_STALE_HOURS = 24;
+export const DEFAULT_STAGE_TIMEOUT_MINUTES = 0;
 
 export const DEFAULT_GATES: HumanGate[] = Object.values(HumanGate);
 
@@ -349,6 +355,8 @@ export function parseConfig(raw: unknown, root: string): Config {
     maxBatches: num(top, "maxBatches", 5, "config"),
     resumeCooldownMinutes: num(top, "resumeCooldownMinutes", 15, "config"),
     heartbeatMinutes: num(top, "heartbeatMinutes", 30, "config"),
+    staleHours: num(top, "staleHours", DEFAULT_STALE_HOURS, "config"),
+    stageTimeoutMinutes: num(top, "stageTimeoutMinutes", DEFAULT_STAGE_TIMEOUT_MINUTES, "config"),
     pollSeconds: Math.max(30, num(top, "pollSeconds", 120, "config")),
     usageLimitWaitMinutes: num(top, "usageLimitWaitMinutes", 60, "config"),
     autoMerge: bool(top, "autoMerge", false, "config"),

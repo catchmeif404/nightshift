@@ -12,7 +12,7 @@ import { run } from "./exec.js";
 import { sendNotification, wants } from "./notify.js";
 import { Logger, mask } from "./log.js";
 import { Runner, TicketOutcome, TicketPipeline } from "./pipeline.js";
-import { DailyReportOutcome, sendDailyReport } from "./report.js";
+import { DailyReportOutcome, sendDailyReport, sendStaleAlerts } from "./report.js";
 import {
   SlotInfo,
   Slots,
@@ -190,6 +190,17 @@ async function morningReport(r: Runner): Promise<void> {
   }
 }
 
+// Tickets stuck in review or blocked are told once each. It never stops a dispatch.
+async function staleAlerts(r: Runner): Promise<void> {
+  try {
+    const { sent, failures } = await sendStaleAlerts(r.config, r.paths, Date.now());
+    for (const ticket of sent) r.log.line(`dispatch: stale notice sent for ${ticket}`);
+    for (const failure of failures) r.log.line(`dispatch: stale notice failed: ${failure}`);
+  } catch (error) {
+    r.log.line(`dispatch: stale notice failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 export async function dispatch(r: Runner, spawner: WorkerSpawner = spawnWorker, probe: Probe = run): Promise<WorkerStart[]> {
   if (!(await acquireLock(r.paths.dispatchLock, 24, 5_000))) {
     r.log.line("dispatch: lock still busy, skipping this round");
@@ -197,6 +208,7 @@ export async function dispatch(r: Runner, spawner: WorkerSpawner = spawnWorker, 
   }
   try {
     await morningReport(r);
+    await staleAlerts(r);
     // While an agent's account is over its usage limit, start nothing: every run would be refused anyway.
     const limited = r.limits.active(Date.now());
     if (limited.length > 0) {

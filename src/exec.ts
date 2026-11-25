@@ -62,6 +62,11 @@ export function execShell(commandLine: string, options: ExecOptions, timeoutMinu
   return spawnCollect("/bin/sh", ["-c", commandLine], options, Math.max(1, Math.round(timeoutMinutes * MS_PER_MINUTE)));
 }
 
+// A program with a time limit in minutes (0: none). A run that passes it has its whole process group killed.
+export function execTimed(command: string, args: string[], options: ExecOptions, timeoutMinutes: number): Promise<TimedExecResult> {
+  return spawnCollect(command, args, options, Math.round(timeoutMinutes * MS_PER_MINUTE));
+}
+
 // Run a tool in a folder with the current environment and no stdin.
 export function run(command: string, args: string[], cwd: string): Promise<ExecResult> {
   return exec(command, args, { cwd, env: process.env, input: "" });

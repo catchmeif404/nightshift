@@ -87,6 +87,10 @@ export enum StateFile {
   Handoff = "handoff",
   // The commit the branch was at when the review stage started; what the reviewer's own edits are measured from.
   ReviewBase = "review.base",
+  // The settle time (ms) of the ticket's record the stale notice was sent for; gone when the ticket moves again.
+  Stale = "stale",
+  // The stage time limit (minutes) the last run of this stage ran into; gone when a run finishes.
+  TimedOut = "timedout",
 }
 
 // Why a project cannot publish: what the check before starting a worker found.
@@ -131,6 +135,8 @@ export enum NotifyEvent {
   Merged = "merged",
   // The morning summary: sent once a day when `dailyReportAt` is set, or by `report --send`.
   DailyReport = "daily-report",
+  // A ticket in review or blocked has not moved for `staleHours`: sent once per ticket.
+  Stale = "stale",
 }
 
 // Ready-made `ticketSections` for `init --sections`: the preset name on the command line and the label it writes.
