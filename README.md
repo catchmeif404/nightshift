@@ -133,6 +133,8 @@ nightshift service install         # from now on, picks up new tickets on its ow
 nightshift ui                      # a local web console: status, settings, doctor
 ```
 
+A ticket can wait for others: `nightshift add "..." --depends T-1,T-2` starts it only once T-1 and T-2 are done.
+
 With the local board, tickets are files in `.tickets/`; the runner moves them through
 `ready → working → review | blocked → done` and appends notes to each file. Finished work waits on a local branch
 (`nightshift/t-1`) for you to merge. `service install` registers a LaunchAgent (macOS) or systemd timer (Linux):
@@ -207,6 +209,7 @@ script and nightshift uses it as the board.
 
 ```
 <command> list <status>                      print a JSON array: [{"id","title","body","project","kind","createdAt"}]
+                                             (optional "dependsOn": ["id", ...], tickets that must be done first)
 <command> set-status <id> <status> <reason>  the note comes on stdin
 <command> note <id>                          the note comes on stdin
 ```

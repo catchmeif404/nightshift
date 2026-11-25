@@ -42,6 +42,21 @@ function isIssue(value: unknown): value is IssueJson {
   return typeof v.number === "number" && typeof v.title === "string" && Array.isArray(v.labels);
 }
 
+const DEPENDS_LINE = /^[\s>*+-]*(?:depends on|blocked by)\s*:?\s+(.+)$/gim;
+const ISSUE_REF = /(?:([\w.-]+\/[\w.-]+))?#(\d+)/g;
+
+// "Depends on #12" / "Blocked by #12, owner/other#3" lines in an issue body -> ticket ids ("repo#number").
+export function dependsFromBody(body: string, repo: string): string[] {
+  const ids: string[] = [];
+  for (const line of body.matchAll(DEPENDS_LINE)) {
+    for (const ref of (line[1] ?? "").matchAll(ISSUE_REF)) {
+      const id = `${ref[1] ?? repo}#${ref[2] ?? ""}`;
+      if (!ids.includes(id)) ids.push(id);
+    }
+  }
+  return ids;
+}
+
 export function splitId(id: string): { repo: string; number: string } {
   const at = id.lastIndexOf("#");
   return { repo: id.slice(0, at), number: id.slice(at + 1) };
@@ -88,10 +103,41 @@ export class GitHubBoard implements Board {
           kind: labels.includes(RELEASE_LABEL) ? TicketKind.Release : TicketKind.Build,
           status,
           createdAt: issue.createdAt,
+          dependsOn: dependsFromBody(issue.body ?? "", repo),
         });
       }
     }
     return tickets.sort(oldestFirst);
+  }
+
+  // Closed issues count as done; open ones by their status label (no label: still to do).
+  async find(ids: string[]): Promise<Ticket[]> {
+    const found: Ticket[] = [];
+    for (const id of ids) {
+      const { repo, number } = splitId(id);
+      if (!this.repos.includes(repo) || !/^\d+$/.test(number)) continue;
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(await this.call(["issue", "view", number, "--repo", repo, "--json", "number,title,body,createdAt,labels,state"]));
+      } catch (error) {
+        if (error instanceof GitHubError) continue;
+        throw error;
+      }
+      if (!isIssueDetail(parsed)) continue;
+      const labels = parsed.labels.map((l) => l.name);
+      const open = Object.values(TicketStatus).find((s) => labels.includes(statusLabel(s))) ?? TicketStatus.Ready;
+      found.push({
+        id,
+        title: parsed.title,
+        body: parsed.body ?? "",
+        project: repo,
+        kind: labels.includes(RELEASE_LABEL) ? TicketKind.Release : TicketKind.Build,
+        status: parsed.state === GitHubState.Open ? open : TicketStatus.Done,
+        createdAt: parsed.createdAt,
+        dependsOn: dependsFromBody(parsed.body ?? "", repo),
+      });
+    }
+    return found;
   }
 
   async setStatus(id: string, status: TicketStatus, _reason: SettleReason, note: string): Promise<void> {
@@ -125,4 +171,16 @@ function isIssueView(value: unknown): value is IssueView {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
   return typeof v.state === "string" && Array.isArray(v.labels);
+}
+
+interface IssueDetail extends IssueView {
+  title: string;
+  body: string | null;
+  createdAt: string;
+}
+
+function isIssueDetail(value: unknown): value is IssueDetail {
+  if (!isIssueView(value)) return false;
+  const v = value as unknown as Record<string, unknown>;
+  return typeof v.title === "string" && typeof v.createdAt === "string";
 }

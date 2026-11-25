@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { Ticket } from "../src/board/board.js";
+import { DependencyWaitCause, Ticket } from "../src/board/board.js";
 import { loadConfig } from "../src/config.js";
 import { AgentType, BoardType, CheckLevel, NotifyService, TicketKind, TicketStatus } from "../src/enums.js";
 import { SlotInfo, Slots, projectSlotKey } from "../src/state.js";
@@ -175,7 +175,7 @@ test("status shows real workers, their stage and why a ticket waits", async () =
 });
 
 test("wait reasons follow the dispatch rules", () => {
-  const ticket = (project: string, kind = TicketKind.Build): Ticket => ({ id: "T", title: "t", body: "", project, kind, status: TicketStatus.Ready, createdAt: "" });
+  const ticket = (project: string, kind = TicketKind.Build): Ticket => ({ id: "T", title: "t", body: "", project, kind, status: TicketStatus.Ready, createdAt: "", dependsOn: [] });
   const slot = (key: string, release = false): SlotInfo => ({ key, target: key, pid: 1, stage: "", release });
   const causes = (r: ReturnType<typeof waitReasons>): string[] => r.map((x) => x.cause);
   assert.deepEqual(causes(waitReasons(ticket("a"), [], [], 3, ["a"])), [WaitCause.NextDispatch]);
@@ -185,6 +185,12 @@ test("wait reasons follow the dispatch rules", () => {
   assert.deepEqual(causes(waitReasons(ticket("zzz"), [], [], 3, ["a"])), [WaitCause.UnknownProject]);
   assert.deepEqual(causes(waitReasons(ticket("a", TicketKind.Release), [slot("x")], [], 3, ["a"])), [WaitCause.ReleaseWaitsForIdle]);
   assert.ok(causes(waitReasons(ticket("a"), [slot("r", true)], [], 3, ["a"])).includes(WaitCause.ReleaseRunning));
+});
+
+test("a predecessor that is not done is a wait reason", () => {
+  const t: Ticket = { id: "T", title: "t", body: "", project: "a", kind: TicketKind.Build, status: TicketStatus.Ready, createdAt: "", dependsOn: ["P"] };
+  const reasons = waitReasons(t, [], [], 3, ["a"], {}, [{ cause: DependencyWaitCause.Blocked, id: "P" }]);
+  assert.deepEqual(reasons, [{ cause: WaitCause.DependencyBlocked, detail: "P" }]);
 });
 
 test("edit, check, save: the CLI loader sees it, the rest of the file is kept, a backup exists", async () => {

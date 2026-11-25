@@ -1,6 +1,7 @@
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, statSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import { DependencyWait, dependencyWaits, isBroken, loadDependencyGraph } from "./board/board.js";
 import { boardLabels } from "./board/github.js";
 import { LocalMarkdownBoard } from "./board/localMarkdown.js";
 import { Brand } from "./brand.js";
@@ -155,7 +156,7 @@ export async function init(root: string, given: InitOptions): Promise<void> {
   console.log(`\nNext:\n  ${Brand.name} doctor\n  ${Brand.name} add '<what to do>' --project ${initProjectName(options)}\n  ${Brand.name} run`);
 }
 
-export function add(config: Config, title: string, project: string, kind: TicketKind, body: string): string {
+export function add(config: Config, title: string, project: string, kind: TicketKind, body: string, dependsOn: string[] = []): string {
   if (config.board.type !== BoardType.LocalMarkdown) {
     // Other boards have their own way to add tickets.
     throw new Error(`"add" works with the local markdown board; on GitHub, open an issue with the ${Brand.labelPrefix}${TicketStatus.Ready} label.`);
@@ -164,7 +165,7 @@ export function add(config: Config, title: string, project: string, kind: Ticket
   // Only the items the given body does not already fill, so a complete --body gets no second, empty form.
   const form = kind === TicketKind.Release ? "" : sectionsTemplate(missingSections(body, config.ticketSections));
   const full = body === "" ? form : form === "" ? body : `${body}\n\n${form}`;
-  return new LocalMarkdownBoard(config.board.dir).create(title, project, kind, full);
+  return new LocalMarkdownBoard(config.board.dir).create(title, project, kind, full, dependsOn);
 }
 
 // The config's env joins this process's environment, so the agent, git and gh it starts (and the workers) see it.
@@ -236,6 +237,7 @@ export async function daemon(config: Config): Promise<void> {
 export async function status(config: Config): Promise<void> {
   const runner = openRunner(config);
   const live = runner.slots.live();
+  const say = messagesFor(config.language);
   console.log(`board: ${runner.board.name}`);
   console.log(`log:   ${runner.paths.log}`);
   for (const limit of runner.limits.active(Date.now())) {
@@ -247,9 +249,11 @@ export async function status(config: Config): Promise<void> {
   for (const s of [TicketStatus.Working, TicketStatus.Ready, TicketStatus.Review, TicketStatus.Blocked]) {
     const tickets = await runner.board.list(s);
     console.log(`${s}: ${tickets.length}`);
+    const graph = s === TicketStatus.Ready ? await loadDependencyGraph(runner.board, tickets) : new Map();
     for (const t of tickets.slice(0, 10)) {
       const entries = new UsageLog(runner.paths.usage, t.id).read();
       console.log(`  ${t.id}  ${t.title}  [${t.project}]${entries.length === 0 ? "" : `  ${formatTotal(totalUsage(entries))}`}`);
+      for (const wait of dependencyWaits(t, graph)) console.log(`    ${say.dependencyWait(wait)}`);
     }
   }
 }
@@ -366,8 +370,25 @@ export async function configChecks(config: Config, root: string): Promise<Check[
         : `notify ${config.notify.service}: environment variable ${missing.join(", ")} is not set, so no message will be sent`,
     });
   }
+  checks.push(...(await dependencyChecks(config)));
   if (config.autoMerge) checks.push({ level: CheckLevel.Warn, what: "autoMerge is on: passed pull requests merge without you" });
   return checks;
+}
+
+// Ready and blocked tickets whose predecessors can never be done: a missing id, itself, a loop.
+export async function dependencyChecks(config: Config): Promise<Check[]> {
+  const say = messagesFor(config.language);
+  try {
+    const board = openRunner(config).board;
+    const tickets = [...(await board.list(TicketStatus.Ready)), ...(await board.list(TicketStatus.Blocked))];
+    const graph = await loadDependencyGraph(board, tickets);
+    return tickets.flatMap((t) =>
+      dependencyWaits(t, graph).filter(isBroken).map((w: DependencyWait) => ({ level: CheckLevel.Warn, what: `ticket ${t.id}: ${say.dependencyWait(w)}, so it will not start` })),
+    );
+  } catch {
+    // The board is not readable here; the other checks say so.
+    return [];
+  }
 }
 
 function publishOk(publish: PublishMode): string {

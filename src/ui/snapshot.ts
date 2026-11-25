@@ -1,5 +1,5 @@
 import { closeSync, existsSync, openSync, readSync, statSync } from "node:fs";
-import { Ticket } from "../board/board.js";
+import { DependencyWait, DependencyWaitCause, Ticket, dependencyWaits, loadDependencyGraph } from "../board/board.js";
 import { openBoard } from "../board/index.js";
 import { Config } from "../config.js";
 import { StateFile, TicketKind, TicketStatus } from "../enums.js";
@@ -22,7 +22,20 @@ export enum WaitCause {
   UnknownProject = "unknown-project",
   PreflightFailed = "preflight-failed",
   NextDispatch = "next-dispatch",
+  DependencyMissing = "dependency-missing",
+  DependencySelf = "dependency-self",
+  DependencyCycle = "dependency-cycle",
+  DependencyBlocked = "dependency-blocked",
+  DependencyPending = "dependency-pending",
 }
+
+const DEPENDENCY_CAUSE: Record<DependencyWaitCause, WaitCause> = {
+  [DependencyWaitCause.Missing]: WaitCause.DependencyMissing,
+  [DependencyWaitCause.Self]: WaitCause.DependencySelf,
+  [DependencyWaitCause.Cycle]: WaitCause.DependencyCycle,
+  [DependencyWaitCause.Blocked]: WaitCause.DependencyBlocked,
+  [DependencyWaitCause.Pending]: WaitCause.DependencyPending,
+};
 
 export interface WaitReason {
   cause: WaitCause;
@@ -86,8 +99,10 @@ export function waitReasons(
   knownProjects: string[],
   // Project name -> why it cannot publish (empty: nothing wrong).
   preflight: Record<string, string> = {},
+  // What the ticket still waits for among the tickets it depends on.
+  dependencies: DependencyWait[] = [],
 ): WaitReason[] {
-  const reasons: WaitReason[] = [];
+  const reasons: WaitReason[] = dependencies.map((w) => ({ cause: DEPENDENCY_CAUSE[w.cause], detail: w.id }));
   if (limits.length > 0) {
     reasons.push({ cause: WaitCause.UsageLimit, detail: `${limits.map((l) => l.agent).join(", ")} until ${stamp(Math.max(...limits.map((l) => l.until)))}` });
   }
@@ -150,6 +165,7 @@ export async function snapshot(config: Config): Promise<StatusSnapshot> {
   for (const status of [TicketStatus.Working, TicketStatus.Ready, TicketStatus.Review, TicketStatus.Blocked]) {
     try {
       const list = await board.list(status);
+      const graph = status === TicketStatus.Ready ? await loadDependencyGraph(board, list.slice(0, LIST_LIMIT)) : new Map<string, Ticket>();
       tickets[status] = {
         count: list.length,
         items: list.slice(0, LIST_LIMIT).map((t) => ({
@@ -159,7 +175,7 @@ export async function snapshot(config: Config): Promise<StatusSnapshot> {
           status,
           stage: new TicketState(paths.results, t.id).firstLine(StateFile.Stage),
           usage: usageText(paths.usage, t.id),
-          waiting: status === TicketStatus.Ready ? waitReasons(t, live, limits, config.maxSlots, projects, preflight) : [],
+          waiting: status === TicketStatus.Ready ? waitReasons(t, live, limits, config.maxSlots, projects, preflight, dependencyWaits(t, graph)) : [],
         })),
       };
     } catch (error) {

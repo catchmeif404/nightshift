@@ -129,6 +129,8 @@ nightshift service install         # 이제부터 새 티켓을 알아서 가져
 nightshift ui                      # 로컬 웹 콘솔: 현황, 설정, doctor
 ```
 
+티켓은 다른 티켓을 기다릴 수 있습니다: `nightshift add "..." --depends T-1,T-2` 는 T-1, T-2 가 끝난 뒤에만 시작합니다.
+
 로컬 보드에서는 티켓이 `.tickets/` 안의 파일이고, 러너가 `ready → working → review | blocked → done` 으로 옮기며
 각 파일에 메모를 덧붙입니다.
 

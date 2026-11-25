@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { SettleReason, TicketKind, TicketStatus } from "../enums.js";
-import { Board, Ticket, oldestFirst } from "./board.js";
+import { Board, Ticket, findByListing, oldestFirst } from "./board.js";
 
 export interface NotionProperties {
   // Property names in the database. Empty: not used.
@@ -200,6 +200,7 @@ export class NotionBoard implements Board {
       kind: p.kind !== "" && (await this.valueOf(page, p.kind)) === this.cfg.releaseKind ? TicketKind.Release : TicketKind.Build,
       status,
       createdAt: str(page.created_time),
+      dependsOn: [],
     };
   }
 
@@ -239,6 +240,10 @@ export class NotionBoard implements Board {
     const page = found[0];
     if (page === undefined) throw new NotionError(`no page with ${this.cfg.properties.id} ${id}`);
     return str(page.id);
+  }
+
+  find(ids: string[]): Promise<Ticket[]> {
+    return findByListing(this, ids);
   }
 
   async setStatus(id: string, status: TicketStatus, _reason: SettleReason, note: string): Promise<void> {
