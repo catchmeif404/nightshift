@@ -4,10 +4,13 @@ import { fileURLToPath } from "node:url";
 import { openAgent } from "./agent/index.js";
 import { Ticket } from "./board/board.js";
 import { openBoard } from "./board/index.js";
-import { Config } from "./config.js";
-import { CliCommand, SettleReason, StateFile, TicketKind, TicketStatus, WorkerMode } from "./enums.js";
+import { Config, hasProject, projectNamed } from "./config.js";
+import { CliCommand, NotifyEvent, SettleReason, StateFile, TicketKind, TicketStatus, WorkerMode } from "./enums.js";
 import { messagesFor } from "./messages.js";
-import { Logger } from "./log.js";
+import { PreflightMemory, Probe, checkPublish } from "./preflight.js";
+import { run } from "./exec.js";
+import { sendNotification, wants } from "./notify.js";
+import { Logger, mask } from "./log.js";
 import { Runner, TicketOutcome, TicketPipeline } from "./pipeline.js";
 import { DailyReportOutcome, sendDailyReport } from "./report.js";
 import {
@@ -126,6 +129,39 @@ function spawnWorker(r: Runner, key: string): number {
 
 export type WorkerSpawner = (r: Runner, key: string) => number;
 
+// Tickets of projects that can publish. A project that cannot is not started and its tickets are left as they are;
+// the reason is logged, and sent once (to notifyCommand and the chat notifier) until it is resolved.
+export async function publishable(r: Runner, tickets: Ticket[], probe: Probe = run): Promise<Ticket[]> {
+  const memory = new PreflightMemory(r.paths.preflight);
+  const verdict = new Map<string, boolean>();
+  for (const ticket of tickets) {
+    if (ticket.kind === TicketKind.Release || verdict.has(ticket.project) || !hasProject(r.config, ticket.project)) continue;
+    const result = await checkPublish(r.config, projectNamed(r.config, ticket.project), probe);
+    verdict.set(ticket.project, result.ok);
+    if (result.ok) {
+      memory.clear(ticket.project);
+      continue;
+    }
+    r.log.line(`dispatch: ${result.message}`);
+    if (memory.record(ticket.project, result)) await announceBlocked(r, ticket.project, result.message);
+  }
+  return tickets.filter((t) => t.kind === TicketKind.Release || verdict.get(t.project) !== false);
+}
+
+// notifyCommand and the built-in notifier (blocked event); a failure is only logged.
+async function announceBlocked(r: Runner, project: string, message: string): Promise<void> {
+  const say = messagesFor(r.config.language);
+  const text = `${say.preflightNotice(project)}\n${message}`;
+  if (r.config.notifyCommand !== "") {
+    const result = await run(r.config.notifyCommand, [mask(text)], r.config.root);
+    if (result.code !== 0) r.log.line(`dispatch: notify failed: ${result.stderr.trim().slice(0, 200)}`);
+  }
+  if (wants(r.config.notify, NotifyEvent.Blocked)) {
+    const failure = await sendNotification(r.config.notify, text);
+    if (failure !== "") r.log.line(`dispatch: notify (${r.config.notify.service}) failed: ${failure}`);
+  }
+}
+
 // The first dispatch after dailyReportAt sends the morning report. It never stops a dispatch.
 async function morningReport(r: Runner): Promise<void> {
   try {
@@ -137,7 +173,7 @@ async function morningReport(r: Runner): Promise<void> {
   }
 }
 
-export async function dispatch(r: Runner, spawner: WorkerSpawner = spawnWorker): Promise<WorkerStart[]> {
+export async function dispatch(r: Runner, spawner: WorkerSpawner = spawnWorker, probe: Probe = run): Promise<WorkerStart[]> {
   if (!(await acquireLock(r.paths.dispatchLock, 24, 5_000))) {
     r.log.line("dispatch: lock still busy, skipping this round");
     return [];
@@ -152,7 +188,7 @@ export async function dispatch(r: Runner, spawner: WorkerSpawner = spawnWorker):
       return [];
     }
     const live = r.slots.live();
-    const candidates = [...(await stuckTickets(r)), ...(await requireSections(r, await r.board.list(TicketStatus.Ready)))];
+    const candidates = await publishable(r, [...(await stuckTickets(r)), ...(await requireSections(r, await r.board.list(TicketStatus.Ready)))], probe);
     const starts = planDispatch(candidates, live, r.config.maxSlots);
     for (const start of starts) {
       if (!r.slots.tryCreate(start.key, start.target, start.mode === WorkerMode.Release)) continue;

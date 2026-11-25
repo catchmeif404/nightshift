@@ -5,6 +5,7 @@ import { Config } from "../config.js";
 import { StateFile, TicketKind, TicketStatus } from "../enums.js";
 import { mask } from "../log.js";
 import { UsageLog, formatTotal, totalUsage } from "../usage.js";
+import { PreflightMemory } from "../preflight.js";
 import { ReportData, readReport } from "../report.js";
 import { SlotInfo, Slots, TicketState, UsageLimits, projectSlotKey, statePaths } from "../state.js";
 
@@ -19,6 +20,7 @@ export enum WaitCause {
   ProjectBusy = "project-busy",
   NoFreeSlot = "no-free-slot",
   UnknownProject = "unknown-project",
+  PreflightFailed = "preflight-failed",
   NextDispatch = "next-dispatch",
 }
 
@@ -82,6 +84,8 @@ export function waitReasons(
   limits: { agent: string; until: number }[],
   maxSlots: number,
   knownProjects: string[],
+  // Project name -> why it cannot publish (empty: nothing wrong).
+  preflight: Record<string, string> = {},
 ): WaitReason[] {
   const reasons: WaitReason[] = [];
   if (limits.length > 0) {
@@ -92,6 +96,8 @@ export function waitReasons(
     if (live.length > 0) reasons.push({ cause: WaitCause.ReleaseWaitsForIdle, detail: `${live.length}` });
   } else {
     if (!knownProjects.includes(ticket.project)) reasons.push({ cause: WaitCause.UnknownProject, detail: ticket.project });
+    const unpublishable = preflight[ticket.project] ?? "";
+    if (unpublishable !== "") reasons.push({ cause: WaitCause.PreflightFailed, detail: unpublishable });
     if (live.some((slot) => slot.key === projectSlotKey(ticket.project))) reasons.push({ cause: WaitCause.ProjectBusy, detail: ticket.project });
     if (live.length >= maxSlots) reasons.push({ cause: WaitCause.NoFreeSlot, detail: `${live.length}/${maxSlots}` });
   }
@@ -138,6 +144,9 @@ export async function snapshot(config: Config): Promise<StatusSnapshot> {
   let boardError = "";
   const board = openBoard(config);
   const projects = config.projects.map((p) => p.name);
+  const memory = new PreflightMemory(paths.preflight);
+  const preflight: Record<string, string> = {};
+  for (const name of projects) preflight[name] = memory.message(name);
   for (const status of [TicketStatus.Working, TicketStatus.Ready, TicketStatus.Review, TicketStatus.Blocked]) {
     try {
       const list = await board.list(status);
@@ -150,7 +159,7 @@ export async function snapshot(config: Config): Promise<StatusSnapshot> {
           status,
           stage: new TicketState(paths.results, t.id).firstLine(StateFile.Stage),
           usage: usageText(paths.usage, t.id),
-          waiting: status === TicketStatus.Ready ? waitReasons(t, live, limits, config.maxSlots, projects) : [],
+          waiting: status === TicketStatus.Ready ? waitReasons(t, live, limits, config.maxSlots, projects, preflight) : [],
         })),
       };
     } catch (error) {

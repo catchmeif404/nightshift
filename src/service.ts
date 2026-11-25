@@ -26,6 +26,8 @@ export interface ServiceSpec {
   path: string;
   home: string;
   log: string;
+  // From the config: added to the service environment (they win over PATH, HOME and LANG).
+  env: Record<string, string>;
 }
 
 const CLI_PATH = fileURLToPath(new URL("./cli.js", import.meta.url));
@@ -46,7 +48,13 @@ export function serviceSpec(config: Config): ServiceSpec {
     path: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin",
     home: homedir(),
     log: join(config.stateDir, "service.log"),
+    env: config.env,
   };
+}
+
+// The variables the service starts with: the basics, then the config's env (which may override them).
+function serviceEnv(s: ServiceSpec): Record<string, string> {
+  return { PATH: s.path, HOME: s.home, LANG: "en_US.UTF-8", ...s.env };
 }
 
 function xml(text: string): string {
@@ -56,6 +64,7 @@ function xml(text: string): string {
 // A LaunchAgent that runs "nightshift run" every pollSeconds and at login. AbandonProcessGroup keeps launchd from
 // killing the workers "run" leaves running in the background when it exits.
 export function launchdPlist(s: ServiceSpec): string {
+  const envLines = Object.entries(serviceEnv(s)).map(([k, v]) => `    <key>${xml(k)}</key><string>${xml(v)}</string>`).join("\n");
   const args = [s.node, s.cli, CliCommand.Run, "--root", s.root].map((a) => `    <string>${xml(a)}</string>`).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -69,9 +78,7 @@ ${args}
   <key>WorkingDirectory</key><string>${xml(s.root)}</string>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>PATH</key><string>${xml(s.path)}</string>
-    <key>HOME</key><string>${xml(s.home)}</string>
-    <key>LANG</key><string>en_US.UTF-8</string>
+${envLines}
   </dict>
   <key>StartInterval</key><integer>${s.pollSeconds}</integer>
   <key>RunAtLoad</key><true/>
@@ -90,6 +97,8 @@ function quote(arg: string): string {
 
 // A oneshot service plus a timer. KillMode=process keeps systemd from stopping the background workers with "run".
 export function systemdUnits(s: ServiceSpec): { service: string; timer: string } {
+  // systemd expands "%" in unit files: a literal one is written twice.
+  const envLines = Object.entries(serviceEnv(s)).map(([k, v]) => `Environment=${quote(`${k}=${v.replace(/%/g, "%%")}`)}`).join("\n");
   const exec = [s.node, s.cli, CliCommand.Run, "--root", s.root].map(quote).join(" ");
   return {
     service: `[Unit]
@@ -99,9 +108,7 @@ Description=${Brand.name} queue in ${s.root}
 Type=oneshot
 ExecStart=${exec}
 WorkingDirectory=${s.root}
-Environment=${quote(`PATH=${s.path}`)}
-Environment=HOME=${s.home}
-Environment=LANG=en_US.UTF-8
+${envLines}
 KillMode=process
 StandardOutput=append:${s.log}
 StandardError=append:${s.log}

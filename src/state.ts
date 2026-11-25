@@ -26,6 +26,8 @@ export interface StatePaths {
   sessions: string;
   dispatchLock: string;
   limits: string;
+  // One file per project with an unresolved publish problem (see preflight.ts).
+  preflight: string;
   usage: string;
   // One JSON line per settled ticket and per usage limit: what the morning report reads.
   journal: string;
@@ -43,11 +45,12 @@ export function statePaths(stateDir: string): StatePaths {
     sessions: join(stateDir, "sessions"),
     dispatchLock: join(stateDir, "dispatch.lock"),
     limits: join(stateDir, "limits"),
+    preflight: join(stateDir, "preflight"),
     usage: join(stateDir, "usage"),
     journal: join(stateDir, "journal.jsonl"),
     reportSent: join(stateDir, "report-sent"),
   };
-  for (const dir of [paths.root, paths.results, paths.slots, paths.worktrees, paths.sessions, paths.limits, paths.usage]) {
+  for (const dir of [paths.root, paths.results, paths.slots, paths.worktrees, paths.sessions, paths.limits, paths.preflight, paths.usage]) {
     mkdirSync(dir, { recursive: true, mode: 0o700 });
   }
   return paths;

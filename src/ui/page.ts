@@ -72,7 +72,7 @@ var STR = {
     "report-reworked": "Passed after rework", "report-blocked": "Blocked", "report-needs-human": "Needs a human decision", "report-unknown": "tokens unknown",
     "report-totals": "Totals", "report-tickets": "tickets", "report-first": "first-pass", "report-tokens": "tokens", "report-wait": "waited for usage limits",
     "report-todo": "To do now", "report-todo-none": "nothing waits for you.", "report-merge": "review and merge", "report-unblock": "read why it is blocked, fix it and set it ready again", "report-decide": "decide, then set it ready again or close it",
-    "project-busy": "the project already has a worker", "no-free-slot": "all worker slots are busy", "unknown-project": "project is not in the config", "next-dispatch": "starts at the next dispatch",
+    "preflight-failed": "cannot publish", "project-busy": "the project already has a worker", "no-free-slot": "all worker slots are busy", "unknown-project": "project is not in the config", "next-dispatch": "starts at the next dispatch",
   },
   ko: {
     title: "nightshift 콘솔", local: "이 페이지는 이 컴퓨터(127.0.0.1)에서만 열립니다.",
@@ -94,7 +94,7 @@ var STR = {
     "report-reworked": "재작업 후 통과", "report-blocked": "막힘", "report-needs-human": "사람 판단 필요", "report-unknown": "토큰 알 수 없음",
     "report-totals": "합계", "report-tickets": "티켓", "report-first": "1회 통과", "report-tokens": "토큰", "report-wait": "사용 한도로 기다린 시간",
     "report-todo": "지금 할 일", "report-todo-none": "기다리는 일이 없습니다.", "report-merge": "검토하고 머지", "report-unblock": "막힌 사유를 읽고 고친 뒤 다시 할 일로 두기", "report-decide": "결정한 뒤 다시 할 일로 두거나 닫기",
-    "project-busy": "이 프로젝트에 이미 워커가 있음", "no-free-slot": "워커 슬롯이 모두 사용 중", "unknown-project": "설정에 없는 프로젝트", "next-dispatch": "다음 배차에 시작",
+    "preflight-failed": "게시할 수 없음", "project-busy": "이 프로젝트에 이미 워커가 있음", "no-free-slot": "워커 슬롯이 모두 사용 중", "unknown-project": "설정에 없는 프로젝트", "next-dispatch": "다음 배차에 시작",
   },
 };
 var lang = localStorage.getItem("lang") || document.documentElement.lang;

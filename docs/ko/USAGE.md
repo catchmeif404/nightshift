@@ -84,6 +84,19 @@ nightshift service uninstall
 실행하세요. 서비스 자체 출력은 `.nightshift/service.log`에 남습니다. Linux에서 로그아웃 중에도 돌리려면
 `loginctl enable-linger $USER`. 큐 폴더마다 서비스가 따로 생깁니다.
 
+**환경 변수** (`env`, 기본 `{}`): 문자열 이름과 값의 객체. 예: `{"env": {"GH_CONFIG_DIR": "/Users/me/.config/gh-work"}}` 로
+러너가 다른 `gh` 로그인을 쓰게 할 수 있습니다. `service install` 이 LaunchAgent 의 `EnvironmentVariables` 와 systemd 유닛의
+`Environment=` 에 넣으므로 다시 설치해도 남습니다(서비스 파일을 손으로 고치지 마세요). `run`, `work`, `daemon` 도 시작하는
+에이전트·`git`·`gh` 의 실행 환경에 합쳐 넣습니다. 비밀 값은 넣지 마세요: 이 파일과 서비스 파일은 평문입니다. 토큰은 `gh`
+로그인이나 `tokenEnv` / `botTokenEnv` / `webhookUrlEnv` 가 가리키는 환경 변수에 두세요.
+
+**시작 전 점검**: `publish: "pull-request"` 인 프로젝트는 `doctor` 가 `origin` 이 있는지, 지금 활성인 `gh` 계정이 그 저장소에
+push 할 수 있는지(`gh api repos/<owner>/<repo>` 의 `permissions.push`)를 확인합니다. `publish: "branch"` 는 원격이 없어도
+됩니다. 배차도 프로젝트 워커를 시작하기 직전에 같은 점검을 합니다. 실패하면 개발을 시작하지 않고 그 프로젝트의 ready
+티켓은 그대로 둡니다. 사유는 로그에 남고, `notifyCommand` 와 채팅 알림(`blocked` 이벤트)으로 한 번만 갑니다. 문제가 풀렸다가
+다시 생길 때만 또 보냅니다. 콘솔의 "대기 원인"에도 보입니다. 고치면(`gh auth switch`, `git remote add origin ...`) 다음
+배차에서 작업이 시작됩니다.
+
 배차는 한 번에 하나만 돕니다(`.nightshift/` 안의 잠금). 서비스가 있어도 직접 `run`을 해도 안전합니다.
 
 터미널에 띄워 두고 싶으면 `nightshift daemon`이 멈출 때까지 같은 일을 합니다. cron을 쓰고 싶으면 도구들이 든 PATH와 함께

@@ -88,6 +88,21 @@ The service runs `nightshift run` for this queue every `pollSeconds` (default 12
 `service install` again after installing a new CLI. Its own output goes to `.nightshift/service.log`. On Linux, add
 `loginctl enable-linger $USER` to keep it running while you are logged out. Each queue folder gets its own service.
 
+**Environment variables** (`env`, default `{}`): an object of string names and values, for example
+`{"env": {"GH_CONFIG_DIR": "/Users/me/.config/gh-work"}}` to make the runner use a different `gh` login. `service install`
+writes them into the LaunchAgent's `EnvironmentVariables` and the systemd unit's `Environment=`, so they survive a
+reinstall (never edit the service file by hand). `run`, `work` and `daemon` also add them to the environment of the
+agent, `git` and `gh` they start. Do not put secrets here: the file and the service file are plain text. Keep tokens in
+the `gh` login, or in an environment variable named by `tokenEnv` / `botTokenEnv` / `webhookUrlEnv`.
+
+**Checks before starting**: for a project with `publish: "pull-request"`, `doctor` checks that `origin` exists and
+that the active `gh` account can push to that repository (`gh api repos/<owner>/<repo>`, `permissions.push`). A project
+with `publish: "branch"` needs no remote. The dispatch runs the same check right before it starts a project's worker.
+If it fails, no work starts and the project's ready tickets stay as they are. The reason goes to the log and, once, to
+`notifyCommand` and the chat notifier (`blocked` event); it is sent again only after the problem was fixed and came
+back. The console shows it under "Waiting because". Fix it (`gh auth switch`, `git remote add origin ...`) and the
+next dispatch starts the work.
+
 Only one dispatch runs at a time (a lock in `.nightshift/`), so a manual `run` while the service is installed is safe.
 
 Prefer to keep it in a terminal? `nightshift daemon` does the same until you stop it. Prefer cron? Call

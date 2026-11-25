@@ -96,6 +96,8 @@ export interface Config {
   ticketSections: string[];
   // Globs of repository paths: a change touching one goes to a human whatever the review says. Empty: off.
   gatePaths: string[];
+  // Environment variables for the service, the workers and the agent, git and gh they start. Never put secrets here.
+  env: Record<string, string>;
   tools: ToolPaths;
 }
 
@@ -265,6 +267,20 @@ function dailyReportAt(o: JsonObject): string {
   return value;
 }
 
+export const ENV_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+function envVars(o: JsonObject): Record<string, string> {
+  const raw = optObject(o, "env", "config");
+  const env: Record<string, string> = {};
+  for (const [name, value] of Object.entries(raw)) {
+    if (!ENV_NAME_PATTERN.test(name)) throw new ConfigError(`config.env: "${name}" is not a valid environment variable name`);
+    if (typeof value !== "string") throw new ConfigError(`config.env.${name} must be a string`);
+    if (/[\r\n\0]/.test(value)) throw new ConfigError(`config.env.${name} must not contain a line break`);
+    env[name] = value;
+  }
+  return env;
+}
+
 export const DEFAULT_GATES: HumanGate[] = Object.values(HumanGate);
 
 export function parseConfig(raw: unknown, root: string): Config {
@@ -330,6 +346,7 @@ export function parseConfig(raw: unknown, root: string): Config {
     language: oneOf(top, "language", Object.values(NoteLanguage), NoteLanguage.English, "config"),
     ticketSections: sectionLabels(top),
     gatePaths: gateGlobs(top),
+    env: envVars(top),
     tools: {
       git: str(toolsRaw, "git", "git", "tools"),
       gh: str(toolsRaw, "gh", "gh", "tools"),
