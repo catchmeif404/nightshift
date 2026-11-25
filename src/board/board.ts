@@ -76,12 +76,15 @@ export async function loadDependencyGraph(board: Board, tickets: Ticket[]): Prom
   return graph;
 }
 
+// Whether waiting from `from` leads back to `target`. A done ticket waits for nothing, so the walk stops there.
 function reaches(graph: DependencyGraph, from: string, target: string): boolean {
   const seen = new Set<string>();
   const queue = [from];
   while (queue.length > 0) {
     const id = queue.pop() ?? "";
-    for (const next of graph.get(id)?.dependsOn ?? []) {
+    const ticket = graph.get(id);
+    if (ticket === undefined || ticket.status === TicketStatus.Done) continue;
+    for (const next of ticket.dependsOn) {
       if (next === target) return true;
       if (!seen.has(next)) {
         seen.add(next);

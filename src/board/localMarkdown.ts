@@ -110,7 +110,8 @@ export class LocalMarkdownBoard implements Board {
   }
 
   async find(ids: string[]): Promise<Ticket[]> {
-    return ids.filter((id) => existsSync(this.pathOf(id))).flatMap((id) => this.toTickets(id, this.read(id)));
+    // An id is a file name in this folder, never a path elsewhere.
+    return ids.filter((id) => id === basename(id) && existsSync(this.pathOf(id))).flatMap((id) => this.toTickets(id, this.read(id)));
   }
 
   // Next free T-n id. Used by the "add" command.

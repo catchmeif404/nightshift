@@ -114,6 +114,13 @@ test("a missing id, itself and a loop never start", async () => {
   assert.deepEqual(await dispatch(box.runner, () => 1), []);
 });
 
+test("a loop that runs through a done ticket is no loop: the ticket just waits", () => {
+  const t = (id: string, status: TicketStatus, dependsOn: string[]): Ticket => ({ id, title: id, body: "", project: "demo", kind: TicketKind.Build, status, createdAt: id, dependsOn });
+  const graph = new Map([t("T-1", TicketStatus.Done, ["T-2"]), t("T-2", TicketStatus.Ready, ["T-1"]), t("T-3", TicketStatus.Ready, ["T-2"])].map((x) => [x.id, x]));
+  assert.deepEqual(dependencyWaits(graph.get("T-2") as Ticket, graph), []);
+  assert.deepEqual(dependencyWaits(graph.get("T-3") as Ticket, graph).map((w) => `${w.cause}:${w.id}`), [`${DependencyWaitCause.Pending}:T-2`]);
+});
+
 test("doctor warns about a missing id, itself and a loop, not about a waiting ticket", async () => {
   const box = sandbox();
   make(box, "lonely", ["T-99"]);
