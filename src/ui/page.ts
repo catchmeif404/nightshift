@@ -68,6 +68,10 @@ var STR = {
     locked: "This value is a custom command; change it in the config file.", doctor: "Doctor", runDoctor: "Run doctor", checkResult: "Check result", lang: "한국어",
     problem: "The saved file has a problem: ", changed: "Changes: ", failed: "Not saved.", refreshed: "Updated ",
     "usage-limit": "usage limit", "release-running": "a release is running", "release-waits-for-idle": "a release waits until no worker runs",
+    "report-title": "Morning report (last 24 hours)", "report-none": "none: no ticket moved in this period.", "report-passed": "Passed (merged or waiting for review)",
+    "report-reworked": "Passed after rework", "report-blocked": "Blocked", "report-needs-human": "Needs a human decision", "report-unknown": "tokens unknown",
+    "report-totals": "Totals", "report-tickets": "tickets", "report-first": "first-pass", "report-tokens": "tokens", "report-wait": "waited for usage limits",
+    "report-todo": "To do now", "report-todo-none": "nothing waits for you.", "report-merge": "review and merge", "report-unblock": "read why it is blocked, fix it and set it ready again", "report-decide": "decide, then set it ready again or close it",
     "project-busy": "the project already has a worker", "no-free-slot": "all worker slots are busy", "unknown-project": "project is not in the config", "next-dispatch": "starts at the next dispatch",
   },
   ko: {
@@ -86,6 +90,10 @@ var STR = {
     locked: "사용자 지정 command 값입니다. 설정 파일에서 바꾸세요.", doctor: "Doctor", runDoctor: "doctor 실행", checkResult: "검사 결과", lang: "English",
     problem: "저장된 파일에 문제가 있습니다: ", changed: "변경: ", failed: "저장하지 않았습니다.", refreshed: "갱신 ",
     "usage-limit": "사용량 한도", "release-running": "출시 작업 실행 중", "release-waits-for-idle": "실행 중인 워커가 없어질 때까지 출시가 대기",
+    "report-title": "아침 보고 (지난 24시간)", "report-none": "없음: 이 기간에 움직인 티켓이 없습니다.", "report-passed": "통과 (머지됨 또는 리뷰 대기)",
+    "report-reworked": "재작업 후 통과", "report-blocked": "막힘", "report-needs-human": "사람 판단 필요", "report-unknown": "토큰 알 수 없음",
+    "report-totals": "합계", "report-tickets": "티켓", "report-first": "1회 통과", "report-tokens": "토큰", "report-wait": "사용 한도로 기다린 시간",
+    "report-todo": "지금 할 일", "report-todo-none": "기다리는 일이 없습니다.", "report-merge": "검토하고 머지", "report-unblock": "막힌 사유를 읽고 고친 뒤 다시 할 일로 두기", "report-decide": "결정한 뒤 다시 할 일로 두거나 닫기",
     "project-busy": "이 프로젝트에 이미 워커가 있음", "no-free-slot": "워커 슬롯이 모두 사용 중", "unknown-project": "설정에 없는 프로젝트", "next-dispatch": "다음 배차에 시작",
   },
 };
@@ -112,11 +120,40 @@ async function api(path, body) {
 
 var settings = null, lastStatus = null;
 
+function fmtDuration(sec) { sec = Math.max(0, Math.round(sec)); if (sec < 60) return sec + "s"; var m = Math.floor(sec / 60); if (m < 60) return m + "m" + String(sec % 60).padStart(2, "0") + "s"; return Math.floor(m / 60) + "h" + String(m % 60).padStart(2, "0") + "m"; }
+function fmtTokens(n) { return n < 1000 ? String(n) : n < 1000000 ? Math.round(n / 1000) + "k" : (n / 1000000).toFixed(1) + "M"; }
+
+function renderReport(box, r) {
+  var card = h("div", { class: "report" }, h("h3", {}, t("report-title")));
+  var total = r.totals;
+  if (total.tickets === 0) card.append(h("p", { class: "mut" }, t("report-none")));
+  ["passed", "reworked", "blocked", "needs-human"].forEach(function (g) {
+    var rows = r.groups[g];
+    if (!rows.length) return;
+    card.append(h("div", {}, h("strong", {}, t("report-" + g) + " (" + rows.length + ")")));
+    var tb = h("table", { class: "tickets" });
+    rows.forEach(function (row) {
+      var meta = [row.where, row.tokensKnown ? fmtTokens(row.tokens) : t("report-unknown"), fmtDuration(row.seconds)].filter(function (x) { return x; }).join(" · ");
+      tb.append(h("tr", {}, h("td", { class: "id" }, row.ticket), h("td", {}, row.title, h("div", { class: "mut" }, row.project), row.reason ? h("div", { class: "warn" }, row.reason) : null), h("td", { class: "why" }, meta)));
+    });
+    card.append(tb);
+  });
+  if (total.tickets > 0) {
+    var first = total.judged === 0 ? "-" : total.firstPass + "/" + total.judged + " (" + Math.round(total.firstPass / total.judged * 100) + "%)";
+    card.append(h("p", {}, h("strong", {}, t("report-totals") + ": "), total.tickets + " " + t("report-tickets") + " · " + t("report-first") + " " + first + " · " + fmtTokens(total.tokens) + " " + t("report-tokens") + " · " + t("report-wait") + " " + fmtDuration(total.limitWaitSeconds)));
+  }
+  card.append(h("div", {}, h("strong", {}, t("report-todo"))));
+  if (!r.todo.length) card.append(h("p", { class: "mut" }, t("report-todo-none")));
+  r.todo.forEach(function (i) { card.append(h("div", {}, i.ticket + ": " + t("report-" + i.kind) + (i.where ? " " + i.where : ""))); });
+  box.append(card);
+}
+
 function renderStatus(s) {
   lastStatus = s;
   var box = clear($("status"));
   box.append(h("p", { class: "mut" }, t("board") + ": " + s.board + " · max " + s.maxSlots + " · poll " + s.pollSeconds + "s · " + t("refreshed") + new Date().toLocaleTimeString(lang === "ko" ? "ko-KR" : "en-US")));
   if (s.boardError) box.append(h("p", { class: "fail" }, s.boardError));
+  renderReport(box, s.report);
   s.limits.forEach(function (l) { box.append(h("div", { class: "note" }, t("limits") + ": " + l.agent + " → " + l.until + " (" + l.message + ")")); });
   box.append(h("h3", {}, t("workers")));
   if (s.workers.length === 0) box.append(h("p", { class: "mut" }, t("noWorkers")));

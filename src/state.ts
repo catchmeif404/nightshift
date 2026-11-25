@@ -27,6 +27,10 @@ export interface StatePaths {
   dispatchLock: string;
   limits: string;
   usage: string;
+  // One JSON line per settled ticket and per usage limit: what the morning report reads.
+  journal: string;
+  // The date (YYYY-MM-DD) the daily report was last sent.
+  reportSent: string;
 }
 
 export function statePaths(stateDir: string): StatePaths {
@@ -40,6 +44,8 @@ export function statePaths(stateDir: string): StatePaths {
     dispatchLock: join(stateDir, "dispatch.lock"),
     limits: join(stateDir, "limits"),
     usage: join(stateDir, "usage"),
+    journal: join(stateDir, "journal.jsonl"),
+    reportSent: join(stateDir, "report-sent"),
   };
   for (const dir of [paths.root, paths.results, paths.slots, paths.worktrees, paths.sessions, paths.limits, paths.usage]) {
     mkdirSync(dir, { recursive: true, mode: 0o700 });

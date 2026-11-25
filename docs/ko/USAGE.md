@@ -147,7 +147,7 @@ git이 바뀐 파일을 못 가져오면 통과시키지 않고 사람에게 넘
 ```
 
 - `service`: `telegram`, `slack`, `discord` 중 하나(기본 `none` = 꺼짐).
-- `events`(기본 셋 다): `review`(검토 통과, 머지 대기), `blocked`(막힘·사람 결정 필요·끊김·머지 실패·설정 오류로 멈춤), `merged`(머지됨, 문서 통과, 출시 끝).
+- `events`(기본 넷 다): `review`(검토 통과, 머지 대기), `blocked`(막힘·사람 결정 필요·끊김·머지 실패·설정 오류로 멈춤), `merged`(머지됨, 문서 통과, 출시 끝), `daily-report`([아침 보고](#아침-보고-nightshift-report). `dailyReportAt`을 넣었을 때만 보냄).
 - 비밀값은 설정에 넣지 않고 환경변수 **이름**만 적습니다. Telegram은 `botTokenEnv`(기본 `NIGHTSHIFT_TELEGRAM_BOT_TOKEN`)와 `chatId`(다른 API 주소가 필요하면 `apiUrl`), Slack·Discord는 `webhookUrlEnv`(수신 웹훅 URL, 기본 `NIGHTSHIFT_SLACK_WEBHOOK_URL` / `NIGHTSHIFT_DISCORD_WEBHOOK_URL`)입니다. 변수는 러너가 도는 환경에서 내보내 두세요(설치한 서비스라면 그 서비스 환경).
 - 메시지는 `language` 설정에 맞춘 한두 줄입니다: `<티켓> <제목>: <무슨 일>`, 그리고 PR이 있으면 PR 링크.
 - 전송이 실패해도(네트워크, HTTP 오류, 변수 없음) 로그에만 남고 티켓과 실행은 계속됩니다. 변수가 없으면 `doctor`가 경고합니다.
@@ -178,6 +178,45 @@ input / output / cache read / cache write 토큰, 가중 합계, 소요 초. 따
 - 티켓이 끝나면 보드 메모에 한 줄이 붙습니다. 예: `개발 r1 sonnet 2m10s 124k · 검토 r1 opus 1m17s 93k · 합계 217k`
   (`language: "en"`이면 영어). 토큰을 모르는 단계는 그렇게 표시하고 합계에서 뺍니다.
 - `nightshift status`와 콘솔의 티켓 줄에 지금까지의 합계(`217k · 3m27s`)가 나옵니다.
+
+## 아침 보고 (`nightshift report`)
+
+```bash
+nightshift report                       # 지난 24시간
+nightshift report --since 3d            # 지난 3일 (12h 도 가능)
+nightshift report --since 2026-11-24    # 그날 0시부터 (이 컴퓨터의 시간대)
+nightshift report --json                # 스크립트용 같은 자료
+nightshift report --send                # notify 와 notifyCommand 로도 보내기
+```
+
+`<stateDir>`에 러너가 남기는 기록만 읽습니다. 티켓이 끝날 때와 사용 한도로 멈출 때 `journal.jsonl`에 한 줄씩 쌓입니다.
+보드를 새로 긁지 않으므로 오프라인에서도 됩니다. 이 버전으로 올리기 전에 끝난 티켓은 기록이 없어 나오지 않습니다.
+
+기간 안에 끝난 티켓은 그 기간의 마지막 결과 기준으로 한 묶음에 들어갑니다.
+
+- **통과**: 머지됐거나, 검토를 통과해 PR이 머지를 기다리는 것.
+- **재작업 후 통과**: 위와 같되 검토자가 한 번 이상 돌려보낸 것.
+- **막힘**: 개발이나 검토가 멈췄거나 단계가 끊긴 것. 사유가 한 줄 붙습니다.
+- **사람 판단 필요**: 게이트(돈, 법무, 지정 경로 등)에 걸렸거나 검토자가 사람을 요청한 것. 사유가 한 줄 붙습니다.
+
+줄마다 `[프로젝트] 티켓 제목 - PR 또는 브랜치 · 토큰 · 시간`이 나옵니다 (토큰은 [티켓별 토큰과 시간](#티켓별-토큰과-시간)의
+가중 합계이고, 읽지 못했으면 "토큰 알 수 없음"). 맨 아래에 합계(티켓 수, **1회 통과율** = 사람 판단 대기를 뺀 티켓 중
+재작업 없이 통과한 비율, 총 토큰, 사용 한도로 기다린 시간. 겹친 한도는 한 번만 셉니다)와 **지금 할 일**(기다리는 PR
+머지, 막힌 것 풀기, 나머지 결정)이 붙습니다. 움직인 티켓이 없으면 그렇다고 한 줄만 나옵니다. 할 일 목록은 기간 끝
+시점의 기록 기준이라, 그 뒤 직접 머지하거나 고친 티켓은 다시 끝나기 전까지 남아 있을 수 있습니다.
+
+`--send`는 같은 글을 `notify` 채팅(Telegram, Slack, Discord)과 `notifyCommand`(마지막 인자)로 보냅니다. `notify.events`는 무시합니다(직접 요청했으므로). 보낼 곳이 없거나
+보내기에 실패하면 종료 코드가 1입니다. 매일 아침 받으려면 **`dailyReportAt`**(`"HH:MM"`, 24시간제, 이 컴퓨터의 시각. 비우거나
+없으면 꺼짐이 기본)을 넣으세요.
+
+```json
+{ "dailyReportAt": "08:00", "notify": { "service": "telegram", "chatId": "123456", "events": ["review", "blocked", "merged", "daily-report"] } }
+```
+
+그 시각 뒤 첫 배차가 지난 24시간 보고를 한 번 보냅니다. 보내기에 성공하면 날짜를 `<stateDir>/report-sent`에 적어 두므로
+재시작이나 두 번째 워커가 있어도 두 번 가지 않고, 실패하면 다음 배차에 다시 시도합니다. 채팅 서비스로 받으려면
+`notify.events`에 `daily-report`가 있어야 합니다(기본값에는 들어 있음). `nightshift ui`의 현황 맨 위에도 지난 24시간
+요약이 카드로 뜹니다.
 
 ## Claude Code 대신 (또는 함께) Codex
 

@@ -3,6 +3,7 @@ import { NotifyEvent, NotifyService } from "./enums.js";
 import { clip, mask } from "./log.js";
 
 const TIMEOUT_MS = 10_000;
+const DEFAULT_MAX_CHARS = 1500;
 
 interface TelegramBody {
   chat_id: string;
@@ -55,8 +56,8 @@ export function wants(cfg: NotifyConfig, event: NotifyEvent): boolean {
 
 // Send one message. Never throws: returns "" on success, otherwise a short reason for the log. The reason never
 // contains the request URL, because it carries the bot token or the webhook secret.
-export async function sendNotification(cfg: NotifyConfig, text: string, env: NodeJS.ProcessEnv = process.env): Promise<string> {
-  const request = buildRequest(cfg, clip(mask(text), 1500), env);
+export async function sendNotification(cfg: NotifyConfig, text: string, env: NodeJS.ProcessEnv = process.env, maxChars: number = DEFAULT_MAX_CHARS): Promise<string> {
+  const request = buildRequest(cfg, clip(mask(text), maxChars), env);
   if (typeof request === "string") return request;
   try {
     const response = await fetch(request.url, {

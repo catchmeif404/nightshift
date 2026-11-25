@@ -150,6 +150,15 @@ work. A doctor button runs the same checks as `nightshift doctor`. More in [the 
 <img src="docs/images/console.en.png" alt="The nightshift console: a status card with no worker running and tickets grouped as ready, review and blocked, then a settings card with the repository path, board, builder and reviewer models, concurrent workers, ticket form labels, gated paths and chat notifications, and Check before saving / Save / Reload buttons." width="720">
 </p>
 
+### The morning report (`nightshift report`)
+
+`nightshift report` tells you what finished overnight and what waits for you, from the runner's own records (it does
+not ask the board): tickets that passed, passed after rework, are blocked or need a human decision, each with project,
+ticket, title, pull request, tokens and time, then the totals and a to-do list. `--since 24h|3d|YYYY-MM-DD` picks the
+period, `--json` prints it for scripts, `--send` sends it to your `notify` chat and `notifyCommand`. Set
+`"dailyReportAt": "08:00"` and the service sends it once a day by itself; the console shows the same summary as a card.
+See [the morning report](docs/USAGE.md#the-morning-report-nightshift-report).
+
 ### GitHub Issues
 
 ```sh

@@ -1,5 +1,21 @@
-import { NoteLanguage, NotifyEvent, Stage } from "./enums.js";
+import { NoteLanguage, NotifyEvent, ReportGroup, Stage } from "./enums.js";
 import type { GateHit } from "./git.js";
+
+// The words of the morning report (CLI, chat message and console card).
+export interface ReportWords {
+  title(from: string, to: string): string;
+  none: string;
+  group: Record<ReportGroup, string>;
+  tokensUnknown: string;
+  totals(tickets: number, firstPass: string, tokens: string, limitWait: string): string;
+  todoHeader: string;
+  todoNone: string;
+  todoMerge(ticket: string, where: string): string;
+  todoUnblock(ticket: string): string;
+  todoDecide(ticket: string): string;
+  sendNothing: string;
+  sent: string;
+}
 
 // Every note the runner writes on a ticket, in each supported language.
 export interface Messages {
@@ -26,6 +42,7 @@ export interface Messages {
   released(summary: string): string;
   releaseBlocked(reason: string): string;
   noReason: string;
+  report: ReportWords;
   // The first line of a Telegram / Slack / Discord message.
   notice(event: NotifyEvent, id: string, title: string): string;
 }
@@ -42,12 +59,54 @@ const NOTICE_EN: Record<NotifyEvent, string> = {
   [NotifyEvent.Review]: "ready for your review",
   [NotifyEvent.Blocked]: "stopped, needs you",
   [NotifyEvent.Merged]: "merged",
+  [NotifyEvent.DailyReport]: "morning report",
 };
 
 const NOTICE_KO: Record<NotifyEvent, string> = {
   [NotifyEvent.Review]: "검토 대기",
   [NotifyEvent.Blocked]: "멈춤, 확인 필요",
   [NotifyEvent.Merged]: "머지 완료",
+  [NotifyEvent.DailyReport]: "아침 보고",
+};
+
+const REPORT_EN: ReportWords = {
+  title: (from, to) => `nightshift report ${from} - ${to}`,
+  none: "none: no ticket moved in this period.",
+  group: {
+    [ReportGroup.Passed]: "Passed (merged or waiting for review)",
+    [ReportGroup.Reworked]: "Passed after rework",
+    [ReportGroup.Blocked]: "Blocked",
+    [ReportGroup.NeedsHuman]: "Needs a human decision",
+  },
+  tokensUnknown: "tokens unknown",
+  totals: (tickets, firstPass, tokens, limitWait) => `Totals: ${tickets} tickets · first-pass ${firstPass} · ${tokens} tokens · waited for usage limits ${limitWait}`,
+  todoHeader: "To do now",
+  todoNone: "nothing waits for you.",
+  todoMerge: (id, where) => `${id}: review and merge${where === "" ? "" : ` ${where}`}`,
+  todoUnblock: (id) => `${id}: read why it is blocked, fix it and set it ready again`,
+  todoDecide: (id) => `${id}: decide, then set it ready again or close it`,
+  sendNothing: "nothing to send with: set notify.service or notifyCommand in the config.",
+  sent: "report sent.",
+};
+
+const REPORT_KO: ReportWords = {
+  title: (from, to) => `nightshift 보고 ${from} ~ ${to}`,
+  none: "없음: 이 기간에 움직인 티켓이 없습니다.",
+  group: {
+    [ReportGroup.Passed]: "통과 (머지됨 또는 리뷰 대기)",
+    [ReportGroup.Reworked]: "재작업 후 통과",
+    [ReportGroup.Blocked]: "막힘",
+    [ReportGroup.NeedsHuman]: "사람 판단 필요",
+  },
+  tokensUnknown: "토큰 알 수 없음",
+  totals: (tickets, firstPass, tokens, limitWait) => `합계: 티켓 ${tickets}개 · 1회 통과 ${firstPass} · 토큰 ${tokens} · 사용 한도로 기다린 시간 ${limitWait}`,
+  todoHeader: "지금 할 일",
+  todoNone: "기다리는 일이 없습니다.",
+  todoMerge: (id, where) => `${id}: 검토하고 머지${where === "" ? "" : ` ${where}`}`,
+  todoUnblock: (id) => `${id}: 막힌 사유를 읽고 고친 뒤 다시 할 일로 두기`,
+  todoDecide: (id) => `${id}: 결정한 뒤 다시 할 일로 두거나 닫기`,
+  sendNothing: "보낼 곳이 없습니다: 설정에 notify.service 또는 notifyCommand 를 넣으세요.",
+  sent: "보고를 보냈습니다.",
 };
 
 const english: Messages = {
@@ -74,6 +133,7 @@ const english: Messages = {
   released: (summary) => `release done: ${summary}`,
   releaseBlocked: (reason) => `release blocked: ${reason}`,
   noReason: "no reason given",
+  report: REPORT_EN,
   notice: (event, id, title) => `${id} ${title}: ${NOTICE_EN[event]}`,
 };
 
@@ -101,6 +161,7 @@ const korean: Messages = {
   released: (summary) => `출시 처리 끝: ${summary}`,
   releaseBlocked: (reason) => `출시 막힘: ${reason}`,
   noReason: "사유 없음",
+  report: REPORT_KO,
   notice: (event, id, title) => `${id} ${title}: ${NOTICE_KO[event]}`,
 };
 

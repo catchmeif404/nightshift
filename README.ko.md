@@ -143,6 +143,14 @@ nightshift ui                      # 로컬 웹 콘솔: 현황, 설정, doctor
 <img src="docs/images/console.ko.png" alt="nightshift 콘솔: 실행 중인 워커 없음과 ready·review·blocked로 나뉜 티켓이 보이는 현황 카드, 그 아래 저장소 경로·보드·작업자와 검토자 모델·동시 작업 수·티켓 양식·경로 승인·채팅 알림과 저장 전 검사·저장·다시 불러오기 버튼이 있는 설정 카드" width="720">
 </p>
 
+### 아침 보고 (`nightshift report`)
+
+`nightshift report`는 밤새 무엇이 끝났고 무엇이 나를 기다리는지 보여 줍니다. 보드를 새로 긁지 않고 러너가 남긴 기록만
+읽습니다. 통과, 재작업 후 통과, 막힘, 사람 판단 필요로 묶고 줄마다 프로젝트·티켓·제목·PR·토큰·소요 시간을 보여 준 뒤
+합계와 지금 할 일 목록을 붙입니다. `--since 24h|3d|YYYY-MM-DD`로 기간을 고르고, `--json`은 스크립트용 출력, `--send`는
+`notify` 채팅과 `notifyCommand`로 보냅니다. `"dailyReportAt": "08:00"`을 넣으면 서비스가 하루 한 번 알아서 보내고,
+콘솔에도 같은 요약 카드가 뜹니다. 자세한 건 [아침 보고](docs/ko/USAGE.md#아침-보고-nightshift-report).
+
 ### GitHub Issues
 
 ```sh

@@ -119,6 +119,8 @@ export enum NotifyEvent {
   Review = "review",
   Blocked = "blocked",
   Merged = "merged",
+  // The morning summary: sent once a day when `dailyReportAt` is set, or by `report --send`.
+  DailyReport = "daily-report",
 }
 
 // Ready-made `ticketSections` for `init --sections`: the preset name on the command line and the label it writes.
@@ -175,6 +177,7 @@ export enum CliCommand {
   Service = "service",
   Doctor = "doctor",
   Ui = "ui",
+  Report = "report",
   Version = "version",
   Help = "help",
 }
@@ -206,4 +209,27 @@ export enum UiRoute {
   Check = "/api/settings/check",
   Save = "/api/settings/save",
   Doctor = "/api/doctor",
+}
+
+// What one line of the runner's journal (<state>/journal.jsonl) tells.
+export enum JournalKind {
+  // A ticket left the runner's hands (done, in review, blocked).
+  Settled = "settled",
+  // An agent's account hit its usage limit and everything waited.
+  Limited = "limited",
+}
+
+// The groups of the report: how a ticket that moved ended up.
+export enum ReportGroup {
+  Passed = "passed",
+  Reworked = "reworked",
+  Blocked = "blocked",
+  NeedsHuman = "needs-human",
+}
+
+// What a person has to do next, one per ticket that still waits for them.
+export enum TodoKind {
+  Merge = "merge",
+  Unblock = "unblock",
+  Decide = "decide",
 }

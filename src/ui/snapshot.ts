@@ -5,6 +5,7 @@ import { Config } from "../config.js";
 import { StateFile, TicketKind, TicketStatus } from "../enums.js";
 import { mask } from "../log.js";
 import { UsageLog, formatTotal, totalUsage } from "../usage.js";
+import { ReportData, readReport } from "../report.js";
 import { SlotInfo, Slots, TicketState, UsageLimits, projectSlotKey, statePaths } from "../state.js";
 
 const LOG_LINES = 60;
@@ -53,7 +54,13 @@ export interface LimitView {
   message: string;
 }
 
+const REPORT_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+// The morning report of the last 24 hours, for the console card. Times are epoch milliseconds.
+export type ReportView = ReportData;
+
 export interface StatusSnapshot {
+  report: ReportView;
   board: string;
   boardError: string;
   workers: WorkerView[];
@@ -151,6 +158,7 @@ export async function snapshot(config: Config): Promise<StatusSnapshot> {
     }
   }
   return {
+    report: readReport(paths, now - REPORT_WINDOW_MS, now),
     board: board.name,
     boardError,
     workers: live.map((s) => ({ target: s.target, pid: s.pid, stage: s.stage, release: s.release })),

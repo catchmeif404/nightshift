@@ -156,7 +156,7 @@ the ticket is held for a human rather than passed. `doctor` reports an empty glo
 ```
 
 - `service`: `telegram`, `slack` or `discord` (default `none` = off).
-- `events` (default all three): `review` (passed review, waiting for you to merge), `blocked` (stopped: blocked, needs a human, cut off, merge failed, misconfigured), `merged` (merged, document accepted, release done).
+- `events` (default all four): `review` (passed review, waiting for you to merge), `blocked` (stopped: blocked, needs a human, cut off, merge failed, misconfigured), `merged` (merged, document accepted, release done), `daily-report` (the [morning report](#the-morning-report-nightshift-report); only sent when `dailyReportAt` is set).
 - Secrets never go in the config, only the **name** of an environment variable: `botTokenEnv` for Telegram (default `NIGHTSHIFT_TELEGRAM_BOT_TOKEN`, plus `chatId`, and `apiUrl` if you need another API host), `webhookUrlEnv` for Slack and Discord (an incoming-webhook URL; defaults `NIGHTSHIFT_SLACK_WEBHOOK_URL` / `NIGHTSHIFT_DISCORD_WEBHOOK_URL`). Export the variable where the runner runs (for the installed service, in its environment).
 - The message is one or two lines in the `language` setting: `<ticket> <title>: <what happened>`, then the pull request link when the ticket has one.
 - A failed send (network, HTTP error, variable not set) is only written to the log; the ticket and the run carry on. `doctor` warns when the variable is missing.
@@ -190,6 +190,49 @@ stage, round, model, input / output / cache read / cache write tokens, a weighte
   `build r1 sonnet 2m10s 124k · review r1 opus 1m17s 93k · total 217k` (`language: "ko"` writes
   `개발 r1 sonnet 2m10s 124k · 검토 r1 opus 1m17s 93k · 합계 217k`). Stages with unknown tokens say so and are left out of the total.
 - `nightshift status` and the console show the running total (`217k · 3m27s`) on each ticket line.
+
+## The morning report (`nightshift report`)
+
+```bash
+nightshift report                       # the last 24 hours
+nightshift report --since 3d            # the last 3 days (also 12h ...)
+nightshift report --since 2026-11-24    # from that day's midnight (this computer's time zone)
+nightshift report --json                # the same data for scripts
+nightshift report --send                # also send it to notify and notifyCommand
+```
+
+It reads only what the runner keeps in `<stateDir>`: `journal.jsonl` (one line when a ticket settles, one when a usage
+limit stops work), written by the runner. It never asks the board, so it works offline. Tickets that settled before
+you updated to this version have no journal line and do not appear.
+
+A ticket that settled in the period lands in one group, by its last result in it:
+
+- **Passed**: merged, or review passed and the PR waits for you to merge.
+- **Passed after rework**: the same, but the reviewer sent it back at least once.
+- **Blocked**: the developer or the review stopped it, or a stage was cut off; one line says why.
+- **Needs a human decision**: a gate (money, legal, gated paths ...) or the reviewer asked for you; one line says why.
+
+Each line shows `[project] ticket title - PR or branch · tokens · time` (weighted tokens as in
+[Tokens and time per ticket](#tokens-and-time-per-ticket); "tokens unknown" when they could not be read). At the bottom:
+the totals (tickets, **first-pass rate** = tickets that passed with no rework out of all except those waiting for a
+human, total tokens, and the time everything waited for a usage limit, overlapping limits counted once) and **To do
+now**: merge the PRs that wait, unblock the blocked, decide the rest. With nothing moved the report says so in one line.
+The to-do list is what the records say at the end of the period; a ticket you already merged or fixed by hand since
+may still be listed until it settles again.
+
+`--send` sends the same text to the `notify` chat (Telegram, Slack, Discord) and to `notifyCommand` (the text is its
+last argument). It ignores `notify.events` (you asked for it), and the exit code is 1 if no channel is set or a send
+failed. To get it every morning, set **`dailyReportAt`** (`"HH:MM"`, 24 hours, this computer's time; empty or absent is
+off, the default):
+
+```json
+{ "dailyReportAt": "08:00", "notify": { "service": "telegram", "chatId": "123456", "events": ["review", "blocked", "merged", "daily-report"] } }
+```
+
+The first dispatch after that time sends the last 24 hours once; the date is written to `<stateDir>/report-sent` after
+a send that worked, so a restart or a second worker never sends it twice, and a failed send is tried again at the next
+dispatch. For the chat service the event `daily-report` must be in `notify.events` (it is by default). `nightshift ui`
+shows the same summary of the last 24 hours as a card at the top of the status section.
 
 ## Codex instead of (or with) Claude Code
 
