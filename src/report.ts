@@ -1,11 +1,11 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { Config, ConfigError } from "./config.js";
-import { JournalKind, NoteLanguage, NotifyEvent, NotifyService, ReportGroup, SettleReason, TicketStatus, TodoKind } from "./enums.js";
+import { JournalKind, NoteLanguage, NotifyEvent, NotifyService, ReportGroup, SettleReason, StateFile, TicketStatus, TodoKind } from "./enums.js";
 import { run } from "./exec.js";
 import { clip, mask, oneLine } from "./log.js";
 import { Messages, messagesFor } from "./messages.js";
 import { sendNotification, wants } from "./notify.js";
-import { StatePaths } from "./state.js";
+import { StatePaths, TicketState } from "./state.js";
 import { formatDuration, formatTokens } from "./usage.js";
 
 const HOUR_MS = 3_600_000;
@@ -166,12 +166,55 @@ export interface ReportTotals {
   limitWaitSeconds: number;
 }
 
+// A ticket in review or blocked that nobody has moved for longer than staleHours.
+export interface StaleRow {
+  ticket: string;
+  title: string;
+  project: string;
+  status: TicketStatus;
+  // When the runner last settled it (epoch ms): the stuck time counts from here.
+  at: number;
+  stuckSeconds: number;
+  // The last reason, one line.
+  reason: string;
+}
+
 export interface ReportData {
   since: number;
   until: number;
   groups: Record<ReportGroup, ReportRow[]>;
   totals: ReportTotals;
   todo: ReportTodo[];
+  // Not limited to the report period: stuck is stuck however long ago it settled.
+  stale: StaleRow[];
+  // The setting the list was made with (0: off).
+  staleHours: number;
+}
+
+const STALE_STATUSES: readonly TicketStatus[] = [TicketStatus.Review, TicketStatus.Blocked];
+
+// Tickets whose last settle (the runner's own record in the state directory) left them in review or blocked more than
+// staleHours ago. `moving` says a ticket has been picked up again since (it has a stage in progress). staleHours 0: off.
+export function findStale(records: JournalRecord[], now: number, staleHours: number, moving: (ticket: string) => boolean = () => false): StaleRow[] {
+  if (staleHours <= 0) return [];
+  const last = new Map<string, SettledRecord>();
+  for (const r of records) {
+    if (r.kind !== JournalKind.Settled || r.at > now) continue;
+    const seen = last.get(r.ticket);
+    if (seen === undefined || seen.at <= r.at) last.set(r.ticket, r);
+  }
+  return [...last.values()]
+    .filter((r) => STALE_STATUSES.includes(r.status) && now - r.at > staleHours * HOUR_MS && !moving(r.ticket))
+    .sort((a, b) => a.at - b.at)
+    .map((r) => ({
+      ticket: r.ticket,
+      title: oneLine(mask(r.title)),
+      project: r.project,
+      status: r.status,
+      at: r.at,
+      stuckSeconds: Math.round((now - r.at) / 1000),
+      reason: clip(oneLine(mask(r.note)), REASON_CHARS),
+    }));
 }
 
 function groupOf(r: SettledRecord): ReportGroup {
@@ -208,7 +251,7 @@ function unionSeconds(spans: Array<{ from: number; to: number }>, from: number, 
 }
 
 // Groups the tickets that settled in [since, until]. A ticket that settled more than once counts once, as its last time.
-export function buildReport(records: JournalRecord[], since: number, until: number): ReportData {
+export function buildReport(records: JournalRecord[], since: number, until: number, stale: StaleRow[] = [], staleHours: number = 0): ReportData {
   const last = new Map<string, SettledRecord>();
   for (const r of records) {
     if (r.kind !== JournalKind.Settled || r.at < since || r.at > until) continue;
@@ -259,11 +302,23 @@ export function buildReport(records: JournalRecord[], since: number, until: numb
       limitWaitSeconds: unionSeconds(spans, since, until),
     },
     todo,
+    stale,
+    staleHours,
   };
 }
 
-export function readReport(paths: StatePaths, since: number, until: number): ReportData {
-  return buildReport(new Journal(paths.journal).read(), since, until);
+// A ticket with a stage file is being worked on again (or waits to be resumed): not stuck.
+function movingTicket(paths: StatePaths): (ticket: string) => boolean {
+  return (ticket) => new TicketState(paths.results, ticket).has(StateFile.Stage);
+}
+
+export function readStale(paths: StatePaths, now: number, staleHours: number): StaleRow[] {
+  return findStale(new Journal(paths.journal).read(), now, staleHours, movingTicket(paths));
+}
+
+export function readReport(paths: StatePaths, since: number, until: number, staleHours: number = 0): ReportData {
+  const records = new Journal(paths.journal).read();
+  return buildReport(records, since, until, findStale(records, until, staleHours, movingTicket(paths)), staleHours);
 }
 
 function stamp(ms: number): string {
@@ -294,6 +349,14 @@ function todoLine(item: ReportTodo, say: Messages): string {
   }
 }
 
+export function staleLines(rows: StaleRow[], hours: number, say: Messages): string[] {
+  if (rows.length === 0) return [];
+  return [
+    say.report.staleHeader(rows.length, hours),
+    ...rows.flatMap((s) => [say.report.staleRow(s.project, s.ticket, s.title, s.status, formatDuration(s.stuckSeconds)), ...(s.reason === "" ? [] : [`    ${s.reason}`])]),
+  ];
+}
+
 // The text of the report: the same for the terminal and for a chat message.
 export function renderReport(data: ReportData, language: NoteLanguage): string {
   const say = messagesFor(language);
@@ -309,6 +372,8 @@ export function renderReport(data: ReportData, language: NoteLanguage): string {
     const t = data.totals;
     lines.push(say.report.totals(t.tickets, firstPassText(t), formatTokens(t.tokens), formatDuration(t.limitWaitSeconds)));
   }
+  const stale = staleLines(data.stale, data.staleHours, say);
+  if (stale.length > 0) lines.push("", ...stale);
   lines.push("", say.report.todoHeader);
   lines.push(...(data.todo.length === 0 ? [`- ${say.report.todoNone}`] : data.todo.map((i) => `- ${todoLine(i, say)}`)));
   return lines.join("\n");
@@ -318,7 +383,7 @@ export function renderReport(data: ReportData, language: NoteLanguage): string {
 export function reportJson(data: ReportData): string {
   const iso = (ms: number): string => new Date(ms).toISOString();
   const groups = Object.fromEntries(Object.entries(data.groups).map(([g, rows]) => [g, rows.map((r) => ({ ...r, at: iso(r.at) }))]));
-  return JSON.stringify({ since: iso(data.since), until: iso(data.until), groups, totals: data.totals, todo: data.todo }, null, 2);
+  return JSON.stringify({ since: iso(data.since), until: iso(data.until), groups, totals: data.totals, todo: data.todo, staleHours: data.staleHours, stale: data.stale.map((s) => ({ ...s, at: iso(s.at) })) }, null, 2);
 }
 
 // Where a report can go: the built-in chat service and the notifyCommand. `service` is false when the events list leaves the report out.
@@ -373,10 +438,38 @@ export async function sendDailyReport(config: Config, paths: StatePaths, now: nu
   if (!dailyReportDue(config, paths, now)) return { outcome: DailyReportOutcome.NotDue, failures: [] };
   const channels = reportChannels(config, true);
   if (!channels.service && !channels.command) return { outcome: DailyReportOutcome.NoChannel, failures: [] };
-  const body = renderReport(readReport(paths, now - DAY_MS, now), config.language);
+  const body = renderReport(readReport(paths, now - DAY_MS, now, config.staleHours), config.language);
   const failures = await sendReport(config, body, true);
   const tried = Number(channels.service) + Number(channels.command);
   if (failures.length >= tried) return { outcome: DailyReportOutcome.Failed, failures };
   writeFileSync(paths.reportSent, `${localDate(now)}\n`);
   return { outcome: DailyReportOutcome.Sent, failures };
+}
+
+export interface StaleAlertResult {
+  // Tickets a notice went out for this time.
+  sent: string[];
+  failures: string[];
+}
+
+// Tells the chat service once per stuck ticket (the `stale` event). What was told is kept in the ticket's state, as the
+// time it settled: the same stuck period is never told twice, and a ticket that moves and settles again gets a new notice.
+// A failed send leaves no mark, so the next dispatch tries again. Called while the dispatch lock is held.
+export async function sendStaleAlerts(config: Config, paths: StatePaths, now: number): Promise<StaleAlertResult> {
+  const result: StaleAlertResult = { sent: [], failures: [] };
+  if (config.staleHours <= 0 || !wants(config.notify, NotifyEvent.Stale)) return result;
+  const say = messagesFor(config.language);
+  for (const row of readStale(paths, now, config.staleHours)) {
+    const state = new TicketState(paths.results, row.ticket);
+    if (state.firstLine(StateFile.Stale) === String(row.at)) continue;
+    const text = [say.notice(NotifyEvent.Stale, row.ticket, clip(row.title, 120)), say.report.staleNotice(row.status, formatDuration(row.stuckSeconds), row.reason)].join("\n");
+    const failure = await sendNotification(config.notify, text);
+    if (failure === "") {
+      state.write(StateFile.Stale, String(row.at));
+      result.sent.push(row.ticket);
+    } else {
+      result.failures.push(`${row.ticket}: ${config.notify.service}: ${failure}`);
+    }
+  }
+  return result;
 }

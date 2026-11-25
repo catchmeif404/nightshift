@@ -2,7 +2,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { SessionMode } from "../enums.js";
-import { exec } from "../exec.js";
+import { execTimed } from "../exec.js";
 import { Agent, AgentRequest, AgentResult, agentEnv } from "./agent.js";
 
 // Claude Code in print mode. A new stage gets a fixed --session-id, so a cut-off run can be --resume'd.
@@ -41,7 +41,7 @@ export class ClaudeCodeAgent implements Agent {
       ...request.writableDirs.flatMap((dir) => ["--add-dir", dir]),
       ...session,
     ];
-    const result = await exec(this.bin, args, { cwd: request.cwd, env: agentEnv({}), input: "" });
-    return { exitCode: result.code, output: `${result.stdout}${result.stderr === "" ? "" : `\n${result.stderr}`}` };
+    const result = await execTimed(this.bin, args, { cwd: request.cwd, env: agentEnv({}), input: "" }, request.timeoutMinutes);
+    return { exitCode: result.code, output: `${result.stdout}${result.stderr === "" ? "" : `\n${result.stderr}`}`, timedOut: result.timedOut };
   }
 }

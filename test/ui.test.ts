@@ -415,3 +415,19 @@ test("testCommand can be edited in the console, is written to the project and le
   const bad = await post(b, "/api/settings/check", { edit: { ...edit, projects: [{ ...(edit.projects[0] ?? { name: "demo", repoPath: b.repo }), testCommand: "x".repeat(2000) }] }, revision: readSettings(b.root).revision });
   assert.match(bad.body, /testCommand/);
 });
+
+test("staleHours and stageTimeoutMinutes are edited from the console, whole numbers from 0 only", async () => {
+  const b = await box();
+  const { form, revision } = await formOf(b);
+  assert.equal(form.staleHours, 24);
+  assert.equal(form.stageTimeoutMinutes, 0);
+  for (const edit of [{ ...form, staleHours: -1 }, { ...form, staleHours: 1.5 }, { ...form, stageTimeoutMinutes: -3 }, { ...form, stageTimeoutMinutes: 10.5 }]) {
+    assert.equal((await post(b, "/api/settings/save", { edit, revision })).status, 422);
+  }
+  const saved = await post(b, "/api/settings/save", { edit: { ...form, staleHours: 0, stageTimeoutMinutes: 45 }, revision });
+  assert.equal(saved.status, 200, saved.body);
+  assert.deepEqual((JSON.parse(saved.body) as { changed: string[] }).changed, ["staleHours", "stageTimeoutMinutes"]);
+  const config = loadConfig(b.root);
+  assert.deepEqual([config.staleHours, config.stageTimeoutMinutes], [0, 45]);
+  assert.equal((await post(b, "/api/settings/save", { edit: { ...form, staleHours: "x" }, revision })).status, 400);
+});

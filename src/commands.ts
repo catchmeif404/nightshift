@@ -13,7 +13,7 @@ import {
 import { UsageLog, formatTotal, totalUsage } from "./usage.js";
 import { run } from "./exec.js";
 import { missingEnv } from "./notify.js";
-import { parseSince, readReport, renderReport, reportJson, sendReport } from "./report.js";
+import { parseSince, readReport, readStale, renderReport, reportJson, sendReport, staleLines } from "./report.js";
 import { messagesFor } from "./messages.js";
 import { checkPublish } from "./preflight.js";
 import { statePaths } from "./state.js";
@@ -246,6 +246,8 @@ export async function status(config: Config): Promise<void> {
   }
   console.log(live.length === 0 ? "workers: none running" : "workers:");
   for (const slot of live) console.log(`  ${slot.target} (pid ${slot.pid})${slot.stage === "" ? "" : ` - ${slot.stage}`}`);
+  const stale = staleLines(readStale(runner.paths, Date.now(), config.staleHours), config.staleHours, say);
+  if (stale.length > 0) console.log(stale.join("\n"));
   for (const s of [TicketStatus.Working, TicketStatus.Ready, TicketStatus.Review, TicketStatus.Blocked]) {
     const tickets = await runner.board.list(s);
     console.log(`${s}: ${tickets.length}`);
@@ -267,7 +269,7 @@ export interface ReportOptions {
 // The morning report from the runner's own records; it never asks the board. Returns the exit code.
 export async function showReport(config: Config, options: ReportOptions): Promise<number> {
   const now = Date.now();
-  const data = readReport(statePaths(config.stateDir), parseSince(options.since, now), now);
+  const data = readReport(statePaths(config.stateDir), parseSince(options.since, now), now, config.staleHours);
   const body = renderReport(data, config.language);
   console.log(options.json ? reportJson(data) : body);
   if (!options.send) return 0;

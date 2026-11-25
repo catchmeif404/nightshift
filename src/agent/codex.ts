@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CodexSandbox, SessionMode } from "../enums.js";
-import { exec } from "../exec.js";
+import { execTimed } from "../exec.js";
 import { safeId } from "../state.js";
 import { Agent, AgentRequest, AgentResult, agentEnv } from "./agent.js";
 
@@ -101,12 +101,12 @@ export class CodexAgent implements Agent {
       request.mode === SessionMode.New
         ? ["exec", ...common, request.prompt]
         : ["exec", "resume", ...common, readFileSync(this.mapping(request.sessionId), "utf8").trim(), request.prompt];
-    const result = await exec(this.bin, args, { cwd: request.cwd, env: agentEnv({}), input: "" });
+    const result = await execTimed(this.bin, args, { cwd: request.cwd, env: agentEnv({}), input: "" }, request.timeoutMinutes);
     const parsed = parseCodexEvents(result.stdout);
     if (request.mode === SessionMode.New && parsed.threadId !== "") {
       writeFileSync(this.mapping(request.sessionId), parsed.threadId);
     }
     const summary = parsed.messages.length > 0 ? parsed.messages.join("\n") : result.stdout.slice(-2000);
-    return { exitCode: result.code, output: `${summary}${result.stderr === "" ? "" : `\n${result.stderr.slice(-1000)}`}` };
+    return { exitCode: result.code, output: `${summary}${result.stderr === "" ? "" : `\n${result.stderr.slice(-1000)}`}`, timedOut: result.timedOut };
   }
 }

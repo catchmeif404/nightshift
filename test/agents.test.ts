@@ -18,7 +18,7 @@ test("the codex agent maps the runner's session to codex's thread and resumes it
   const dir = mkdtempSync(join(tmpdir(), "nightshift-codex-"));
   process.env.FAKE_CODEX_LOG = join(dir, "args.log");
   const agent = new CodexAgent(join(FIXTURES, "fake-codex.sh"), CodexSandbox.Auto, dir);
-  const request = { prompt: "build it", model: "", cwd: dir, sessionId: "s-1", mode: SessionMode.New, writableDirs: ["/state/results"] };
+  const request = { prompt: "build it", model: "", cwd: dir, sessionId: "s-1", mode: SessionMode.New, writableDirs: ["/state/results"], timeoutMinutes: 0 };
 
   assert.equal(agent.hasSession("s-1"), false);
   const first = await agent.run(request);
@@ -36,7 +36,7 @@ test("a full-access codex sandbox passes no workspace settings", async () => {
   const dir = mkdtempSync(join(tmpdir(), "nightshift-codex-"));
   process.env.FAKE_CODEX_LOG = join(dir, "args.log");
   const agent = new CodexAgent(join(FIXTURES, "fake-codex.sh"), CodexSandbox.FullAccess, dir);
-  await agent.run({ prompt: "p", model: "", cwd: dir, sessionId: "s", mode: SessionMode.New, writableDirs: ["/x"] });
+  await agent.run({ prompt: "p", model: "", cwd: dir, sessionId: "s", mode: SessionMode.New, writableDirs: ["/x"], timeoutMinutes: 0 });
   const args = readFileSync(join(dir, "args.log"), "utf8");
   assert.match(args, /sandbox_mode="danger-full-access" -c approval_policy="never"/);
   assert.doesNotMatch(args, /writable_roots/);

@@ -183,7 +183,7 @@ export async function snapshot(config: Config): Promise<StatusSnapshot> {
     }
   }
   return {
-    report: readReport(paths, now - REPORT_WINDOW_MS, now),
+    report: readReport(paths, now - REPORT_WINDOW_MS, now, config.staleHours),
     board: board.name,
     boardError,
     workers: live.map((s) => ({ target: s.target, pid: s.pid, stage: s.stage, release: s.release })),

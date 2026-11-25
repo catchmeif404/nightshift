@@ -112,11 +112,11 @@ export class TicketState {
   }
 
   clearStage(): void {
-    this.remove(StateFile.Stage, StateFile.Session, StateFile.Tries, StateFile.Failed, StateFile.Result, StateFile.ResultKind);
+    this.remove(StateFile.Stage, StateFile.Session, StateFile.Tries, StateFile.Failed, StateFile.TimedOut, StateFile.Result, StateFile.ResultKind);
   }
 
   nextStage(stage: string, round: number): void {
-    this.remove(StateFile.Session, StateFile.Tries, StateFile.Failed);
+    this.remove(StateFile.Session, StateFile.Tries, StateFile.Failed, StateFile.TimedOut);
     this.write(StateFile.Stage, `${stage} ${round}`);
   }
 }

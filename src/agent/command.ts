@@ -2,7 +2,7 @@ import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Brand } from "../brand.js";
 import { SessionMode } from "../enums.js";
-import { exec } from "../exec.js";
+import { execTimed } from "../exec.js";
 import { safeId } from "../state.js";
 import { Agent, AgentRequest, AgentResult, agentEnv } from "./agent.js";
 
@@ -37,7 +37,7 @@ export class CommandAgent implements Agent {
       [`${Brand.envPrefix}SESSION_ID`]: request.sessionId,
       [`${Brand.envPrefix}SESSION_MODE`]: request.mode,
     });
-    const result = await exec(this.command, [], { cwd: request.cwd, env, input: request.prompt });
-    return { exitCode: result.code, output: `${result.stdout}${result.stderr === "" ? "" : `\n${result.stderr}`}` };
+    const result = await execTimed(this.command, [], { cwd: request.cwd, env, input: request.prompt }, request.timeoutMinutes);
+    return { exitCode: result.code, output: `${result.stdout}${result.stderr === "" ? "" : `\n${result.stderr}`}`, timedOut: result.timedOut };
   }
 }

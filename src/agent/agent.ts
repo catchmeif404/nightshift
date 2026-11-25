@@ -8,11 +8,15 @@ export interface AgentRequest {
   mode: SessionMode;
   // Folders outside cwd the run must write to (the runner's result files).
   writableDirs: string[];
+  // Minutes the run may take before its process group is killed. 0: no limit.
+  timeoutMinutes: number;
 }
 
 export interface AgentResult {
   exitCode: number;
   output: string;
+  // The run was killed for passing the request's time limit.
+  timedOut: boolean;
 }
 
 // One coding agent CLI. Each stage is one run; a cut-off run is resumed in the same session.
