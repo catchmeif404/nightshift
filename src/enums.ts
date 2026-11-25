@@ -87,6 +87,14 @@ export enum StateFile {
   Handoff = "handoff",
 }
 
+// Why a project cannot publish: what the check before starting a worker found.
+export enum PreflightCause {
+  NoOrigin = "no-origin",
+  NotGitHub = "not-github",
+  NoPushPermission = "no-push-permission",
+  GhFailed = "gh-failed",
+}
+
 // Why a ticket moved. Boards may act on it (e.g. file a decision page for NeedsHuman).
 export enum SettleReason {
   Claimed = "claimed",

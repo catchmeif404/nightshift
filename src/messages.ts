@@ -1,4 +1,4 @@
-import { NoteLanguage, NotifyEvent, ReportGroup, Stage } from "./enums.js";
+import { NoteLanguage, NotifyEvent, PreflightCause, ReportGroup, Stage } from "./enums.js";
 import type { GateHit } from "./git.js";
 
 // The words of the morning report (CLI, chat message and console card).
@@ -42,6 +42,10 @@ export interface Messages {
   released(summary: string): string;
   releaseBlocked(reason: string): string;
   noReason: string;
+  // Why a project cannot start: the publish check failed. detail may be empty.
+  preflight(cause: PreflightCause, project: string, detail: string): string;
+  // The first line of the Blocked message for a project that cannot start.
+  preflightNotice(project: string): string;
   report: ReportWords;
   // The first line of a Telegram / Slack / Discord message.
   notice(event: NotifyEvent, id: string, title: string): string;
@@ -133,6 +137,20 @@ const english: Messages = {
   released: (summary) => `release done: ${summary}`,
   releaseBlocked: (reason) => `release blocked: ${reason}`,
   noReason: "no reason given",
+  preflight: (cause, project, detail) => {
+    const where = detail === "" ? "" : ` (${detail})`;
+    switch (cause) {
+      case PreflightCause.NoOrigin:
+        return `project ${project}: the repository has no "origin" remote, so a pull request cannot be opened. Add one (git remote add origin <url>) or set publish to "branch".`;
+      case PreflightCause.NotGitHub:
+        return `project ${project}: the "origin" remote is not a GitHub repository${where}.`;
+      case PreflightCause.NoPushPermission:
+        return `project ${project}: the active gh account cannot push to ${detail}. Switch with "gh auth switch" or ask for write access.`;
+      case PreflightCause.GhFailed:
+        return `project ${project}: could not ask GitHub about push access${where}. Check "gh auth status".`;
+    }
+  },
+  preflightNotice: (project) => `${project}: not started, cannot publish`,
   report: REPORT_EN,
   notice: (event, id, title) => `${id} ${title}: ${NOTICE_EN[event]}`,
 };
@@ -161,6 +179,20 @@ const korean: Messages = {
   released: (summary) => `출시 처리 끝: ${summary}`,
   releaseBlocked: (reason) => `출시 막힘: ${reason}`,
   noReason: "사유 없음",
+  preflight: (cause, project, detail) => {
+    const where = detail === "" ? "" : ` (${detail})`;
+    switch (cause) {
+      case PreflightCause.NoOrigin:
+        return `프로젝트 ${project}: 저장소에 "origin" 원격이 없어 PR 을 열 수 없습니다. 원격을 추가하거나(git remote add origin <url>) publish 를 "branch" 로 바꾸세요.`;
+      case PreflightCause.NotGitHub:
+        return `프로젝트 ${project}: "origin" 원격이 GitHub 저장소가 아닙니다${where}.`;
+      case PreflightCause.NoPushPermission:
+        return `프로젝트 ${project}: 지금 활성인 gh 계정이 ${detail} 에 push 할 수 없습니다. "gh auth switch" 로 계정을 바꾸거나 쓰기 권한을 받으세요.`;
+      case PreflightCause.GhFailed:
+        return `프로젝트 ${project}: push 권한을 GitHub 에 물어보지 못했습니다${where}. "gh auth status" 를 확인하세요.`;
+    }
+  },
+  preflightNotice: (project) => `${project}: 시작하지 않음, 게시할 수 없음`,
   report: REPORT_KO,
   notice: (event, id, title) => `${id} ${title}: ${NOTICE_KO[event]}`,
 };

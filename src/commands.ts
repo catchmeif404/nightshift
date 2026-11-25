@@ -14,6 +14,7 @@ import { run } from "./exec.js";
 import { missingEnv } from "./notify.js";
 import { parseSince, readReport, renderReport, reportJson, sendReport } from "./report.js";
 import { messagesFor } from "./messages.js";
+import { checkPublish } from "./preflight.js";
 import { statePaths } from "./state.js";
 
 export const RULES_FILE = `${Brand.name}.rules.md`;
@@ -166,7 +167,13 @@ export function add(config: Config, title: string, project: string, kind: Ticket
   return new LocalMarkdownBoard(config.board.dir).create(title, project, kind, full);
 }
 
+// The config's env joins this process's environment, so the agent, git and gh it starts (and the workers) see it.
+export function applyEnv(config: Config): void {
+  Object.assign(process.env, config.env);
+}
+
 export async function runOnce(config: Config): Promise<void> {
+  applyEnv(config);
   const runner = openRunner(config);
   const starts = await dispatch(runner);
   if (starts.length > 0) {
@@ -206,6 +213,7 @@ export function logs(config: Config, lines: number, follow: boolean): Promise<vo
 }
 
 export async function workSlot(config: Config, key: string): Promise<void> {
+  applyEnv(config);
   const runner = openRunner(config);
   await work(runner, key);
   if (config.workerDoneCommand !== "") {
@@ -216,6 +224,7 @@ export async function workSlot(config: Config, key: string): Promise<void> {
 }
 
 export async function daemon(config: Config): Promise<void> {
+  applyEnv(config);
   const seconds = config.pollSeconds;
   console.log(`looking for work every ${seconds}s. Ctrl+C to stop (running workers keep going).`);
   for (;;) {
@@ -279,6 +288,11 @@ async function tool(cmd: string, args: string[], cwd: string): Promise<boolean> 
 }
 
 export async function doctor(root: string): Promise<boolean> {
+  try {
+    applyEnv(loadConfig(root));
+  } catch {
+    // doctorChecks reports a config that cannot be read.
+  }
   return report(await doctorChecks(root));
 }
 
@@ -335,6 +349,10 @@ export async function configChecks(config: Config, root: string): Promise<Check[
   for (const p of config.projects) {
     const isRepo = await tool(config.tools.git, ["rev-parse", "--git-dir"], p.repoPath).catch(() => false);
     checks.push({ level: isRepo ? CheckLevel.Ok : CheckLevel.Fail, what: `project ${p.name}: ${p.repoPath} is a git repo` });
+    if (isRepo) {
+      const publish = await checkPublish(config, p);
+      checks.push({ level: publish.ok ? CheckLevel.Ok : CheckLevel.Fail, what: publish.ok ? `project ${p.name}: ${publishOk(p.publish)}` : publish.message });
+    }
     if (p.rulesFile !== "" && !existsSync(p.rulesFile)) {
       checks.push({ level: CheckLevel.Warn, what: `project ${p.name}: rules file ${p.rulesFile} not found` });
     }
@@ -350,6 +368,10 @@ export async function configChecks(config: Config, root: string): Promise<Check[
   }
   if (config.autoMerge) checks.push({ level: CheckLevel.Warn, what: "autoMerge is on: passed pull requests merge without you" });
   return checks;
+}
+
+function publishOk(publish: PublishMode): string {
+  return publish === PublishMode.PullRequest ? "origin exists and the gh account can push" : "publishes to a branch, no remote needed";
 }
 
 function report(checks: Check[]): boolean {
