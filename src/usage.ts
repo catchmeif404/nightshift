@@ -38,6 +38,20 @@ export interface StageUsage {
   tokens: TokenCounts;
   weighted: number;
   seconds: number;
+  // Review stage only: what the reviewer itself changed in the code (0 when it changed nothing).
+  editFiles: number;
+  editAdded: number;
+  editRemoved: number;
+}
+
+// What the reviewer changed across every review round of a ticket.
+export function reviewerEdits(entries: StageUsage[]): { files: number; added: number; removed: number } {
+  const own = entries.filter((e) => e.stage === Stage.Review);
+  return {
+    files: own.reduce((sum, e) => sum + e.editFiles, 0),
+    added: own.reduce((sum, e) => sum + e.editAdded, 0),
+    removed: own.reduce((sum, e) => sum + e.editRemoved, 0),
+  };
 }
 
 export function emptyTokens(): TokenCounts {
@@ -147,6 +161,9 @@ export class UsageLog {
           tokens: { input: num(t.input), output: num(t.output), cacheRead: num(t.cacheRead), cacheWrite: num(t.cacheWrite) },
           weighted: num(e.weighted),
           seconds: num(e.seconds),
+          editFiles: num(e.editFiles),
+          editAdded: num(e.editAdded),
+          editRemoved: num(e.editRemoved),
         });
       } catch {
         continue;

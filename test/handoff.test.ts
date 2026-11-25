@@ -22,7 +22,7 @@ const ticket: Ticket = {
 function context(overrides: Partial<StageContext> = {}): StageContext {
   return {
     ticket,
-    project: { name: "demo", repoPath: "/r", baseBranch: "main", publish: PublishMode.Branch, rulesFile: "", postMergeCommand: "" },
+    project: { name: "demo", repoPath: "/r", baseBranch: "main", publish: PublishMode.Branch, rulesFile: "", postMergeCommand: "", testCommand: "", testTimeoutMinutes: 15 },
     worktree: { path: "/w/t-1", branch: "nightshift/t-1" },
     round: 1,
     lastRound: false,

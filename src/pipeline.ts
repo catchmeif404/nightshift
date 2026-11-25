@@ -20,15 +20,15 @@ import {
   Verdict,
 } from "./enums.js";
 import { Brand } from "./brand.js";
-import { exec, run } from "./exec.js";
-import { GitError, Worktree, changedFiles, ensureWorktree, gateHits, gitCommonDir, mergePullRequest, pullRequestState, removeWorktree, worktreeFor } from "./git.js";
+import { exec, execShell, run } from "./exec.js";
+import { DiffSize, GitError, NO_DIFF, Worktree, changedFiles, diffSince, ensureWorktree, gateHits, gitCommonDir, headCommit, mergePullRequest, pullRequestState, removeWorktree, worktreeFor } from "./git.js";
 import { Logger, clip, mask, oneLine } from "./log.js";
 import { sendNotification, wants } from "./notify.js";
 import { Messages, messagesFor } from "./messages.js";
 import { RESUME_PROMPT, StageContext, buildPrompt, releasePrompt, reviewPrompt } from "./prompts.js";
 import { Slots, StatePaths, TicketState, UsageLimits } from "./state.js";
 import { detectLimit } from "./limits.js";
-import { StageUsage, UsageLog, readSessionUsage, totalUsage, usageNote, weighted } from "./usage.js";
+import { StageUsage, UsageLog, readSessionUsage, reviewerEdits, totalUsage, usageNote, weighted } from "./usage.js";
 import { Journal } from "./report.js";
 
 export interface Runner {
@@ -103,6 +103,29 @@ function tail(text: string, chars: number): string {
   return clip(oneLine(lines.slice(-8).join(" ")), chars);
 }
 
+// Lines of the check's output the developer gets back, and the characters kept of them.
+const CHECK_TAIL_LINES = 60;
+const CHECK_TAIL_CHARS = 8000;
+
+// The end of a command's output, at most CHECK_TAIL_LINES lines, secrets masked.
+export function outputTail(output: string): string {
+  const lines = output.trimEnd().split("\n");
+  return clip(mask(lines.slice(-CHECK_TAIL_LINES).join("\n")), CHECK_TAIL_CHARS);
+}
+
+function lastOutputLine(output: string): string {
+  const lines = output.split("\n").map((l) => l.trim()).filter((l) => l !== "");
+  return clip(oneLine(mask(lines[lines.length - 1] ?? "")), 200);
+}
+
+// What the runner's own check found. `output` is empty when it passed.
+interface CheckFailure {
+  command: string;
+  // The time limit in minutes when the check timed out, else 0.
+  timeoutMinutes: number;
+  output: string;
+}
+
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
@@ -144,6 +167,7 @@ export class TicketPipeline {
     try {
       const entries = this.usage.read();
       const total = totalUsage(entries);
+      const edits = reviewerEdits(entries);
       const rounds = Math.max(1, ...entries.filter((e) => e.stage === Stage.Build).map((e) => e.round));
       new Journal(this.r.paths.journal).append({
         kind: JournalKind.Settled,
@@ -158,6 +182,9 @@ export class TicketPipeline {
         known: total.known,
         weighted: total.weighted,
         seconds: total.seconds,
+        reviewerFiles: edits.files,
+        reviewerAdded: edits.added,
+        reviewerRemoved: edits.removed,
         note: clip(oneLine(mask(note)), 300),
       });
     } catch (error) {
@@ -176,7 +203,7 @@ export class TicketPipeline {
   }
 
   // Records what a finished stage used. Never fails the stage: unreadable usage is stored as unknown, with the wall-clock time.
-  private recordUsage(stage: Stage, round: number, agent: Agent, model: string, sessionId: string, wallSeconds: number): void {
+  private recordUsage(stage: Stage, round: number, agent: Agent, model: string, sessionId: string, wallSeconds: number, edit: DiffSize): void {
     try {
       const session = readSessionUsage(agent.usageFile(sessionId));
       const entry: StageUsage = {
@@ -188,6 +215,9 @@ export class TicketPipeline {
         tokens: session.tokens,
         weighted: weighted(session.tokens),
         seconds: session.known && session.seconds > 0 ? session.seconds : wallSeconds,
+        editFiles: edit.files,
+        editAdded: edit.added,
+        editRemoved: edit.removed,
       };
       this.usage.record(entry);
     } catch (error) {
@@ -258,7 +288,7 @@ export class TicketPipeline {
       round = Math.max(1, Number.parseInt(savedRound ?? "1", 10) || 1);
       this.log(`resuming at ${stage} r${round}`);
     } else {
-      this.state.remove(StateFile.Build, StateFile.Verdict, StateFile.Review, StateFile.ReviewPrevious, StateFile.Handoff);
+      this.state.remove(StateFile.Build, StateFile.Verdict, StateFile.Review, StateFile.ReviewPrevious, StateFile.Handoff, StateFile.ReviewBase);
       this.state.clearStage();
       this.usage.clear();
     }
@@ -289,7 +319,7 @@ export class TicketPipeline {
         }
         this.state.write(StateFile.Result, build.value);
         this.state.write(StateFile.ResultKind, build.kind);
-        this.state.remove(StateFile.Verdict);
+        this.state.remove(StateFile.Verdict, StateFile.ReviewBase);
         this.state.nextStage(Stage.Review, round);
         stage = Stage.Review;
       }
@@ -314,11 +344,9 @@ export class TicketPipeline {
       switch (verdict) {
         case Verdict.Rework:
           if (!lastRound) {
-            this.state.remove(StateFile.ReviewPrevious, StateFile.Build, StateFile.Verdict, StateFile.ResultKind, StateFile.Handoff);
-            this.state.move(StateFile.Review, StateFile.ReviewPrevious);
+            this.sendBack(round);
             round += 1;
             stage = Stage.Build;
-            this.state.nextStage(Stage.Build, round);
             await this.r.board.addNote(this.ticket.id, this.say.sentBack(round - 1));
             continue;
           }
@@ -329,9 +357,73 @@ export class TicketPipeline {
         case Verdict.NeedsHuman:
           await this.notify(`${this.ticket.id} needs a human decision`);
           return this.settle(TicketStatus.Blocked, SettleReason.NeedsHuman, this.say.needsHuman(`${resultKind} ${result}`, review));
-        case Verdict.Pass:
-          return this.passed(project, tree, resultKind, result, review);
+        case Verdict.Pass: {
+          // A PASS is only a verdict until the runner's own check agrees.
+          const failure = await this.runCheck(project, tree);
+          if (failure === undefined) return this.passed(project, tree, resultKind, result, review);
+          if (!lastRound) {
+            this.state.write(StateFile.Review, `${review}\n\n${this.say.checkFailedNotes(failure.command, failure.timeoutMinutes, failure.output)}`.trim());
+            this.sendBack(round);
+            round += 1;
+            stage = Stage.Build;
+            await this.r.board.addNote(this.ticket.id, this.say.checkSentBack(round - 1, failure.command, failure.timeoutMinutes));
+            continue;
+          }
+          return this.settle(
+            TicketStatus.Blocked,
+            SettleReason.Blocked,
+            this.say.checkBlocked(failure.command, failure.timeoutMinutes, lastOutputLine(failure.output), review),
+          );
+        }
       }
+    }
+  }
+
+  // Moves the review notes aside for the developer and queues the next build round.
+  private sendBack(round: number): void {
+    this.state.remove(StateFile.ReviewPrevious, StateFile.Build, StateFile.Verdict, StateFile.ResultKind, StateFile.Handoff, StateFile.ReviewBase);
+    this.state.move(StateFile.Review, StateFile.ReviewPrevious);
+    this.state.nextStage(Stage.Build, round + 1);
+  }
+
+  // Runs the project's testCommand in the ticket's worktree itself, since an agent's "tests pass" is only its word.
+  // Returns nothing when the check is off or passed; a failure or a timeout comes back with the end of the output.
+  private async runCheck(project: ProjectConfig, tree: Worktree): Promise<CheckFailure | undefined> {
+    if (project.testCommand === "") return undefined;
+    const env = {
+      ...process.env,
+      [`${Brand.envPrefix}TICKET`]: this.ticket.id,
+      [`${Brand.envPrefix}PROJECT`]: project.name,
+    };
+    const out = await execShell(project.testCommand, { cwd: tree.path, env, input: "" }, project.testTimeoutMinutes);
+    const output = `${out.stdout}${out.stdout.endsWith("\n") || out.stdout === "" ? "" : "\n"}${out.stderr}`;
+    this.log(`runner check exit ${out.code}${out.timedOut ? " (timed out)" : ""}: ${tail(output, 300)}`);
+    if (!out.timedOut && out.code === 0) return undefined;
+    return { command: project.testCommand, timeoutMinutes: out.timedOut ? project.testTimeoutMinutes : 0, output };
+  }
+
+  // The commit the review stage started from, kept across a resumed stage. Empty when git cannot say.
+  private async reviewBase(tree: Worktree): Promise<string> {
+    const saved = this.state.read(StateFile.ReviewBase);
+    if (saved !== "") return saved;
+    try {
+      const head = await headCommit(this.r.config, tree);
+      this.state.write(StateFile.ReviewBase, head);
+      return head;
+    } catch (error) {
+      this.log(`reviewer edits: start commit unknown (${clip(oneLine(errorText(error)), 200)})`);
+      return "";
+    }
+  }
+
+  // What the reviewer changed since `base`: committed lines only. A git failure counts as no change, and is logged.
+  private async reviewerEdit(tree: Worktree, base: string): Promise<DiffSize> {
+    if (base === "") return NO_DIFF;
+    try {
+      return await diffSince(this.r.config, tree, base);
+    } catch (error) {
+      this.log(`reviewer edits unknown (${clip(oneLine(errorText(error)), 200)})`);
+      return NO_DIFF;
     }
   }
 
@@ -437,6 +529,7 @@ export class TicketPipeline {
     if (!resume) this.state.write(StateFile.Session, sessionId);
     this.log(`${stage} r${round}: ${resume ? "resuming" : "starting"} ${agent.name} session ${sessionId} (try ${tries})`);
 
+    const reviewBase = stage === Stage.Review ? await this.reviewBase(tree) : "";
     const gitDir = await gitCommonDir(this.r.config, tree);
     const heartbeat = this.heartbeat(stage, round, marker);
     const startedAt = Date.now();
@@ -470,7 +563,12 @@ export class TicketPipeline {
       return StageOutcome.Failed;
     }
     this.state.remove(StateFile.Failed);
-    this.recordUsage(stage, round, agent, model, sessionId, Math.round((Date.now() - startedAt) / 1000));
+    const edit = stage === Stage.Review ? await this.reviewerEdit(tree, reviewBase) : NO_DIFF;
+    this.recordUsage(stage, round, agent, model, sessionId, Math.round((Date.now() - startedAt) / 1000), edit);
+    if (edit.files > 0) {
+      this.log(`${stage} r${round}: the reviewer changed ${edit.files} files +${edit.added}/-${edit.removed}`);
+      await this.r.board.addNote(this.ticket.id, this.say.reviewerEdited(round, edit.files, edit.added, edit.removed));
+    }
     return StageOutcome.Finished;
   }
 

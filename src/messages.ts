@@ -16,6 +16,8 @@ export interface ReportWords {
   todoDecide(ticket: string): string;
   sendNothing: string;
   sent: string;
+  // The "reviewer edit +12/-3" mark on a ticket row.
+  reviewerEdit(added: number, removed: number): string;
 }
 
 // Every note the runner writes on a ticket, in each supported language.
@@ -42,6 +44,13 @@ export interface Messages {
   stillWorking(stage: Stage, round: number): string;
   usageLimit(agent: string, until: string): string;
   postMerge(code: number, tail: string): string;
+  // The runner's own check (testCommand) failed after a passing review. `minutes` is the limit when it timed out, else 0.
+  checkSentBack(round: number, command: string, minutes: number): string;
+  // What the developer reads: the command and the end of its output, appended to the review notes.
+  checkFailedNotes(command: string, minutes: number, output: string): string;
+  checkBlocked(command: string, minutes: number, lastLine: string, review: string): string;
+  // The reviewer changed code itself.
+  reviewerEdited(round: number, files: number, added: number, removed: number): string;
   released(summary: string): string;
   releaseBlocked(reason: string): string;
   noReason: string;
@@ -94,6 +103,7 @@ const REPORT_EN: ReportWords = {
   todoDecide: (id) => `${id}: decide, then set it ready again or close it`,
   sendNothing: "nothing to send with: set notify.service or notifyCommand in the config.",
   sent: "report sent.",
+  reviewerEdit: (added, removed) => `reviewer edit +${added}/-${removed}`,
 };
 
 const REPORT_KO: ReportWords = {
@@ -114,6 +124,7 @@ const REPORT_KO: ReportWords = {
   todoDecide: (id) => `${id}: 결정한 뒤 다시 할 일로 두거나 닫기`,
   sendNothing: "보낼 곳이 없습니다: 설정에 notify.service 또는 notifyCommand 를 넣으세요.",
   sent: "보고를 보냈습니다.",
+  reviewerEdit: (added, removed) => `검토자 수정 +${added}/-${removed}`,
 };
 
 const english: Messages = {
@@ -144,6 +155,12 @@ const english: Messages = {
   stillWorking: (stage, round) => `still working: ${stage} stage, round ${round}.`,
   usageLimit: (agent, until) => `${agent} hit its usage limit; waiting until ${until}, then resuming the same session (not counted as a try).`,
   postMerge: (code, tail) => ` Post-merge check (exit ${code}): ${tail}`,
+  checkSentBack: (round, command, minutes) => `review round ${round}: the runner's own check failed${minutes > 0 ? ` (timed out after ${minutes} min)` : ""}: ${command}. Sent back for rework.`,
+  checkFailedNotes: (command, minutes, output) =>
+    `Runner check failed${minutes > 0 ? ` (timed out after ${minutes} min)` : ""}: \`${command}\`. The review passed, but the runner ran this command in the worktree itself and it did not succeed. Fix it. End of its output:\n${output}`,
+  checkBlocked: (command, minutes, lastLine, review) =>
+    `runner check failed${minutes > 0 ? ` (timed out after ${minutes} min)` : ""}: ${command}. Last output line: ${lastLine}.${withReview(review, "Review")}`,
+  reviewerEdited: (round, files, added, removed) => `review round ${round}: the reviewer changed code itself: ${files} file${files === 1 ? "" : "s"}, +${added}/-${removed}.`,
   released: (summary) => `release done: ${summary}`,
   releaseBlocked: (reason) => `release blocked: ${reason}`,
   noReason: "no reason given",
@@ -193,6 +210,12 @@ const korean: Messages = {
   stillWorking: (stage, round) => `생존 신호: ${stage} 단계 진행 중 (${round}회차).`,
   usageLimit: (agent, until) => `${agent} 사용량 한도. ${until}까지 기다렸다가 같은 세션으로 이어 갑니다 (시도 횟수로 세지 않음).`,
   postMerge: (code, tail) => ` 머지 뒤 점검 (exit ${code}): ${tail}`,
+  checkSentBack: (round, command, minutes) => `검토 ${round}회차: 러너 확인 실패${minutes > 0 ? ` (${minutes}분 시간 초과)` : ""}: ${command}. 재작업으로 돌려보냈습니다.`,
+  checkFailedNotes: (command, minutes, output) =>
+    `러너 확인 실패${minutes > 0 ? ` (${minutes}분 시간 초과)` : ""}: \`${command}\`. 검토는 통과했지만 러너가 worktree 에서 이 명령을 직접 돌렸더니 성공하지 못했습니다. 고치세요. 출력 끝부분:\n${output}`,
+  checkBlocked: (command, minutes, lastLine, review) =>
+    `러너 확인 실패${minutes > 0 ? ` (${minutes}분 시간 초과)` : ""}: ${command}. 출력 끝 한 줄: ${lastLine}.${withReview(review, "검토")}`,
+  reviewerEdited: (round, files, added, removed) => `검토 ${round}회차: 검토자가 코드를 직접 고쳤습니다: 파일 ${files}개, +${added}/-${removed}.`,
   released: (summary) => `출시 처리 끝: ${summary}`,
   releaseBlocked: (reason) => `출시 막힘: ${reason}`,
   noReason: "사유 없음",

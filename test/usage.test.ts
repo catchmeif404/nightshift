@@ -46,8 +46,8 @@ test("the board note is one line in both languages, with unknown tokens kept out
   const dir = mkdtempSync(join(tmpdir(), "usage-"));
   const log = new UsageLog(dir, "T-1");
   const tokens = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
-  log.append({ stage: Stage.Build, round: 1, session: "s1", model: "sonnet", known: true, tokens, weighted: 124_000, seconds: 130 });
-  log.append({ stage: Stage.Review, round: 1, session: "s2", model: "opus", known: false, tokens, weighted: 0, seconds: 77 });
+  log.append({ stage: Stage.Build, round: 1, session: "s1", model: "sonnet", known: true, tokens, weighted: 124_000, seconds: 130, editFiles: 0, editAdded: 0, editRemoved: 0 });
+  log.append({ stage: Stage.Review, round: 1, session: "s2", model: "opus", known: false, tokens, weighted: 0, seconds: 77, editFiles: 0, editAdded: 0, editRemoved: 0 });
   const entries = log.read();
   assert.equal(usageNote(entries, NoteLanguage.English), "build r1 sonnet 2m10s 124k · review r1 opus 1m17s tokens unknown · total 124k");
   assert.equal(usageNote(entries, NoteLanguage.Korean), "개발 r1 sonnet 2m10s 124k · 검토 r1 opus 1m17s 토큰 알 수 없음 · 합계 124k");
@@ -80,9 +80,9 @@ test("a rerun that resumes the same session replaces its entry instead of counti
   const dir = mkdtempSync(join(tmpdir(), "usage-"));
   const log = new UsageLog(dir, "T-2");
   const tokens = { input: 10, output: 0, cacheRead: 0, cacheWrite: 0 };
-  log.record({ stage: Stage.Build, round: 1, session: "s1", model: "sonnet", known: true, tokens, weighted: 10, seconds: 60 });
-  log.record({ stage: Stage.Build, round: 1, session: "s1", model: "sonnet", known: true, tokens: { ...tokens, input: 25 }, weighted: 25, seconds: 90 });
-  log.record({ stage: Stage.Review, round: 1, session: "s2", model: "opus", known: false, tokens: emptyTokens(), weighted: 0, seconds: 30 });
-  log.record({ stage: Stage.Review, round: 1, session: "s2", model: "opus", known: false, tokens: emptyTokens(), weighted: 0, seconds: 20 });
+  log.record({ stage: Stage.Build, round: 1, session: "s1", model: "sonnet", known: true, tokens, weighted: 10, seconds: 60, editFiles: 0, editAdded: 0, editRemoved: 0 });
+  log.record({ stage: Stage.Build, round: 1, session: "s1", model: "sonnet", known: true, tokens: { ...tokens, input: 25 }, weighted: 25, seconds: 90, editFiles: 0, editAdded: 0, editRemoved: 0 });
+  log.record({ stage: Stage.Review, round: 1, session: "s2", model: "opus", known: false, tokens: emptyTokens(), weighted: 0, seconds: 30, editFiles: 0, editAdded: 0, editRemoved: 0 });
+  log.record({ stage: Stage.Review, round: 1, session: "s2", model: "opus", known: false, tokens: emptyTokens(), weighted: 0, seconds: 20, editFiles: 0, editAdded: 0, editRemoved: 0 });
   assert.deepEqual(log.read().map((e) => [e.session, e.weighted, e.seconds]), [["s1", 25, 90], ["s2", 0, 50]]);
 });

@@ -115,3 +115,35 @@ export async function changedFiles(config: Config, project: ProjectConfig, tree:
   if (out.code !== 0) throw new GitError(`git diff ${fork}: ${out.stderr.trim()}`);
   return out.stdout.split("\0").filter((f) => f !== "");
 }
+
+// What a span of commits changed: files touched and lines added / removed.
+export interface DiffSize {
+  files: number;
+  added: number;
+  removed: number;
+}
+
+export const NO_DIFF: DiffSize = { files: 0, added: 0, removed: 0 };
+
+// Reads `git diff --numstat` output. A binary file counts as a file with no lines.
+export function parseNumstat(text: string): DiffSize {
+  const size: DiffSize = { files: 0, added: 0, removed: 0 };
+  for (const line of text.split("\n")) {
+    const m = /^(\d+|-)\t(\d+|-)\t.+$/.exec(line);
+    if (m === null) continue;
+    size.files += 1;
+    size.added += Number(m[1]) || 0;
+    size.removed += Number(m[2]) || 0;
+  }
+  return size;
+}
+
+export async function headCommit(config: Config, tree: Worktree): Promise<string> {
+  return git(config, tree.path, ["rev-parse", "HEAD"]);
+}
+
+// Committed changes from `from` to the worktree's current HEAD (the reviewer's own commits).
+export async function diffSince(config: Config, tree: Worktree, from: string): Promise<DiffSize> {
+  const out = await git(config, tree.path, ["diff", "--numstat", "--no-renames", from, "HEAD"]);
+  return parseNumstat(out);
+}

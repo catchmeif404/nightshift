@@ -4,6 +4,7 @@
 #   BUILD_PR       commit a file and write "PR https://example.com/pr/<n>"
 #   BUILD_BLOCKED  write "BLOCKED <reason>"
 #   REVIEW <word>  write <word> as the verdict (and a review note)
+#   REVIEW_EDIT <word>  like REVIEW, but first commit a 3-line addition to work.txt
 #   EXIT <code>    exit with <code> without writing anything
 #   GARBAGE        write a result the runner must reject
 #   RELEASE_DONE / RELEASE_BLOCKED  answer a release run
@@ -49,6 +50,14 @@ case "$action" in
   BUILD_BLOCKED) echo "BLOCKED missing access to the staging database" > "$result" ;;
   RELEASE_DONE) echo "DONE v1.2.3 tagged, health check 200" > "$result" ;;
   RELEASE_BLOCKED) echo "BLOCKED the deploy workflow failed" > "$result" ;;
+  REVIEW_EDIT\ *)
+    word="${action#REVIEW_EDIT }"
+    printf 'reviewer 1\nreviewer 2\nreviewer 3\n' >> work.txt
+    git add work.txt
+    git -c user.name=fake -c user.email=fake@example.com commit -q -m "reviewer fix $n"
+    [ -n "$review" ] && echo "review note round $n: $word" > "$review"
+    echo "$word" > "$result"
+    ;;
   REVIEW\ *)
     word="${action#REVIEW }"
     [ -n "$review" ] && echo "review note round $n: $word" > "$review"

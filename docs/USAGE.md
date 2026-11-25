@@ -64,6 +64,28 @@ A ticket can name tickets that must be `done` (merged, or finished by you) befor
 Setting a blocked ticket back to `ready` starts it over from the build stage; the branch and any open pull request
 are reused, so the developer picks up where it was.
 
+## The runner's own test run (`testCommand`)
+
+A reviewer saying "tests pass" is only its word. Give a project a `testCommand` and nightshift runs it itself, in the
+ticket's worktree, after the review says `PASS` and before anything is merged or handed to you:
+
+```json
+"projects": { "my-app": { "repoPath": "~/code/my-app", "testCommand": "npm test", "testTimeoutMinutes": 15 } }
+```
+
+- Exit code 0: the ticket goes on as before. Empty (the default): off, nothing changes.
+- Failed or past `testTimeoutMinutes` (default 15, then killed): the `PASS` is not accepted, and `autoMerge` does not
+  merge. If a rework round is left (`maxRework`), the end of the output (up to 60 lines) is added to the review notes and
+  the developer gets the ticket back. If not, the ticket is `blocked` with "runner check failed: <command>" and the last
+  output line.
+- The command is a shell command line run by you, from your config; keep secrets out of it. It also runs on document
+  tickets, so leave it empty for a project that only produces documents.
+- You can edit it in the console's settings (`nightshift ui`); `nightshift doctor` shows on how many projects it is set.
+
+When the reviewer changes the code itself, nightshift compares the commits before and after the review stage and writes
+the file count and +/- lines to the ticket note and the ticket's usage file. `nightshift report` shows it on the row,
+for example "reviewer edit +12/-3". Nobody else checks those edits, so treat that mark as "look at this one".
+
 ## GitHub Issues and pull requests
 
 ```sh

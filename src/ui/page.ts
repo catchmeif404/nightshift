@@ -56,7 +56,7 @@ var STR = {
     title: "nightshift console", local: "This page only listens on this computer (127.0.0.1).",
     status: "Status", workers: "Workers", noWorkers: "No worker running.", stage: "stage", limits: "Usage limit",
     tickets: "Tickets", waiting: "Waiting because", log: "Recent log", board: "Board", noTickets: "none",
-    settings: "Settings", projects: "Projects: repository path", boardH: "Board", boardType: "Board type", boardDir: "Ticket folder (inside the config root)",
+    settings: "Settings", testCommand: "Runner check command (empty: off)", projects: "Projects: repository path", boardH: "Board", boardType: "Board type", boardDir: "Ticket folder (inside the config root)",
     repos: "GitHub repositories (owner/name, one per line)", trusted: "Trusted GitHub logins (one per line)",
     builder: "Developer", reviewer: "Reviewer", agentType: "Executor", model: "Model (empty: the executor's default)", maxSlots: "Concurrent workers (1-16)",
     extras: "Ticket form, gated paths, notifications", sections: "Ticket form: required labels (one per line, empty = off)",
@@ -79,7 +79,7 @@ var STR = {
     title: "nightshift 콘솔", local: "이 페이지는 이 컴퓨터(127.0.0.1)에서만 열립니다.",
     status: "현황", workers: "워커", noWorkers: "실행 중인 워커 없음.", stage: "단계", limits: "사용량 한도",
     tickets: "티켓", waiting: "대기 원인", log: "최근 로그", board: "보드", noTickets: "없음",
-    settings: "설정", projects: "프로젝트: 저장소 경로", boardH: "보드", boardType: "보드 종류", boardDir: "티켓 폴더 (설정 root 안)",
+    settings: "설정", testCommand: "러너 확인 명령 (비우면 끔)", projects: "프로젝트: 저장소 경로", boardH: "보드", boardType: "보드 종류", boardDir: "티켓 폴더 (설정 root 안)",
     repos: "GitHub 저장소 (owner/name, 한 줄에 하나)", trusted: "신뢰할 GitHub 로그인 (한 줄에 하나)",
     builder: "개발자", reviewer: "검토자", agentType: "실행기", model: "모델 (비우면 실행기 기본값)", maxSlots: "동시 작업 수 (1-16)",
     extras: "티켓 양식, 경로 승인, 알림", sections: "티켓 양식: 필수 항목 이름 (한 줄에 하나, 비우면 꺼짐)",
@@ -199,7 +199,10 @@ function renderSettings(v) {
   box.append(h("div", { class: "note" }, t("nextDispatch")));
   box.append(h("h3", {}, t("projects")));
   var pg = h("div", { class: "grid" });
-  f.projects.forEach(function (p, i) { pg.append(field("proj" + i, p.name, h("input", { value: p.repoPath }), "projects." + p.name + ".repoPath")); });
+  f.projects.forEach(function (p, i) {
+    pg.append(field("proj" + i, p.name, h("input", { value: p.repoPath }), "projects." + p.name + ".repoPath"));
+    pg.append(field("test" + i, p.name + " · " + t("testCommand"), h("input", { value: p.testCommand, placeholder: "npm test" }), "projects." + p.name + ".testCommand"));
+  });
   box.append(pg);
   box.append(h("h3", {}, t("boardH")));
   var bg = h("div", { class: "grid" });
@@ -237,7 +240,7 @@ function renderSettings(v) {
 function collect() {
   var f = settings.form;
   return {
-    projects: f.projects.map(function (p, i) { return { name: p.name, repoPath: $("proj" + i).value }; }),
+    projects: f.projects.map(function (p, i) { return { name: p.name, repoPath: $("proj" + i).value, testCommand: $("test" + i).value.trim() }; }),
     board: { type: $("boardType").value, dir: $("boardDir").value, repos: lines($("boardRepos").value), trustedAuthors: lines($("boardTrusted").value) },
     builder: { type: $("builderType").value, model: $("builderModel").value.trim() },
     reviewer: { type: $("reviewerType").value, model: $("reviewerModel").value.trim() },

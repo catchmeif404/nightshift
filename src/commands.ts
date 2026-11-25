@@ -361,6 +361,11 @@ export async function configChecks(config: Config, root: string): Promise<Check[
       checks.push({ level: CheckLevel.Warn, what: `project ${p.name}: rules file ${p.rulesFile} not found` });
     }
   }
+  const withTests = config.projects.filter((p) => p.testCommand !== "").length;
+  checks.push({
+    level: CheckLevel.Ok,
+    what: `testCommand is set on ${withTests} of ${config.projects.length} projects${withTests === 0 ? ": the runner trusts the agents' word that tests passed" : ": the runner runs it after a passing review"}`,
+  });
   if (config.notify.service !== NotifyService.None) {
     const missing = missingEnv(config.notify);
     checks.push({

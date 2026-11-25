@@ -261,8 +261,8 @@ test("wrong values are refused with the field named, and nothing is written", as
     ["board.dir", { ...form, board: { ...form.board, dir: "/etc" } }],
     ["board.repos", { ...form, board: { ...form.board, type: BoardType.GitHub, repos: ["not a repo"] } }],
     ["board.repos", { ...form, board: { ...form.board, type: BoardType.GitHub, repos: [] } }],
-    ["projects.demo.repoPath", { ...form, projects: [{ name: "demo", repoPath: join(b.root, "missing") }] }],
-    ["projects.ghost.repoPath", { ...form, projects: [{ name: "ghost", repoPath: b.repo }] }],
+    ["projects.demo.repoPath", { ...form, projects: [{ name: "demo", repoPath: join(b.root, "missing"), testCommand: "" }] }],
+    ["projects.ghost.repoPath", { ...form, projects: [{ name: "ghost", repoPath: b.repo, testCommand: "" }] }],
   ];
   for (const [field, edit] of bad) {
     const r = await post(b, "/api/settings/save", { edit, revision });
@@ -399,4 +399,19 @@ test("a bad ticket label, glob or chat id is refused and nothing is written", as
     assert.ok((JSON.parse(r.body) as { issues: Array<{ field: string }> }).issues.some((i) => i.field === field), `${field}: ${r.body}`);
   }
   assert.equal(readFileSync(b.configFile, "utf8"), file);
+});
+
+test("testCommand can be edited in the console, is written to the project and leaves the rest of it alone", async () => {
+  const b = await box();
+  const { form, revision } = await formOf(b);
+  assert.deepEqual(form.projects.map((p) => p.testCommand), [""]);
+  const edit: SettingsForm = { ...form, projects: form.projects.map((p) => ({ ...p, testCommand: "npm test" })) };
+  const saved = await post(b, "/api/settings/save", { edit, revision });
+  assert.equal(saved.status, 200, saved.body);
+  assert.equal(loadConfig(b.root).projects[0]?.testCommand, "npm test");
+  const file = JSON.parse(readFileSync(b.configFile, "utf8")) as { projects: { demo: Record<string, unknown> } };
+  assert.equal(file.projects.demo.baseBranch, "main");
+  assert.equal(file.projects.demo.testCommand, "npm test");
+  const bad = await post(b, "/api/settings/check", { edit: { ...edit, projects: [{ ...(edit.projects[0] ?? { name: "demo", repoPath: b.repo }), testCommand: "x".repeat(2000) }] }, revision: readSettings(b.root).revision });
+  assert.match(bad.body, /testCommand/);
 });
