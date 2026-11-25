@@ -34,6 +34,10 @@ export interface SettledRecord {
   known: boolean;
   weighted: number;
   seconds: number;
+  // What the reviewer changed in the code itself, over all review rounds (0: nothing).
+  reviewerFiles: number;
+  reviewerAdded: number;
+  reviewerRemoved: number;
   // The first line of the note the ticket got, shortened.
   note: string;
 }
@@ -97,6 +101,9 @@ export class Journal {
           known: e.known === true,
           weighted: num(e.weighted),
           seconds: num(e.seconds),
+          reviewerFiles: num(e.reviewerFiles),
+          reviewerAdded: num(e.reviewerAdded),
+          reviewerRemoved: num(e.reviewerRemoved),
           note: text(e.note),
         });
       } catch {
@@ -134,6 +141,10 @@ export interface ReportRow {
   tokens: number;
   seconds: number;
   rounds: number;
+  // What the reviewer changed itself; zeros when nothing.
+  reviewerFiles: number;
+  reviewerAdded: number;
+  reviewerRemoved: number;
   // Why it is blocked or waits for a human, one line. Empty for passed tickets.
   reason: string;
   at: number;
@@ -224,6 +235,9 @@ export function buildReport(records: JournalRecord[], since: number, until: numb
       tokens: r.known ? r.weighted : 0,
       seconds: r.seconds,
       rounds: r.rounds,
+      reviewerFiles: r.reviewerFiles,
+      reviewerAdded: r.reviewerAdded,
+      reviewerRemoved: r.reviewerRemoved,
       reason: group === ReportGroup.Blocked || group === ReportGroup.NeedsHuman ? clip(oneLine(mask(r.note)), REASON_CHARS) : "",
       at: r.at,
     };
@@ -264,7 +278,8 @@ function firstPassText(totals: ReportTotals): string {
 function rowLine(row: ReportRow, say: Messages): string {
   const tokens = row.tokensKnown ? formatTokens(row.tokens) : say.report.tokensUnknown;
   const head = [`[${row.project}]`, row.ticket, row.title].filter((p) => p !== "").join(" ");
-  const tail = [row.where, tokens, formatDuration(row.seconds)].filter((p) => p !== "").join(" · ");
+  const edit = row.reviewerFiles > 0 ? say.report.reviewerEdit(row.reviewerAdded, row.reviewerRemoved) : "";
+  const tail = [row.where, tokens, formatDuration(row.seconds), edit].filter((p) => p !== "").join(" · ");
   return `- ${head} - ${tail}${row.reason === "" ? "" : `\n    ${row.reason}`}`;
 }
 

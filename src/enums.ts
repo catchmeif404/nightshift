@@ -85,6 +85,8 @@ export enum StateFile {
   Result = "result",
   ResultKind = "kind",
   Handoff = "handoff",
+  // The commit the branch was at when the review stage started; what the reviewer's own edits are measured from.
+  ReviewBase = "review.base",
 }
 
 // Why a project cannot publish: what the check before starting a worker found.

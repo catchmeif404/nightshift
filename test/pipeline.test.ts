@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, readFileSync, realpathSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
-import { SettleReason, TicketKind, TicketStatus } from "../src/enums.js";
-import { worktreeFor } from "../src/git.js";
-import { TicketOutcome, TicketPipeline } from "../src/pipeline.js";
-import { Sandbox, readyTicket, sandbox, ticketFile, ticketStatus } from "./helpers.js";
+import { PublishMode, SettleReason, TicketKind, TicketStatus } from "../src/enums.js";
+import { parseNumstat, worktreeFor } from "../src/git.js";
+import { TicketOutcome, TicketPipeline, outputTail } from "../src/pipeline.js";
+import { UsageLog, reviewerEdits } from "../src/usage.js";
+import { FIXTURES, Sandbox, readyTicket, sandbox, ticketFile, ticketStatus } from "./helpers.js";
 
 async function runPipeline(box: Sandbox, id: string): Promise<TicketOutcome> {
   const ticket = (await box.board.list(TicketStatus.Working)).find((t) => t.id === id);
@@ -115,4 +118,109 @@ test("a ticket for an unknown project is blocked before any agent runs", async (
   assert.equal(await ticketStatus(box, id), TicketStatus.Blocked);
   assert.equal(box.calls().length, 0);
   assert.equal(existsSync(worktreeFor(box.runner.paths.worktrees, id).path), false);
+});
+
+function withCheck(box: Sandbox, command: string, minutes = 15): void {
+  const project = box.config.projects[0];
+  assert.ok(project);
+  project.testCommand = command;
+  project.testTimeoutMinutes = minutes;
+}
+
+test("a passing testCommand lets the review stand; it ran in the ticket's worktree", async () => {
+  const box = sandbox();
+  withCheck(box, `pwd >> "${box.root}/check-ran.txt"; test -f work.txt`);
+  const id = await readyTicket(box, "Add a footer");
+  box.plan(["BUILD", "REVIEW PASS"]);
+  assert.equal(await runPipeline(box, id), TicketOutcome.Settled);
+  assert.equal(await ticketStatus(box, id), TicketStatus.Review);
+  assert.equal(box.calls().length, 2);
+  const ran = readFileSync(join(box.root, "check-ran.txt"), "utf8").trim();
+  assert.equal(realpathSync(ran), realpathSync(worktreeFor(box.runner.paths.worktrees, id).path));
+});
+
+test("without a testCommand nothing extra runs and the flow is the same as before", async () => {
+  const box = sandbox();
+  assert.equal(box.config.projects[0]?.testCommand, "");
+  assert.equal(box.config.projects[0]?.testTimeoutMinutes, 15);
+  const id = await readyTicket(box, "Add a footer");
+  box.plan(["BUILD", "REVIEW PASS"]);
+  await runPipeline(box, id);
+  assert.equal(await ticketStatus(box, id), TicketStatus.Review);
+  assert.doesNotMatch(ticketFile(box, id), /runner check|reviewer changed/i);
+});
+
+test("a failing testCommand turns a PASS into rework with the output end, then passes after the fix", async () => {
+  const box = sandbox();
+  withCheck(box, 'echo "lines: $(wc -l < work.txt)"; echo extra-output-line >&2; test "$(wc -l < work.txt)" -ge 2');
+  const id = await readyTicket(box, "Add dark mode");
+  box.plan(["BUILD", "REVIEW PASS", "BUILD", "REVIEW PASS"]);
+  assert.equal(await runPipeline(box, id), TicketOutcome.Settled);
+  assert.equal(await ticketStatus(box, id), TicketStatus.Review);
+  assert.equal(box.calls().length, 4);
+  assert.match(box.prompt(3), /Review notes from the previous round/);
+  assert.match(box.prompt(3), /review note round 2: PASS/);
+  assert.match(box.prompt(3), /Runner check failed: `echo "lines/);
+  assert.match(box.prompt(3), /lines: +1\nextra-output-line/);
+  assert.match(ticketFile(box, id), /the runner's own check failed/);
+});
+
+test("a failing testCommand with no rework left blocks the ticket and never merges, even with autoMerge", async () => {
+  const log = join(mkdtempSync(join(tmpdir(), "nightshift-gh-")), "gh.log");
+  process.env.FAKE_GH_LOG = log;
+  const gh = join(FIXTURES, "fake-gh.sh");
+  chmodSync(gh, 0o755);
+  const box = sandbox({ autoMerge: true, maxRework: 0, tools: { gh } }, PublishMode.PullRequest);
+  withCheck(box, "echo first; echo the-last-line; exit 3");
+  const id = await readyTicket(box, "Touch work");
+  box.plan(["BUILD_PR", "REVIEW PASS"]);
+  assert.equal(await runPipeline(box, id), TicketOutcome.Settled);
+  assert.equal(await ticketStatus(box, id), TicketStatus.Blocked);
+  assert.match(ticketFile(box, id), /runner check failed: echo first; echo the-last-line; exit 3\. Last output line: the-last-line/);
+  assert.equal(box.calls().length, 2);
+  assert.doesNotMatch(existsSync(log) ? readFileSync(log, "utf8") : "", /pr merge/);
+});
+
+test("a testCommand that runs past testTimeoutMinutes is killed and counts as failed", async () => {
+  const box = sandbox({ maxRework: 0 });
+  withCheck(box, "echo started; sleep 30", 0.02);
+  const id = await readyTicket(box, "Slow tests");
+  box.plan(["BUILD", "REVIEW PASS"]);
+  const started = Date.now();
+  assert.equal(await runPipeline(box, id), TicketOutcome.Settled);
+  assert.ok(Date.now() - started < 20_000, "the check was killed, not waited for");
+  assert.equal(await ticketStatus(box, id), TicketStatus.Blocked);
+  assert.match(ticketFile(box, id), /runner check failed \(timed out after 0\.02 min\): echo started; sleep 30/);
+});
+
+test("the end of a long output is cut to 60 lines", () => {
+  const output = Array.from({ length: 100 }, (_, i) => `line ${i + 1}`).join("\n");
+  const lines = outputTail(output).split("\n");
+  assert.equal(lines.length, 60);
+  assert.equal(lines[0], "line 41");
+  assert.equal(lines[59], "line 100");
+});
+
+test("git numstat is summed into files and +/- lines; a binary file counts as a file only", () => {
+  assert.deepEqual(parseNumstat("10\t2\ta.ts\n2\t1\tb.ts\n-\t-\timg.png\n"), { files: 3, added: 12, removed: 3 });
+  assert.deepEqual(parseNumstat(""), { files: 0, added: 0, removed: 0 });
+});
+
+test("a reviewer who changes the code is counted in the note, the usage file and the journal; one who does not is not", async () => {
+  const box = sandbox();
+  const id = await readyTicket(box, "Fix the thing");
+  box.plan(["BUILD", "REVIEW_EDIT PASS"]);
+  assert.equal(await runPipeline(box, id), TicketOutcome.Settled);
+  assert.match(ticketFile(box, id), /the reviewer changed code itself: 1 file, \+3\/-0/);
+  const entries = new UsageLog(box.runner.paths.usage, id).read();
+  assert.deepEqual(reviewerEdits(entries), { files: 1, added: 3, removed: 0 });
+  const journal = readFileSync(box.runner.paths.journal, "utf8");
+  assert.match(journal, /"reviewerFiles":1,"reviewerAdded":3,"reviewerRemoved":0/);
+
+  const quiet = sandbox();
+  const quietId = await readyTicket(quiet, "Nothing to fix");
+  quiet.plan(["BUILD", "REVIEW PASS"]);
+  await runPipeline(quiet, quietId);
+  assert.deepEqual(reviewerEdits(new UsageLog(quiet.runner.paths.usage, quietId).read()), { files: 0, added: 0, removed: 0 });
+  assert.doesNotMatch(ticketFile(quiet, quietId), /reviewer changed code/);
 });

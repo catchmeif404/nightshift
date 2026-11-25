@@ -30,6 +30,9 @@ function settled(ticket: string, hoursAgo: number, over: Partial<SettledRecord> 
     known: true,
     weighted: 217_000,
     seconds: 207,
+    reviewerFiles: 0,
+    reviewerAdded: 0,
+    reviewerRemoved: 0,
     note: "",
     ...over,
   };
@@ -238,4 +241,11 @@ test("a failed send is tried again at the next dispatch, and the report stays of
   assert.equal((await sendDailyReport(off.config, off.runner.paths, Date.now())).outcome, DailyReportOutcome.NoChannel);
   const none = sandbox({ notify: { service: "slack", webhookUrlEnv: HOOK_ENV } });
   assert.equal((await sendDailyReport(none.config, none.runner.paths, Date.now())).outcome, DailyReportOutcome.NotDue);
+});
+
+test("a ticket the reviewer edited shows the size of the edit in both languages", () => {
+  const data = buildReport([settled("T-1", 1, { reviewerFiles: 2, reviewerAdded: 12, reviewerRemoved: 3 }), settled("T-2", 2)], NOW - 24 * HOUR, NOW);
+  assert.match(renderReport(data, NoteLanguage.English), /T-1 Title of T-1 - .* · reviewer edit \+12\/-3\n/);
+  assert.match(renderReport(data, NoteLanguage.Korean), /T-1 Title of T-1 - .* · 검토자 수정 \+12\/-3\n/);
+  assert.doesNotMatch(renderReport(data, NoteLanguage.English).split("\n").filter((l) => l.includes("T-2 Title"))[0] ?? "", /reviewer edit/);
 });

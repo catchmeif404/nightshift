@@ -198,3 +198,13 @@ test("doctor warns about a missing environment variable and says ok when set", a
     delete process.env[TOKEN_ENV];
   }
 });
+
+test("doctor shows how many projects have a testCommand", async () => {
+  const box = sandbox();
+  const { writeFileSync } = await import("node:fs");
+  const count = async (): Promise<string> => (await doctorChecks(box.root)).find((c) => c.what.startsWith("testCommand"))?.what ?? "";
+  writeFileSync(`${box.root}/nightshift.json`, JSON.stringify({ projects: { demo: { repoPath: box.repo }, other: { repoPath: box.repo, testCommand: "npm test" } } }));
+  assert.match(await count(), /^testCommand is set on 1 of 2 projects/);
+  writeFileSync(`${box.root}/nightshift.json`, JSON.stringify({ projects: { demo: { repoPath: box.repo } } }));
+  assert.match(await count(), /^testCommand is set on 0 of 1 projects/);
+});

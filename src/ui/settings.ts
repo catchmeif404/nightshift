@@ -15,6 +15,7 @@ export const UI_BOARD_TYPES: readonly BoardType[] = [BoardType.LocalMarkdown, Bo
 export const UI_AGENT_TYPES: readonly AgentType[] = [AgentType.ClaudeCode, AgentType.Codex];
 
 const MAX_SLOTS_LIMIT = 16;
+const MAX_COMMAND_CHARS = 1000;
 const MODEL_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/@[\]-]{0,79}$/;
 const REPO_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const LOGIN_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:\[bot\])?$/;
@@ -29,7 +30,7 @@ export interface AgentForm {
 }
 
 export interface SettingsForm {
-  projects: Array<{ name: string; repoPath: string }>;
+  projects: Array<{ name: string; repoPath: string; testCommand: string }>;
   board: { type: BoardType; dir: string; repos: string[]; trustedAuthors: string[] };
   builder: AgentForm;
   reviewer: AgentForm;
@@ -117,7 +118,7 @@ function formFrom(raw: JsonObject, defaults: Config): SettingsForm {
   const board = obj(raw.board);
   const boardType = Object.values(BoardType).find((t) => t === board.type) ?? defaults.board.type;
   return {
-    projects: Object.entries(obj(raw.projects)).map(([name, p]) => ({ name, repoPath: text(obj(p).repoPath, "") })),
+    projects: Object.entries(obj(raw.projects)).map(([name, p]) => ({ name, repoPath: text(obj(p).repoPath, ""), testCommand: text(obj(p).testCommand, "") })),
     board: {
       type: boardType,
       dir: text(board.dir, Brand.ticketsDir),
@@ -147,7 +148,7 @@ function preservedFields(value: unknown, path: string, out: PreservedField[]): v
     for (const [key, child] of Object.entries(value)) preservedFields(child, path === "" ? key : `${path}.${key}`, out);
     return;
   }
-  if (EDITED_PATHS.has(path) || /^projects\.[^.]+\.repoPath$/.test(path)) return;
+  if (EDITED_PATHS.has(path) || /^projects\.[^.]+\.(repoPath|testCommand)$/.test(path)) return;
   const key = path.split(".").pop() ?? "";
   const secret = SECRET_KEY.test(key) && !REFERENCE_KEYS.has(key);
   out.push({ path, value: secret ? KEPT : mask(clip(JSON.stringify(value), 120)), secret });
@@ -265,6 +266,9 @@ export function validateEdit(edit: SettingsForm, current: SettingsForm, root: st
     } else if (p.repoPath !== before.repoPath && !isDirectory(inside(root, p.repoPath))) {
       issues.push(issue(CheckLevel.Fail, field, `${inside(root, p.repoPath)} is not a folder`));
     }
+    if (typeof p.testCommand !== "string" || p.testCommand.includes("\0") || p.testCommand.length > MAX_COMMAND_CHARS) {
+      issues.push(issue(CheckLevel.Fail, `projects.${p.name}.testCommand`, `a shell command line (up to ${MAX_COMMAND_CHARS} characters), or empty to turn the runner's own check off`));
+    }
   }
   return issues;
 }
@@ -296,6 +300,7 @@ export function applyEdit(raw: JsonObject, edit: SettingsForm, current: Settings
   };
   for (const p of edit.projects) {
     if (p.repoPath !== current.projects.find((c) => c.name === p.name)?.repoPath) set(["projects", p.name, "repoPath"], p.repoPath);
+    if (p.testCommand !== current.projects.find((c) => c.name === p.name)?.testCommand) set(["projects", p.name, "testCommand"], p.testCommand);
   }
   if (edit.board.type !== current.board.type) set(["board", "type"], edit.board.type);
   if (edit.board.dir !== current.board.dir) set(["board", "dir"], edit.board.dir);

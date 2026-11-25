@@ -25,6 +25,11 @@ export interface ProjectConfig {
   rulesFile: string;
   // Runs in repoPath after a PR of this project is merged. Empty: none.
   postMergeCommand: string;
+  // Run by the runner itself in the ticket's worktree after a passing review, before merge or review hand-off.
+  // Exit code 0 passes. Empty: off.
+  testCommand: string;
+  // Minutes testCommand may run before it is killed and counted as failed.
+  testTimeoutMinutes: number;
 }
 
 export interface BoardConfig {
@@ -129,6 +134,12 @@ function num(o: JsonObject, key: string, fallback: number, where: string): numbe
   if (typeof v !== "number" || !Number.isFinite(v) || v < 0) {
     throw new ConfigError(`${where}.${key} must be a non-negative number`);
   }
+  return v;
+}
+
+function positive(o: JsonObject, key: string, fallback: number, where: string): number {
+  const v = num(o, key, fallback, where);
+  if (v === 0) throw new ConfigError(`${where}.${key} must be greater than 0`);
   return v;
 }
 
@@ -281,6 +292,8 @@ function envVars(o: JsonObject): Record<string, string> {
   return env;
 }
 
+export const DEFAULT_TEST_TIMEOUT_MINUTES = 15;
+
 export const DEFAULT_GATES: HumanGate[] = Object.values(HumanGate);
 
 export function parseConfig(raw: unknown, root: string): Config {
@@ -310,6 +323,8 @@ export function parseConfig(raw: unknown, root: string): Config {
       publish: oneOf(p, "publish", Object.values(PublishMode), PublishMode.PullRequest, where),
       rulesFile: inside(root, str(p, "rulesFile", "", where)),
       postMergeCommand: str(p, "postMergeCommand", "", where),
+      testCommand: str(p, "testCommand", "", where),
+      testTimeoutMinutes: positive(p, "testTimeoutMinutes", DEFAULT_TEST_TIMEOUT_MINUTES, where),
     };
   });
 

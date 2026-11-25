@@ -77,6 +77,9 @@ What makes it hold up when nobody is watching:
 
 - **Runs are not trusted, files are.** A stage counts as done only when it writes its one-line result file in the
   expected format. A result it cannot read is set aside and the stage runs again.
+- **Tests are run by the runner, not taken on faith.** With a `testCommand`, nightshift runs it in the ticket's worktree
+  after a passing review; a failure or timeout sends the ticket back (or blocks it) instead of merging, and anything the
+  reviewer changed itself is shown as "reviewer edit +12/-3" in the report.
 - **Cut-off runs resume.** Each stage gets a fixed session id; after a reboot or a killed process the next dispatch
   resumes that same session. After 3 cut-offs the ticket is blocked with the last log line as the reason.
 - **Usage limits wait instead of failing.** When the agent says "You've hit your limit · resets 3:30pm", nightshift
@@ -183,6 +186,8 @@ This writes the config, creates the `nightshift:*` labels and trusts the signed-
 | `projects.<name>.publish` | `pr` | `pr` pushes and opens a pull request; `branch` leaves a local branch |
 | `projects.<name>.rulesFile` | none | house rules added to every prompt for this project |
 | `projects.<name>.postMergeCommand` | none | runs after a merge; its result is noted on the ticket |
+| `projects.<name>.testCommand` | none (off) | the runner runs it in the ticket's worktree after a passing review; a failure or timeout is not accepted as PASS (rework, or blocked), and `autoMerge` does not merge |
+| `projects.<name>.testTimeoutMinutes` | `15` | how long `testCommand` may run before it is killed and counted as failed |
 | `builder`, `reviewer` | Claude Code `sonnet` / `opus` | `type` (`claude-code`, `codex` or `command`), `model`, `permissionMode` (Claude Code), `sandbox` (Codex: `auto`, `workspace-write`, `read-only`, `danger-full-access`) |
 | `pollSeconds` | 120 | how often the service and `daemon` look for work (at least 30) |
 | `maxSlots` | 3 | projects worked at the same time |

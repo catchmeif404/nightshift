@@ -96,7 +96,11 @@ export function parseForm(value: unknown): SettingsForm {
   return {
     projects: o.projects.map((p, i) => {
       const r = asRecord(p, `edit.projects[${i}]`);
-      return { name: asString(r.name, `edit.projects[${i}].name`), repoPath: asString(r.repoPath, `edit.projects[${i}].repoPath`) };
+      return {
+        name: asString(r.name, `edit.projects[${i}].name`),
+        repoPath: asString(r.repoPath, `edit.projects[${i}].repoPath`),
+        testCommand: asString(r.testCommand, `edit.projects[${i}].testCommand`),
+      };
     }),
     board: {
       type: asEnum(Object.values(BoardType), board.type, "edit.board.type"),
