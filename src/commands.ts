@@ -12,6 +12,8 @@ import {
 import { UsageLog, formatTotal, totalUsage } from "./usage.js";
 import { run } from "./exec.js";
 import { missingEnv } from "./notify.js";
+import { parseSince, readReport, renderReport, reportJson, sendReport } from "./report.js";
+import { messagesFor } from "./messages.js";
 import { statePaths } from "./state.js";
 
 export const RULES_FILE = `${Brand.name}.rules.md`;
@@ -241,6 +243,30 @@ export async function status(config: Config): Promise<void> {
       console.log(`  ${t.id}  ${t.title}  [${t.project}]${entries.length === 0 ? "" : `  ${formatTotal(totalUsage(entries))}`}`);
     }
   }
+}
+
+export interface ReportOptions {
+  since: string;
+  json: boolean;
+  send: boolean;
+}
+
+// The morning report from the runner's own records; it never asks the board. Returns the exit code.
+export async function showReport(config: Config, options: ReportOptions): Promise<number> {
+  const now = Date.now();
+  const data = readReport(statePaths(config.stateDir), parseSince(options.since, now), now);
+  const body = renderReport(data, config.language);
+  console.log(options.json ? reportJson(data) : body);
+  if (!options.send) return 0;
+  const say = messagesFor(config.language).report;
+  const failures = await sendReport(config, body, false);
+  if (config.notify.service === NotifyService.None && config.notifyCommand === "") {
+    console.error(say.sendNothing);
+    return 1;
+  }
+  for (const failure of failures) console.error(failure);
+  if (failures.length === 0) console.error(say.sent);
+  return failures.length === 0 ? 0 : 1;
 }
 
 export interface Check {

@@ -3,8 +3,9 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { Brand } from "./brand.js";
-import { add, daemon, doctor, init, initExtras, logs, runOnce, status, workSlot } from "./commands.js";
+import { add, daemon, doctor, init, initExtras, logs, runOnce, showReport, status, workSlot } from "./commands.js";
 import { ConfigError, loadConfig } from "./config.js";
+import { DEFAULT_SINCE } from "./report.js";
 import { BoardType, CliCommand, ServiceAction, TicketKind } from "./enums.js";
 import { DEFAULT_PORT, startUi } from "./ui/server.js";
 import { installService, serviceStatus, uninstallService } from "./service.js";
@@ -25,6 +26,9 @@ Usage: ${Brand.name} <command> [options]
                       run it on its own: launchd (macOS) or systemd (Linux), every pollSeconds
   status              running workers and tickets by status
   logs [-f] [-n 40]   the runner's log (-f: keep following)
+  report [--since 24h|YYYY-MM-DD] [--json] [--send]
+                      what finished overnight and what waits for you (from the runner's own records);
+                      --send also sends it to notify / notifyCommand
   doctor              check tools, sign-ins and the config
   ui [--port 4404]    a local web console (127.0.0.1 only): status, settings, doctor
 
@@ -55,6 +59,9 @@ async function main(argv: string[]): Promise<number> {
       project: { type: "string", default: "" },
       body: { type: "string", default: "" },
       release: { type: "boolean", default: false },
+      since: { type: "string", default: DEFAULT_SINCE },
+      json: { type: "boolean", default: false },
+      send: { type: "boolean", default: false },
       port: { type: "string", default: String(DEFAULT_PORT) },
       help: { type: "boolean", short: "h", default: false },
     },
@@ -114,6 +121,8 @@ async function main(argv: string[]): Promise<number> {
           throw new ConfigError(`usage: ${Brand.name} service ${Object.values(ServiceAction).join("|")}`);
       }
     }
+    case CliCommand.Report:
+      return showReport(loadConfig(root), { since: values.since, json: values.json, send: values.send });
     case CliCommand.Doctor:
       return (await doctor(root)) ? 0 : 1;
     case CliCommand.Ui: {

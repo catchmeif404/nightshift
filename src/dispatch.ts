@@ -9,6 +9,7 @@ import { CliCommand, SettleReason, StateFile, TicketKind, TicketStatus, WorkerMo
 import { messagesFor } from "./messages.js";
 import { Logger } from "./log.js";
 import { Runner, TicketOutcome, TicketPipeline } from "./pipeline.js";
+import { DailyReportOutcome, sendDailyReport } from "./report.js";
 import {
   SlotInfo,
   Slots,
@@ -125,12 +126,24 @@ function spawnWorker(r: Runner, key: string): number {
 
 export type WorkerSpawner = (r: Runner, key: string) => number;
 
+// The first dispatch after dailyReportAt sends the morning report. It never stops a dispatch.
+async function morningReport(r: Runner): Promise<void> {
+  try {
+    const { outcome, failures } = await sendDailyReport(r.config, r.paths, Date.now());
+    if (outcome === DailyReportOutcome.Sent) r.log.line("dispatch: morning report sent");
+    for (const failure of failures) r.log.line(`dispatch: morning report failed: ${failure}`);
+  } catch (error) {
+    r.log.line(`dispatch: morning report failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 export async function dispatch(r: Runner, spawner: WorkerSpawner = spawnWorker): Promise<WorkerStart[]> {
   if (!(await acquireLock(r.paths.dispatchLock, 24, 5_000))) {
     r.log.line("dispatch: lock still busy, skipping this round");
     return [];
   }
   try {
+    await morningReport(r);
     // While an agent's account is over its usage limit, start nothing: every run would be refused anyway.
     const limited = r.limits.active(Date.now());
     if (limited.length > 0) {

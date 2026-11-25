@@ -6,6 +6,7 @@ import { Config, ProjectConfig, hasProject, projectNamed } from "./config.js";
 import {
   BuildResult,
   GitHubState,
+  JournalKind,
   NotifyEvent,
   PublishMode,
   ReleaseResult,
@@ -27,7 +28,8 @@ import { Messages, messagesFor } from "./messages.js";
 import { RESUME_PROMPT, StageContext, buildPrompt, releasePrompt, reviewPrompt } from "./prompts.js";
 import { Slots, StatePaths, TicketState, UsageLimits } from "./state.js";
 import { detectLimit } from "./limits.js";
-import { StageUsage, UsageLog, readSessionUsage, usageNote, weighted } from "./usage.js";
+import { StageUsage, UsageLog, readSessionUsage, totalUsage, usageNote, weighted } from "./usage.js";
+import { Journal } from "./report.js";
 
 export interface Runner {
   config: Config;
@@ -131,9 +133,36 @@ export class TicketPipeline {
     this.log(`-> ${status} (${reason}): ${clip(oneLine(note), 200)}`);
     await this.noteUsage();
     const link = this.state.firstLine(StateFile.Result);
+    this.journalSettled(status, reason, link, note);
     this.state.clearStage();
     await this.announce(reason, link);
     return TicketOutcome.Settled;
+  }
+
+  // What the morning report reads. A failure is only logged: the ticket has already moved.
+  private journalSettled(status: TicketStatus, reason: SettleReason, link: string, note: string): void {
+    try {
+      const entries = this.usage.read();
+      const total = totalUsage(entries);
+      const rounds = Math.max(1, ...entries.filter((e) => e.stage === Stage.Build).map((e) => e.round));
+      new Journal(this.r.paths.journal).append({
+        kind: JournalKind.Settled,
+        at: Date.now(),
+        ticket: this.ticket.id,
+        title: clip(oneLine(mask(this.ticket.title)), 200),
+        project: this.ticket.project,
+        status,
+        reason,
+        link: /^\S+$/.test(link) ? link : "",
+        rounds,
+        known: total.known,
+        weighted: total.weighted,
+        seconds: total.seconds,
+        note: clip(oneLine(mask(note)), 300),
+      });
+    } catch (error) {
+      this.log(`journal write failed: ${errorText(error)}`);
+    }
   }
 
   // One line on the board with what the stages cost. A failure is only logged: the ticket has already moved.
@@ -427,6 +456,11 @@ export class TicketPipeline {
         // Not the ticket's fault: give the try back, remember the reset for every ticket of this agent.
         this.state.write(StateFile.Tries, String(tries - 1));
         this.r.limits.set(agent.name, limit.until, limit.message);
+        try {
+          new Journal(this.r.paths.journal).append({ kind: JournalKind.Limited, at: Date.now(), until: limit.until, agent: agent.name });
+        } catch (error) {
+          this.log(`journal write failed: ${errorText(error)}`);
+        }
         const until = new Date(limit.until).toLocaleString("sv-SE", { hour12: false }).slice(0, 16);
         this.log(`${stage} r${round}: usage limit (${agent.name}) until ${until}: ${clip(limit.message, 160)}`);
         await this.r.board.addNote(this.ticket.id, this.say.usageLimit(agent.name, until));

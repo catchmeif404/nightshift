@@ -88,6 +88,8 @@ export interface Config {
   workerDoneCommand: string;
   // Built-in Telegram / Slack / Discord messages. service "none": off.
   notify: NotifyConfig;
+  // "HH:MM": the first dispatch after this time sends the morning report, once a day. Empty: off.
+  dailyReportAt: string;
   // Language of the notes the runner writes on tickets.
   language: NoteLanguage;
   // Labels ("Label:" lines) every ticket body must carry before it runs. Empty: no check.
@@ -255,6 +257,14 @@ function notifyConfig(o: JsonObject): NotifyConfig {
   return cfg;
 }
 
+export const DAILY_REPORT_AT_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function dailyReportAt(o: JsonObject): string {
+  const value = str(o, "dailyReportAt", "", "config").trim();
+  if (value !== "" && !DAILY_REPORT_AT_PATTERN.test(value)) throw new ConfigError('config.dailyReportAt must be a time like "08:00" (24 hours), or empty for off');
+  return value;
+}
+
 export const DEFAULT_GATES: HumanGate[] = Object.values(HumanGate);
 
 export function parseConfig(raw: unknown, root: string): Config {
@@ -316,6 +326,7 @@ export function parseConfig(raw: unknown, root: string): Config {
     notifyCommand: inside(root, str(top, "notifyCommand", "", "config")),
     workerDoneCommand: str(top, "workerDoneCommand", "", "config"),
     notify: notifyConfig(optObject(top, "notify", "config")),
+    dailyReportAt: dailyReportAt(top),
     language: oneOf(top, "language", Object.values(NoteLanguage), NoteLanguage.English, "config"),
     ticketSections: sectionLabels(top),
     gatePaths: gateGlobs(top),
