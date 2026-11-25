@@ -1,6 +1,6 @@
 import { SettleReason, TicketStatus } from "../enums.js";
 import { exec } from "../exec.js";
-import { Board, Ticket, kindFrom, oldestFirst } from "./board.js";
+import { Board, Ticket, findByListing, kindFrom, oldestFirst } from "./board.js";
 
 export enum BoardCall {
   List = "list",
@@ -15,9 +15,14 @@ function field(o: Record<string, unknown>, key: string): string {
   return typeof v === "string" ? v : "";
 }
 
+function idList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string" && v.trim() !== "").map((v) => v.trim()) : [];
+}
+
 // Any tracker, through one executable that speaks this protocol (exit 0 on success):
 //   <command> list <status>                       -> prints a JSON array of tickets in that status:
-//                                                    [{"id","title","body","project","kind","createdAt"}]
+//                                                    [{"id","title","body","project","kind","createdAt","dependsOn"}]
+//                                                    (dependsOn: optional array of ticket ids that must be done first)
 //   <command> set-status <id> <status> <reason>   note on stdin (may be empty)
 //   <command> note <id>                           note on stdin
 // Statuses and reasons are the runner's own words (ready, working, ... / needs-human, merged, ...);
@@ -55,10 +60,15 @@ export class CommandBoard implements Board {
         kind: kindFrom(field(o, "kind")),
         status,
         createdAt: field(o, "createdAt"),
+        dependsOn: idList(o["dependsOn"]),
       };
       if (ticket.id !== "" && ticket.project !== "") tickets.push(ticket);
     }
     return tickets.sort(oldestFirst);
+  }
+
+  find(ids: string[]): Promise<Ticket[]> {
+    return findByListing(this, ids);
   }
 
   async setStatus(id: string, status: TicketStatus, reason: SettleReason, note: string): Promise<void> {

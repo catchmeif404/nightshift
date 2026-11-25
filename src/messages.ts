@@ -1,3 +1,4 @@
+import { DependencyWait, DependencyWaitCause } from "./board/board.js";
 import { NoteLanguage, NotifyEvent, PreflightCause, ReportGroup, Stage } from "./enums.js";
 import type { GateHit } from "./git.js";
 
@@ -23,6 +24,8 @@ export interface Messages {
   unknownProject(project: string): string;
   worktreeFailed(error: string): string;
   missingSections(labels: string[]): string;
+  // Why a ticket waits for (or never starts because of) a ticket it depends on.
+  dependencyWait(wait: DependencyWait): string;
   buildBlocked(reason: string): string;
   sentBack(round: number): string;
   stillNotRight(rounds: number, review: string): string;
@@ -118,6 +121,13 @@ const english: Messages = {
   unknownProject: (p) => `project "${p}" is not in the config; add it and set the ticket ready again.`,
   worktreeFailed: (e) => `could not make a worktree: ${e}`,
   missingSections: (l) => `the ticket body lacks these sections (a "Label: text" line each): ${l.join(", ")}. Add them and set the ticket ready again.`,
+  dependencyWait: (w) => ({
+    [DependencyWaitCause.Missing]: `depends on ${w.id}, which is not on the board`,
+    [DependencyWaitCause.Self]: `depends on itself (${w.id})`,
+    [DependencyWaitCause.Cycle]: `waits in a loop with ${w.id}`,
+    [DependencyWaitCause.Blocked]: `predecessor ${w.id} is blocked`,
+    [DependencyWaitCause.Pending]: `waiting for predecessor ${w.id} to be done`,
+  })[w.cause],
   buildBlocked: (r) => `the developer could not finish: ${r}`,
   sentBack: (round) => `review round ${round}: sent back for rework.`,
   stillNotRight: (rounds, review) => `still not right after ${rounds} rounds.${withReview(review, "Review")}`,
@@ -160,6 +170,13 @@ const korean: Messages = {
   unknownProject: (p) => `설정에 없는 프로젝트 "${p}". 설정에 넣고 다시 할 일로 두세요.`,
   worktreeFailed: (e) => `작업 폴더(worktree)를 만들지 못함: ${e}`,
   missingSections: (l) => `티켓 본문에 빠진 항목: ${l.join(", ")} ("항목: 내용" 한 줄씩). 채운 뒤 다시 할 일로 두세요.`,
+  dependencyWait: (w) => ({
+    [DependencyWaitCause.Missing]: `선행 ${w.id} 이 보드에 없음`,
+    [DependencyWaitCause.Self]: `자기 자신(${w.id})에 의존함`,
+    [DependencyWaitCause.Cycle]: `${w.id} 와 서로 기다리는 순환`,
+    [DependencyWaitCause.Blocked]: `선행 ${w.id} 이 막힘`,
+    [DependencyWaitCause.Pending]: `선행 ${w.id} 이 끝나기를 기다림`,
+  })[w.cause],
   buildBlocked: (r) => `개발 단계에서 막힘: ${r}`,
   sentBack: (round) => `${round}회차 검토: 재작업으로 돌려보냄.`,
   stillNotRight: (rounds, review) => `${rounds}회차까지 고쳐도 통과 못 함.${withReview(review, "검토")}`,

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { Brand } from "./brand.js";
+import { splitIds } from "./board/board.js";
 import { add, daemon, doctor, init, initExtras, logs, runOnce, showReport, status, workSlot } from "./commands.js";
 import { ConfigError, loadConfig } from "./config.js";
 import { DEFAULT_SINCE } from "./report.js";
@@ -18,7 +19,7 @@ Usage: ${Brand.name} <command> [options]
        [--sections deliverable,verify,out-of-scope] [--gate-paths default|glob,glob]
        [--notify telegram|slack|discord] [--notify-chat-id=<id>  (telegram; use = for a negative id)]
                       write ${Brand.configFile} and a rules file (github: also create the labels)
-  add "<title>" --project <name> [--body "..."] [--release]
+  add "<title>" --project <name> [--body "..."] [--depends T-1,T-2] [--release]
                       add a ticket to the local markdown board
   run                 start workers for ready and cut-off tickets, then exit
   daemon              run every pollSeconds (default 120) until stopped
@@ -58,6 +59,7 @@ async function main(argv: string[]): Promise<number> {
       lines: { type: "string", short: "n", default: "40" },
       project: { type: "string", default: "" },
       body: { type: "string", default: "" },
+      depends: { type: "string", default: "" },
       release: { type: "boolean", default: false },
       since: { type: "string", default: DEFAULT_SINCE },
       json: { type: "boolean", default: false },
@@ -86,7 +88,7 @@ async function main(argv: string[]): Promise<number> {
     case CliCommand.Add: {
       const title = positionals[1] ?? "";
       if (title === "" || values.project === "") throw new ConfigError(`usage: ${Brand.name} add "<title>" --project <name>`);
-      const id = add(loadConfig(root), title, values.project, values.release ? TicketKind.Release : TicketKind.Build, values.body);
+      const id = add(loadConfig(root), title, values.project, values.release ? TicketKind.Release : TicketKind.Build, values.body, splitIds(values.depends));
       console.log(`added ${id}. Start it with "${Brand.name} run".`);
       return 0;
     }

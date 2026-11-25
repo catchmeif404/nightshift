@@ -38,6 +38,19 @@ Each ticket becomes the prompt for two runs that cannot ask you anything. Write 
 
 A ticket that is too big tends to come back `REWORK` or `BLOCKED`; split it.
 
+## Tickets that wait for other tickets
+
+A ticket can name tickets that must be `done` (merged, or finished by you) before it starts. Until then it stays
+`ready` and untouched; `nightshift status` and the console say what it waits for (for example "predecessor T-1 is blocked").
+
+- **Local board:** `nightshift add "..." --depends T-1,T-2`, or a `depends: T-1, T-2` line in the ticket file's header.
+- **GitHub Issues:** a line `Depends on #12` or `Blocked by #12` in the issue body (`owner/repo#12` for another repo you list). A closed issue counts as done.
+- **Command board:** a `dependsOn` array of ids in the JSON `list` prints. Without it, the ticket has no predecessors.
+- A blocked predecessor keeps the ticket waiting; nightshift does not block the later ticket for you. An id that is not on the
+  board, a ticket that names itself and tickets that wait for each other never start; `nightshift status` shows why and
+  `nightshift doctor` warns.
+- In one batch, predecessors run first, and the next ticket starts only if its predecessor is really done by then.
+
 ## What each status means
 
 | status | meaning | your move |

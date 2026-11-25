@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { openSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { openAgent } from "./agent/index.js";
-import { Ticket } from "./board/board.js";
+import { Ticket, dependencyWaits, isBroken, loadDependencyGraph, orderByDependencies } from "./board/board.js";
 import { openBoard } from "./board/index.js";
 import { Config, hasProject, projectNamed } from "./config.js";
 import { CliCommand, NotifyEvent, SettleReason, StateFile, TicketKind, TicketStatus, WorkerMode } from "./enums.js";
@@ -58,6 +58,23 @@ export async function requireSections(r: Runner, tickets: Ticket[]): Promise<Tic
     } catch (error) {
       r.log.line(`${ticket.id} could not be blocked: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+  return ok;
+}
+
+// Tickets whose predecessors are all done. The others stay as they are (ready); the reason is logged.
+// With inBatch, a predecessor that is ready in the same list does not hold a ticket back here: it runs first
+// (orderByDependencies), and the wait is checked again just before each ticket starts.
+export async function awaitDependencies(r: Runner, tickets: Ticket[], inBatch = false): Promise<Ticket[]> {
+  if (tickets.every((t) => t.dependsOn.length === 0)) return tickets;
+  const say = messagesFor(r.config.language);
+  const graph = await loadDependencyGraph(r.board, tickets);
+  const inList = new Set(tickets.map((t) => t.id));
+  const ok: Ticket[] = [];
+  for (const ticket of tickets) {
+    const waits = dependencyWaits(ticket, graph).filter((w) => !(inBatch && !isBroken(w) && inList.has(w.id) && graph.get(w.id)?.status === TicketStatus.Ready));
+    if (waits.length === 0) ok.push(ticket);
+    else r.log.line(`${ticket.id} waits: ${waits.map(say.dependencyWait).join("; ")}`);
   }
   return ok;
 }
@@ -188,7 +205,7 @@ export async function dispatch(r: Runner, spawner: WorkerSpawner = spawnWorker, 
       return [];
     }
     const live = r.slots.live();
-    const candidates = await publishable(r, [...(await stuckTickets(r)), ...(await requireSections(r, await r.board.list(TicketStatus.Ready)))], probe);
+    const candidates = await publishable(r, [...(await stuckTickets(r)), ...(await awaitDependencies(r, await requireSections(r, await r.board.list(TicketStatus.Ready))))], probe);
     const starts = planDispatch(candidates, live, r.config.maxSlots);
     for (const start of starts) {
       if (!r.slots.tryCreate(start.key, start.target, start.mode === WorkerMode.Release)) continue;
@@ -234,7 +251,7 @@ export async function work(r: Runner, key: string): Promise<void> {
   try {
     if (release) {
       const stuck = (await stuckTickets(r)).filter((t) => t.id === target);
-      const ready = await claim(r, await requireSections(r, (await r.board.list(TicketStatus.Ready)).filter((t) => t.id === target)));
+      const ready = await claim(r, await awaitDependencies(r, await requireSections(r, (await r.board.list(TicketStatus.Ready)).filter((t) => t.id === target))));
       for (const ticket of [...stuck, ...ready]) {
         if ((await runTicket(r, ticket, key)) === TicketOutcome.Limited) return;
       }
@@ -246,12 +263,14 @@ export async function work(r: Runner, key: string): Promise<void> {
       if ((await runTicket(r, ticket, key)) === TicketOutcome.Limited) return;
     }
     for (let batch = 0; batch < r.config.maxBatches; batch += 1) {
-      const ready = await requireSections(r, (await r.board.list(TicketStatus.Ready)).filter(mine));
+      const ready = orderByDependencies(await awaitDependencies(r, await requireSections(r, (await r.board.list(TicketStatus.Ready)).filter(mine)), true));
       if (ready.length === 0) break;
       r.log.line(`work ${target}: batch ${batch + 1}: ${ready.map((t) => t.id).join(" ")}`);
       // Claim each ticket just before it runs, so a stop (usage limit) never leaves claimed tickets nobody works on.
       let ran = 0;
       for (const ticket of ready) {
+        // A predecessor from this batch must be done by now, not only have run.
+        if ((await awaitDependencies(r, [ticket])).length === 0) continue;
         const claimed = (await claim(r, [ticket]))[0];
         if (claimed === undefined) continue;
         ran += 1;

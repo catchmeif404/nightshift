@@ -41,7 +41,7 @@ test("ticket files round-trip through front matter", () => {
 });
 
 function ticket(id: string, project: string, kind: TicketKind = TicketKind.Build): Ticket {
-  return { id, title: id, body: "", project, kind, status: TicketStatus.Ready, createdAt: id };
+  return { id, title: id, body: "", project, kind, status: TicketStatus.Ready, createdAt: id, dependsOn: [] };
 }
 
 function slot(project: string, release = false): SlotInfo {

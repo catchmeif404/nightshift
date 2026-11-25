@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { SettleReason, TicketKind, TicketStatus } from "../enums.js";
-import { Board, Ticket, isTicketStatus, kindFrom, oldestFirst } from "./board.js";
+import { Board, Ticket, isTicketStatus, kindFrom, oldestFirst, splitIds } from "./board.js";
 
 enum Field {
   Title = "title",
@@ -9,6 +9,7 @@ enum Field {
   Kind = "kind",
   Status = "status",
   Created = "created",
+  Depends = "depends",
 }
 
 const FENCE = "---";
@@ -79,6 +80,7 @@ export class LocalMarkdownBoard implements Board {
       kind: kindFrom(file.fields.get(Field.Kind) ?? TicketKind.Build),
       status,
       createdAt: file.fields.get(Field.Created) ?? "",
+      dependsOn: splitIds(file.fields.get(Field.Depends) ?? ""),
     }];
   }
 
@@ -107,8 +109,12 @@ export class LocalMarkdownBoard implements Board {
     this.write(id, file);
   }
 
+  async find(ids: string[]): Promise<Ticket[]> {
+    return ids.filter((id) => existsSync(this.pathOf(id))).flatMap((id) => this.toTickets(id, this.read(id)));
+  }
+
   // Next free T-n id. Used by the "add" command.
-  create(title: string, project: string, kind: TicketKind, body: string): string {
+  create(title: string, project: string, kind: TicketKind, body: string, dependsOn: string[] = []): string {
     mkdirSync(this.dir, { recursive: true });
     const used = existsSync(this.dir)
       ? readdirSync(this.dir)
@@ -123,6 +129,7 @@ export class LocalMarkdownBoard implements Board {
       [Field.Status, TicketStatus.Ready],
       [Field.Created, new Date().toISOString()],
     ]);
+    if (dependsOn.length > 0) fields.set(Field.Depends, dependsOn.join(", "));
     this.write(id, { fields, body });
     return id;
   }
