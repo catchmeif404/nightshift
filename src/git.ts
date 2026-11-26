@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync, renameSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Brand } from "./brand.js";
@@ -29,11 +29,45 @@ async function succeeds(config: Config, cwd: string, args: string[]): Promise<bo
   return (await run(config.tools.git, args, cwd)).code === 0;
 }
 
+function real(path: string): string {
+  try {
+    return realpathSync(path);
+  } catch {
+    return path;
+  }
+}
+
+// The folders git knows as worktrees of the repository (the main checkout included), as real paths. Throws when git cannot say.
+export async function knownWorktrees(config: Config, repo: string): Promise<Set<string>> {
+  const result = await run(config.tools.git, ["worktree", "list", "--porcelain"], repo);
+  if (result.code !== 0) throw new GitError(`git worktree list in ${repo}: ${result.stderr.trim()}`);
+  const prefix = "worktree ";
+  return new Set(result.stdout.split("\n").filter((l) => l.startsWith(prefix)).map((l) => real(l.slice(prefix.length).trim())));
+}
+
+// Where a leftover folder is moved to: next to it, with the time in the name.
+function asidePath(path: string): string {
+  const stamp = new Date().toISOString().replace(/[-:.]/g, "").slice(0, 18);
+  return `${path}.old-${stamp}`;
+}
+
 // The runner, not the agent, makes the worktree: every ticket works on its own branch,
 // never in the checkout you are using. A resumed ticket gets the same worktree back.
-export async function ensureWorktree(config: Config, project: ProjectConfig, tree: Worktree): Promise<Worktree> {
-  if (existsSync(tree.path)) return tree;
+// A folder at the path that git does not know as this repository's worktree (build leftovers, say) is moved aside,
+// never deleted, and a new worktree is made.
+export async function ensureWorktree(config: Config, project: ProjectConfig, tree: Worktree, log: (line: string) => void = () => undefined): Promise<Worktree> {
   const repo = project.repoPath;
+  if (existsSync(tree.path)) {
+    if ((await knownWorktrees(config, repo)).has(real(tree.path))) return tree;
+    const aside = asidePath(tree.path);
+    try {
+      renameSync(tree.path, aside);
+    } catch (error) {
+      throw new GitError(`${tree.path} exists but git does not know it as a worktree of ${repo}, and it could not be moved aside: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    log(`${tree.path} is not a git worktree of ${repo}; moved it to ${aside} and made a new worktree`);
+    await run(config.tools.git, ["worktree", "prune"], repo);
+  }
   if (!(await succeeds(config, repo, ["rev-parse", "--git-dir"]))) {
     throw new GitError(`${repo} is not a git repository`);
   }

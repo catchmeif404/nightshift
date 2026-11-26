@@ -83,6 +83,8 @@ export interface Config {
   staleHours: number;
   // One agent run of a stage may take this many minutes before its process group is killed and the run counts as cut off. 0: no limit.
   stageTimeoutMinutes: number;
+  // "clean" removes the results and work files of a done ticket once they are this many days old.
+  keepDays: number;
   // How often "daemon" and the installed service look for work.
   pollSeconds: number;
   // How long to wait after a usage limit whose message names no reset time.
@@ -299,6 +301,7 @@ function envVars(o: JsonObject): Record<string, string> {
 export const DEFAULT_TEST_TIMEOUT_MINUTES = 15;
 export const DEFAULT_STALE_HOURS = 24;
 export const DEFAULT_STAGE_TIMEOUT_MINUTES = 0;
+export const DEFAULT_KEEP_DAYS = 14;
 
 export const DEFAULT_GATES: HumanGate[] = Object.values(HumanGate);
 
@@ -357,6 +360,7 @@ export function parseConfig(raw: unknown, root: string): Config {
     heartbeatMinutes: num(top, "heartbeatMinutes", 30, "config"),
     staleHours: num(top, "staleHours", DEFAULT_STALE_HOURS, "config"),
     stageTimeoutMinutes: num(top, "stageTimeoutMinutes", DEFAULT_STAGE_TIMEOUT_MINUTES, "config"),
+    keepDays: num(top, "keepDays", DEFAULT_KEEP_DAYS, "config"),
     pollSeconds: Math.max(30, num(top, "pollSeconds", 120, "config")),
     usageLimitWaitMinutes: num(top, "usageLimitWaitMinutes", 60, "config"),
     autoMerge: bool(top, "autoMerge", false, "config"),

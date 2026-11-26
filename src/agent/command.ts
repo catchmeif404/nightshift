@@ -38,6 +38,6 @@ export class CommandAgent implements Agent {
       [`${Brand.envPrefix}SESSION_MODE`]: request.mode,
     });
     const result = await execTimed(this.command, [], { cwd: request.cwd, env, input: request.prompt }, request.timeoutMinutes);
-    return { exitCode: result.code, output: `${result.stdout}${result.stderr === "" ? "" : `\n${result.stderr}`}`, timedOut: result.timedOut };
+    return { exitCode: result.code, output: `${result.stdout}${result.stderr === "" ? "" : `\n${result.stderr}`}`, timedOut: result.timedOut, cleaned: result.cleaned };
   }
 }

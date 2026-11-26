@@ -194,6 +194,7 @@ export enum CliCommand {
   Doctor = "doctor",
   Ui = "ui",
   Report = "report",
+  Clean = "clean",
   Version = "version",
   Help = "help",
 }

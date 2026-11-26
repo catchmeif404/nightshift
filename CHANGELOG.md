@@ -2,6 +2,33 @@
 
 All notable changes to `@catchmeif404/nightshift` are listed here, newest first.
 
+## Unreleased
+
+### Added
+
+- **`nightshift clean`, and `doctor` shows what it could free (TK-491).** Lists what is left over and, with `--apply`,
+  deletes it (default is a dry run that deletes nothing): the worktree of a `done` ticket (only when nothing is
+  uncommitted; the branch stays), folders under `worktrees` that git does not know, and the results and work files of
+  `done` tickets older than the new config key `keepDays` (default `14`). The runner's own files (`<id>.build`,
+  `.review`, `.verdict`, ...) are kept, and anything of a `blocked`, `review`, `working` or `ready` ticket is never
+  touched. `nightshift doctor` gains one line: the number of folders git does not know and the space `clean` could free.
+
+### Changed
+
+- **Every agent run (command, Codex, Claude Code) now ends by killing what it left running (TK-491).** After the run
+  has finished and its result files are written, processes still alive in the run's process group (a dev server the
+  agent started, a background job) are killed, whether or not the stage time limit was hit. The log says how many
+  (`cleaned up N leftover process(es)`). `AgentResult` (for your own TypeScript agent) has a new required field
+  `cleaned`: return `0` if you do not clean up.
+
+### Fixed
+
+- **A leftover folder is no longer taken for a worktree (TK-491).** If the ticket's worktree path already existed,
+  the runner used it as it was, even with no git in it (only `.next` / `.vite` build leftovers). Now a folder that git
+  does not know as a worktree of the project's repository is moved aside (renamed `<id>.old-<time>`, never deleted), a
+  new worktree is made, and one log line says so. If moving or making it fails, the ticket is blocked as
+  `misconfigured` with the reason, as before.
+
 ## 0.3.0 - 2026-11-26
 
 ### Breaking

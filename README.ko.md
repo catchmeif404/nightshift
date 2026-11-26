@@ -156,6 +156,13 @@ nightshift ui                      # 로컬 웹 콘솔: 현황, 설정, doctor
 `notify` 채팅과 `notifyCommand`로 보냅니다. `"dailyReportAt": "08:00"`을 넣으면 서비스가 하루 한 번 알아서 보내고,
 콘솔에도 같은 요약 카드가 뜹니다. 자세한 건 [아침 보고](docs/ko/USAGE.md#아침-보고-nightshift-report).
 
+### 정리 (`nightshift clean`)
+
+`nightshift clean`은 남은 것을 나열합니다. `done` 티켓의 worktree(커밋 안 된 변경이 없을 때만), git이 모르는
+`worktrees` 하위 폴더, `keepDays`가 지난 `done` 티켓의 results·work 파일입니다. `--apply`를 붙이기 전에는 아무것도
+지우지 않고, `blocked`·`review` 티켓의 파일은 절대 건드리지 않습니다. `nightshift doctor`가 비울 수 있는 용량을
+보여 줍니다. 자세한 건 [정리](docs/ko/USAGE.md#정리-nightshift-clean).
+
 ### GitHub Issues
 
 ```sh
@@ -174,7 +181,7 @@ Notion은 내장 보드가 있습니다([설정](docs/ko/USAGE.md#notion을-보�
 사유(`needs-human`, `merged`, `cut-off` 등)를 보고 결정 요청 페이지를 여는 식으로 트래커 쪽 동작을 붙일 수 있습니다.
 `language: "ko"`로 두면 러너가 티켓에 남기는 메모가 한국어가 됩니다.
 
-설정 키 전체는 [영어 README](README.md#config-nightshiftjson)에 있습니다. 티켓 본문에 `결과물:`, `확인 방법:` 같은 항목을 꼭 넣게 하려면 `ticketSections`를 쓰세요(기본 꺼짐, [설명](docs/ko/USAGE.md)). 정해진 경로(예: `db/migration/**`)가 바뀌면 검토 결과와 상관없이 사람에게 넘기려면 `gatePaths`를 쓰세요(기본 꺼짐, 같은 문서). 실험 옵션 `reviewHandoff`(기본 꺼짐)를 켜면 개발자가 변경 요약·바뀐 파일·테스트 결과를 인계 파일로 남기고 검토자가 이를 받아 처음부터 다시 둘러보지 않습니다. 프로젝트별 `testCommand`·`testTimeoutMinutes`, 멈춘 티켓을 알리는 `staleHours`, 한 번의 에이전트 실행 시간을 제한하는 `stageTimeoutMinutes`, 서비스와 작업자에 넘기는 `env`도 같은 표와 [사용법](docs/ko/USAGE.md)에 있습니다. 설정만으로 Telegram·Slack·Discord 알림을 켜려면 `notify`를 쓰세요(기본 꺼짐, 비밀값은 환경변수 이름만, 같은 문서).
+설정 키 전체는 [영어 README](README.md#config-nightshiftjson)에 있습니다. 티켓 본문에 `결과물:`, `확인 방법:` 같은 항목을 꼭 넣게 하려면 `ticketSections`를 쓰세요(기본 꺼짐, [설명](docs/ko/USAGE.md)). 정해진 경로(예: `db/migration/**`)가 바뀌면 검토 결과와 상관없이 사람에게 넘기려면 `gatePaths`를 쓰세요(기본 꺼짐, 같은 문서). 실험 옵션 `reviewHandoff`(기본 꺼짐)를 켜면 개발자가 변경 요약·바뀐 파일·테스트 결과를 인계 파일로 남기고 검토자가 이를 받아 처음부터 다시 둘러보지 않습니다. 프로젝트별 `testCommand`·`testTimeoutMinutes`, 멈춘 티켓을 알리는 `staleHours`, 한 번의 에이전트 실행 시간을 제한하는 `stageTimeoutMinutes`, `nightshift clean`이 쓰는 `keepDays`(기본 14일), 서비스와 작업자에 넘기는 `env`도 같은 표와 [사용법](docs/ko/USAGE.md)에 있습니다. 설정만으로 Telegram·Slack·Discord 알림을 켜려면 `notify`를 쓰세요(기본 꺼짐, 비밀값은 환경변수 이름만, 같은 문서).
 
 ## 안전
 

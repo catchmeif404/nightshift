@@ -285,7 +285,31 @@ nightshift report --send                # notify 와 notifyCommand 로도 보내
 시간은 포함하지 않습니다(기다림은 실행과 실행 사이이고, 사용 한도 메시지로 실패한 실행은 시도로 세지 않음). 제한은 티켓
 전체가 아니라 실행 한 번 기준입니다. `0`이면 타이머 없이 예전과 똑같이 돕니다.
 
+제한과 상관없이, 에이전트 실행이 끝나면 러너는 그 실행의 프로세스 그룹에 남은 프로세스(에이전트가 띄운 개발 서버,
+백그라운드 작업)를 정리하고 몇 개였는지 로그에 남깁니다. 결과 파일을 다 쓴 뒤에 하며, `command` 에이전트·Codex·Claude
+Code 모두 같습니다.
+
 두 값 모두 `nightshift ui`의 설정에서 고칠 수 있습니다.
+
+## 정리 (`nightshift clean`)
+
+```sh
+nightshift clean            # 미리 보기: 나열만 하고 지우지 않음
+nightshift clean --apply    # 미리 보기에 나온 것을 실제로 삭제
+```
+
+나열하고, `--apply`면 지우는 대상:
+
+- `done` 티켓의 worktree. git이 보기에 커밋 안 된 변경이 없을 때만 지웁니다(브랜치는 남음).
+- git이 worktree로 알지 못하는 `worktrees` 하위 폴더(빌드 찌꺼기, 러너가 `<id>.old-<시각>`으로 옆으로 옮긴 폴더).
+- `results`·`work` 안에서 `done` 티켓에 속하고(이름이 티켓 id로 시작) `keepDays`(기본 `14`일)가 지난 파일·폴더. 에이전트가
+  남긴 스크린샷·영상 등입니다. 러너 자신의 파일(`<id>.build`, `.review`, `.verdict` …)은 남깁니다.
+
+`blocked`·`review`·`working`·`ready` 티켓에 속한 것은 절대 지우지 않고, 커밋 안 된 변경이 있는 worktree는 남겨 두고
+목록에 표시합니다. `nightshift doctor`가 git이 모르는 폴더 수와 `clean`으로 비울 수 있는 용량을 한 줄로 보여 줍니다.
+
+티켓의 worktree 경로에 git이 모르는 폴더가 있으면 러너는 그것을 쓰지 않습니다. 지우지 않고 옆으로 옮기고
+(`<id>.old-<시각>`) worktree를 새로 만든 뒤 로그에 한 줄 남깁니다. 옮겨진 폴더는 나중에 `clean`으로 지울 수 있습니다.
 
 ## Claude Code 대신 (또는 함께) Codex
 

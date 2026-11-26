@@ -164,6 +164,13 @@ period, `--json` prints it for scripts, `--send` sends it to your `notify` chat 
 `"dailyReportAt": "08:00"` and the service sends it once a day by itself; the console shows the same summary as a card.
 See [the morning report](docs/USAGE.md#the-morning-report-nightshift-report).
 
+### Cleaning up (`nightshift clean`)
+
+`nightshift clean` lists what is left over: worktrees of `done` tickets (only with nothing uncommitted), folders under
+`worktrees` that git does not know, and results and work files of `done` tickets older than `keepDays`. It deletes
+nothing until you add `--apply`, and never touches a `blocked` or `review` ticket's files. `nightshift doctor` shows how
+much it could free. See [cleaning up](docs/USAGE.md#cleaning-up-nightshift-clean).
+
 ### GitHub Issues
 
 ```sh
@@ -194,6 +201,7 @@ This writes the config, creates the `nightshift:*` labels and trusts the signed-
 | `maxRework` | 1 | extra build-and-review rounds after a REWORK |
 | `maxStageTries` | 3 | cut-offs before a ticket is blocked (usage limits are not counted) |
 | `staleHours` | 24 | a ticket left in review or blocked longer than this is listed as stuck in `report`, `status` and the console, and told once on the `stale` notify event (0: off) |
+| `keepDays` | 14 | `nightshift clean` removes the results and work files of a `done` ticket once they are this many days old |
 | `stageTimeoutMinutes` | 0 | one agent run of a stage may take this long; past it the process group is killed and the run counts as cut off (0: no limit) |
 | `usageLimitWaitMinutes` | 60 | how long to wait after a usage limit whose message gives no reset time |
 | `autoMerge` | `false` | merge pull requests that pass review |

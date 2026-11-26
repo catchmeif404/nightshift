@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { Brand } from "./brand.js";
 import { splitIds } from "./board/board.js";
-import { add, daemon, doctor, init, initExtras, logs, runOnce, showReport, status, workSlot } from "./commands.js";
+import { add, clean, daemon, doctor, init, initExtras, logs, runOnce, showReport, status, workSlot } from "./commands.js";
 import { ConfigError, loadConfig } from "./config.js";
 import { DEFAULT_SINCE } from "./report.js";
 import { BoardType, CliCommand, ServiceAction, TicketKind } from "./enums.js";
@@ -30,6 +30,9 @@ Usage: ${Brand.name} <command> [options]
   report [--since 24h|YYYY-MM-DD] [--json] [--send]
                       what finished overnight and what waits for you (from the runner's own records);
                       --send also sends it to notify / notifyCommand
+  clean [--apply]     list what is left over: done tickets' worktrees (nothing uncommitted), folders git does not
+                      know, results and work files of done tickets older than keepDays; --apply deletes them
+                      (blocked and review tickets are never touched)
   doctor              check tools, sign-ins and the config
   ui [--port 4404]    a local web console (127.0.0.1 only): status, settings, doctor
 
@@ -64,6 +67,7 @@ async function main(argv: string[]): Promise<number> {
       since: { type: "string", default: DEFAULT_SINCE },
       json: { type: "boolean", default: false },
       send: { type: "boolean", default: false },
+      apply: { type: "boolean", default: false },
       port: { type: "string", default: String(DEFAULT_PORT) },
       help: { type: "boolean", short: "h", default: false },
     },
@@ -125,6 +129,8 @@ async function main(argv: string[]): Promise<number> {
     }
     case CliCommand.Report:
       return showReport(loadConfig(root), { since: values.since, json: values.json, send: values.send });
+    case CliCommand.Clean:
+      return clean(loadConfig(root), values.apply);
     case CliCommand.Doctor:
       return (await doctor(root)) ? 0 : 1;
     case CliCommand.Ui: {
