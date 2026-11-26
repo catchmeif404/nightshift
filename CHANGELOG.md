@@ -41,7 +41,7 @@ All notable changes to `@catchmeif404/nightshift` are listed here, newest first.
 ### Changed
 
 - `notify.events` now knows two more events, `daily-report` and `stale`. A config that does not list `events` gets all
-  five by default, so it will now also receive stuck-ticket messages; list `events` explicitly to opt out. (TK-486)
+  five by default, so it will now also receive stuck-ticket messages; list `events` explicitly to opt out. (`daily-report` TK-482, `stale` TK-486)
 
 ### Also in this release
 
