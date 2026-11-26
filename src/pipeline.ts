@@ -307,7 +307,8 @@ export class TicketPipeline {
       round = Math.max(1, Number.parseInt(savedRound ?? "1", 10) || 1);
       this.log(`resuming at ${stage} r${round}`);
     } else {
-      this.state.remove(StateFile.Build, StateFile.Verdict, StateFile.Review, StateFile.ReviewPrevious, StateFile.Handoff, StateFile.ReviewBase);
+      // A fresh run (also one a human sent back after an earlier merge-failed) gets its own maxConflictRetries.
+      this.state.remove(StateFile.Build, StateFile.Verdict, StateFile.Review, StateFile.ReviewPrevious, StateFile.Handoff, StateFile.ReviewBase, StateFile.Conflict, StateFile.ConflictRetries, StateFile.ConflictFiles);
       this.state.clearStage();
       this.usage.clear();
     }

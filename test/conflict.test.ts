@@ -3,9 +3,10 @@ import { chmodSync, existsSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { JournalKind, PublishMode, SettleReason, TicketStatus } from "../src/enums.js";
+import { JournalKind, PublishMode, SettleReason, StateFile, TicketStatus } from "../src/enums.js";
 import { TicketOutcome, TicketPipeline } from "../src/pipeline.js";
 import { Journal } from "../src/report.js";
+import { TicketState } from "../src/state.js";
 import { FIXTURES, Sandbox, readyTicket, sandbox, ticketFile, ticketStatus } from "./helpers.js";
 
 interface Merge {
@@ -133,4 +134,18 @@ test("gatePaths judges the files after the conflict resolution: a gated file sen
   assert.equal(await ticketStatus(m.box, id), TicketStatus.Blocked);
   assert.equal(merges(m), 1);
   assert.match(ticketFile(m.box, id), /gated paths/);
+});
+
+test("a fresh run does not inherit the conflict retries an earlier run used up", async () => {
+  const m = merging("CONFLICT OK");
+  const id = await readyTicket(m.box, "Touch work");
+  // Left over from an earlier run that ended in review (merge-failed) and was sent back by a human.
+  const state = new TicketState(m.box.runner.paths.results, id);
+  state.write(StateFile.ConflictRetries, "1");
+  state.write(StateFile.ConflictFiles, "old.txt");
+  m.box.plan(["BUILD_PR", "REVIEW PASS", "CONFLICT_FIX", "REVIEW PASS"]);
+  assert.equal(await runPipeline(m.box, id), TicketOutcome.Settled);
+  assert.equal(await ticketStatus(m.box, id), TicketStatus.Done);
+  assert.equal(merges(m), 2);
+  assert.doesNotMatch(m.box.prompt(3), /old\.txt/);
 });
