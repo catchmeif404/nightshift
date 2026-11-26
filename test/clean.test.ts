@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, utimesSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -45,6 +45,23 @@ test("a folder at the worktree path that git does not know is moved aside and a 
   // A real worktree is returned as it is the second time.
   await ensureWorktree(box.config, project, tree, (l) => lines.push(l));
   assert.equal(lines.length, 1);
+});
+
+test("a registered worktree whose folder lost its .git file is moved aside and made again", async () => {
+  const box = sandbox();
+  const project = box.config.projects[0];
+  assert.ok(project);
+  const tree = await ensureWorktree(box.config, project, worktreeFor(box.runner.paths.worktrees, "TK-464"));
+  rmSync(join(tree.path, ".git"));
+  mkdirSync(join(tree.path, ".vite"));
+  const lines: string[] = [];
+
+  await ensureWorktree(box.config, project, tree, (l) => lines.push(l));
+
+  assert.equal(lines.length, 1);
+  assert.ok(existsSync(join(tree.path, ".git")));
+  assert.equal(existsSync(join(tree.path, ".vite")), false);
+  assert.equal(readdirSync(box.runner.paths.worktrees).filter((n) => n.startsWith("tk-464.old-")).length, 1);
 });
 
 test("a run that ended by itself leaves no background process of its own behind", async () => {

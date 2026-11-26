@@ -38,11 +38,19 @@ function real(path: string): string {
 }
 
 // The folders git knows as worktrees of the repository (the main checkout included), as real paths. Throws when git cannot say.
+// An entry git marks prunable (its folder lost the .git file, e.g. only build leftovers remain) does not count.
 export async function knownWorktrees(config: Config, repo: string): Promise<Set<string>> {
   const result = await run(config.tools.git, ["worktree", "list", "--porcelain"], repo);
   if (result.code !== 0) throw new GitError(`git worktree list in ${repo}: ${result.stderr.trim()}`);
   const prefix = "worktree ";
-  return new Set(result.stdout.split("\n").filter((l) => l.startsWith(prefix)).map((l) => real(l.slice(prefix.length).trim())));
+  const known = new Set<string>();
+  for (const block of result.stdout.split(/\n\s*\n/)) {
+    const lines = block.split("\n");
+    const head = lines.find((l) => l.startsWith(prefix));
+    if (head === undefined || lines.some((l) => l.startsWith("prunable"))) continue;
+    known.add(real(head.slice(prefix.length).trim()));
+  }
+  return known;
 }
 
 // Where a leftover folder is moved to: next to it, with the time in the name.
