@@ -38,6 +38,8 @@ export interface SettledRecord {
   reviewerFiles: number;
   reviewerAdded: number;
   reviewerRemoved: number;
+  // How many times the ticket was sent back to resolve a merge conflict (0: never).
+  conflictRetries: number;
   // The first line of the note the ticket got, shortened.
   note: string;
 }
@@ -104,6 +106,7 @@ export class Journal {
           reviewerFiles: num(e.reviewerFiles),
           reviewerAdded: num(e.reviewerAdded),
           reviewerRemoved: num(e.reviewerRemoved),
+          conflictRetries: num(e.conflictRetries),
           note: text(e.note),
         });
       } catch {
@@ -145,6 +148,7 @@ export interface ReportRow {
   reviewerFiles: number;
   reviewerAdded: number;
   reviewerRemoved: number;
+  conflictRetries: number;
   // Why it is blocked or waits for a human, one line. Empty for passed tickets.
   reason: string;
   at: number;
@@ -281,6 +285,7 @@ export function buildReport(records: JournalRecord[], since: number, until: numb
       reviewerFiles: r.reviewerFiles,
       reviewerAdded: r.reviewerAdded,
       reviewerRemoved: r.reviewerRemoved,
+      conflictRetries: r.conflictRetries,
       reason: group === ReportGroup.Blocked || group === ReportGroup.NeedsHuman ? clip(oneLine(mask(r.note)), REASON_CHARS) : "",
       at: r.at,
     };
@@ -334,7 +339,8 @@ function rowLine(row: ReportRow, say: Messages): string {
   const tokens = row.tokensKnown ? formatTokens(row.tokens) : say.report.tokensUnknown;
   const head = [`[${row.project}]`, row.ticket, row.title].filter((p) => p !== "").join(" ");
   const edit = row.reviewerFiles > 0 ? say.report.reviewerEdit(row.reviewerAdded, row.reviewerRemoved) : "";
-  const tail = [row.where, tokens, formatDuration(row.seconds), edit].filter((p) => p !== "").join(" · ");
+  const conflict = row.conflictRetries > 0 ? say.report.conflictRetries(row.conflictRetries) : "";
+  const tail = [row.where, tokens, formatDuration(row.seconds), edit, conflict].filter((p) => p !== "").join(" · ");
   return `- ${head} - ${tail}${row.reason === "" ? "" : `\n    ${row.reason}`}`;
 }
 

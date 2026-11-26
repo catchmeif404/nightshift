@@ -431,3 +431,17 @@ test("staleHours and stageTimeoutMinutes are edited from the console, whole numb
   assert.deepEqual([config.staleHours, config.stageTimeoutMinutes], [0, 45]);
   assert.equal((await post(b, "/api/settings/save", { edit: { ...form, staleHours: "x" }, revision })).status, 400);
 });
+
+test("maxConflictRetries is edited from the console: default 1, whole numbers from 0 to 5", async () => {
+  const b = await box();
+  const { form, revision } = await formOf(b);
+  assert.equal(form.maxConflictRetries, 1);
+  for (const edit of [{ ...form, maxConflictRetries: -1 }, { ...form, maxConflictRetries: 0.5 }, { ...form, maxConflictRetries: 6 }]) {
+    assert.equal((await post(b, "/api/settings/save", { edit, revision })).status, 422);
+  }
+  const saved = await post(b, "/api/settings/save", { edit: { ...form, maxConflictRetries: 0 }, revision });
+  assert.equal(saved.status, 200, saved.body);
+  assert.deepEqual((JSON.parse(saved.body) as { changed: string[] }).changed, ["maxConflictRetries"]);
+  assert.equal(loadConfig(b.root).maxConflictRetries, 0);
+  assert.equal((await post(b, "/api/settings/save", { edit: { ...form, maxConflictRetries: "x" }, revision })).status, 400);
+});

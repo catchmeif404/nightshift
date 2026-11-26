@@ -1,6 +1,6 @@
 import { Ticket } from "./board/board.js";
 import { ProjectConfig } from "./config.js";
-import { BuildResult, HumanGate, PublishMode, ReleaseResult, Verdict } from "./enums.js";
+import { BuildResult, ConflictResult, HumanGate, PublishMode, ReleaseResult, Verdict } from "./enums.js";
 import { Worktree } from "./git.js";
 
 const GATE_TEXT: Record<HumanGate, string> = {
@@ -35,6 +35,9 @@ export interface StageContext {
   // The handoff the developer wrote and the files the branch changed against the base; read by the runner for the review.
   handoffText: string;
   changedFiles: string[];
+  // The conflict run: the base branch as the worktree sees it and the files that conflict with it (empty: not known).
+  baseRef: string;
+  conflictFiles: string[];
 }
 
 function ticketBlock(ticket: Ticket): string {
@@ -124,6 +127,29 @@ ${publishSteps(ctx)}
 - If the deliverable is a document, not code, write \`${BuildResult.Doc} <url of the document>\`.
 - If you cannot finish (failing tests you cannot fix, missing access, a decision only a human can make), write
   \`${BuildResult.Blocked} <one-line reason>\` and leave what you have committed on the branch.
+`;
+}
+
+export function conflictPrompt(ctx: StageContext): string {
+  const files = ctx.conflictFiles.length === 0 ? "(the runner could not list them: find them with the merge below)" : ctx.conflictFiles.map((f) => `- ${f}`).join("\n");
+  const push = ctx.project.publish === PublishMode.PullRequest ? `, then push the branch \`${ctx.worktree.branch}\` (a normal push, never force)` : "";
+  return `You are the developer for one ticket. Its review passed, but merging the pull request failed because the branch now conflicts with \`${ctx.baseRef}\`. You work alone and unattended: nobody will answer questions.
+
+${ticketBlock(ctx.ticket)}
+
+## What to do
+- Your working directory is a git worktree on branch \`${ctx.worktree.branch}\`. Work only here.
+- Fetch the latest base branch and merge it into this branch: \`git fetch origin\` (if the repository has an origin), then \`git merge ${ctx.baseRef}\`. Do not rebase and do not force push.
+- Resolve every conflict so that both the ticket's change and what the base branch gained since stay working. Do not drop either side to make the conflict go away.
+- Files that conflict with \`${ctx.baseRef}\` right now:
+${files}
+- Run the tests, build and lint for what you touched, commit the merge${push}.
+- Do not commit on \`${ctx.project.baseBranch}\` itself and do not merge the pull request: a reviewer looks at the result again, and the runner merges.
+${rulesBlock(ctx.rules)}
+## When you are done
+The last thing you do is write exactly one line to \`${ctx.resultFile}\`:
+- \`${ConflictResult.Done} <what you resolved and how you verified it>\`.
+- If you cannot resolve it, write \`${ConflictResult.Blocked} <one-line reason>\` and leave the branch as it was (\`git merge --abort\`).
 `;
 }
 

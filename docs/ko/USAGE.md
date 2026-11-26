@@ -100,6 +100,15 @@ push할 수 있는 `origin` 원격이 있어야 합니다. (검토를 PR 댓글�
 `postMergeCommand`를 실행합니다. 머지가 안 되는 PR(충돌, 필수 검사 실패)은 사유와 함께 `review`에 남습니다. 한동안
 지켜보기 전에는 `autoMerge`를 꺼 두세요.
 
+**머지 충돌.** 머지가 실패하면 nightshift가 `gh`의 오류 문구가 아니라 GitHub에 PR의 `mergeable` 상태를 다시 물어 봅니다.
+`CONFLICTING`이고 티켓에 남은 재시도(`maxConflictRetries`, 기본 `1`, `maxRework`와 따로 셈, `0`이면 예전처럼 바로
+`review`)가 있으면 개발자가 같은 worktree에서 한 번 더 돕니다. 프롬프트에 충돌 파일 목록이 들어가고, 최신 기준 브랜치를
+합쳐서(rebase·force push 없이) 충돌을 풀고 push 하게 합니다. 그 뒤 검토를 다시 거치고, `testCommand`를 다시 돌리고(실패하면
+머지 안 함), 충돌을 푼 뒤 바뀐 파일로 `gatePaths`를 다시 판정한 다음 머지를 재시도합니다. 충돌이 아닌 실패(권한, 필수 검사)는
+재시도하지 않습니다. 재시도를 다 썼거나 개발자가 풀 수 없다고 하면 `review`(merge-failed)에 두고 메모에 충돌 파일을
+적습니다. 재시도마다 티켓 메모에 "충돌로 다시 맞춤 1회 (최대 1회) ..."가 남고, `nightshift report`와 journal에
+"충돌로 다시 맞춤 N회"가 표시됩니다.
+
 ## 계속 돌리기
 
 `nightshift run`은 준비된 것을 띄우고 끝나고, 작업자는 백그라운드에서 계속 돕니다. 새 티켓을 가져가고 끊긴 실행을

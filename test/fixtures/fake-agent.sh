@@ -5,6 +5,8 @@
 #   BUILD_BLOCKED  write "BLOCKED <reason>"
 #   REVIEW <word>  write <word> as the verdict (and a review note)
 #   REVIEW_EDIT <word>  like REVIEW, but first commit a 3-line addition to work.txt
+#   CONFLICT_FIX   commit resolved.txt and write "DONE <summary>"
+#   CONFLICT_BLOCKED  write "BLOCKED <reason>"
 #   EXIT <code>    exit with <code> without writing anything
 #   GARBAGE        write a result the runner must reject
 #   RELEASE_DONE / RELEASE_BLOCKED  answer a release run
@@ -48,6 +50,13 @@ case "$action" in
     git -c user.name=fake -c user.email=fake@example.com commit -q -m "fake change $n"
     echo "PR https://example.com/pr/$n" > "$result"
     ;;
+  CONFLICT_FIX)
+    echo "resolved $n" >> resolved.txt
+    git add resolved.txt
+    git -c user.name=fake -c user.email=fake@example.com commit -q -m "resolve conflict $n"
+    echo "DONE merged the base branch in and resolved work.txt" > "$result"
+    ;;
+  CONFLICT_BLOCKED) echo "BLOCKED both sides rewrote work.txt" > "$result" ;;
   SLEEP) sleep 60 ;;
   BUILD_BLOCKED) echo "BLOCKED missing access to the staging database" > "$result" ;;
   RELEASE_DONE) echo "DONE v1.2.3 tagged, health check 200" > "$result" ;;

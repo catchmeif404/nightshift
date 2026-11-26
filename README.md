@@ -199,6 +199,7 @@ This writes the config, creates the `nightshift:*` labels and trusts the signed-
 | `pollSeconds` | 120 | how often the service and `daemon` look for work (at least 30) |
 | `maxSlots` | 3 | projects worked at the same time |
 | `maxRework` | 1 | extra build-and-review rounds after a REWORK |
+| `maxConflictRetries` | 1 | with `autoMerge`, when the merge fails because the pull request conflicts with the base branch (asked of GitHub, not guessed from `gh`'s wording), the developer runs once more in the same worktree to merge the base branch in and resolve the conflicts, then review and `testCommand` run again and the merge is retried. Counted apart from `maxRework`. 0: go to `review` (merge-failed) at once. When the retries are used up the ticket stays in `review` and names the conflicting files |
 | `maxStageTries` | 3 | cut-offs before a ticket is blocked (usage limits are not counted) |
 | `staleHours` | 24 | a ticket left in review or blocked longer than this is listed as stuck in `report`, `status` and the console, and told once on the `stale` notify event (0: off) |
 | `keepDays` | 14 | `nightshift clean` removes the results and work files of a `done` ticket once they are this many days old |

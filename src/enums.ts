@@ -46,6 +46,8 @@ export enum PublishMode {
 export enum Stage {
   Build = "build",
   Review = "review",
+  // The developer runs once more in the same worktree to merge the base branch in and resolve the conflicts that stopped the merge.
+  Conflict = "conflict",
   // A release ticket is one run that follows the project's release rules; it has no review stage.
   Release = "release",
 }
@@ -72,6 +74,19 @@ export enum Verdict {
   NeedsHuman = "NEEDS_HUMAN",
 }
 
+// The first word of the one line a conflict run writes.
+export enum ConflictResult {
+  Done = "DONE",
+  Blocked = "BLOCKED",
+}
+
+// What GitHub says about a pull request's mergeable field.
+export enum Mergeable {
+  Mergeable = "MERGEABLE",
+  Conflicting = "CONFLICTING",
+  Unknown = "UNKNOWN",
+}
+
 // Files kept per ticket under <state>/results/<ticket>.<suffix>
 export enum StateFile {
   Build = "build",
@@ -85,6 +100,12 @@ export enum StateFile {
   Result = "result",
   ResultKind = "kind",
   Handoff = "handoff",
+  // The conflict run's one-line result.
+  Conflict = "conflict",
+  // How many times the ticket was sent back to resolve a merge conflict (a number).
+  ConflictRetries = "conflicts",
+  // The files that conflicted when the ticket was last sent back (one per line).
+  ConflictFiles = "conflict.files",
   // The commit the branch was at when the review stage started; what the reviewer's own edits are measured from.
   ReviewBase = "review.base",
   // The settle time (ms) of the ticket's record the stale notice was sent for; gone when the ticket moves again.

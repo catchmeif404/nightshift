@@ -15,6 +15,8 @@ export const UI_BOARD_TYPES: readonly BoardType[] = [BoardType.LocalMarkdown, Bo
 export const UI_AGENT_TYPES: readonly AgentType[] = [AgentType.ClaudeCode, AgentType.Codex];
 
 const MAX_SLOTS_LIMIT = 16;
+// Upper bound for maxConflictRetries in the console.
+const MAX_CONFLICT_RETRIES = 5;
 const MAX_STALE_HOURS = 24 * 365;
 const MAX_STAGE_TIMEOUT_MINUTES = 24 * 60;
 const MAX_COMMAND_CHARS = 1000;
@@ -37,6 +39,8 @@ export interface SettingsForm {
   builder: AgentForm;
   reviewer: AgentForm;
   maxSlots: number;
+  // Extra developer runs that resolve a merge conflict before the ticket waits in review. 0: none.
+  maxConflictRetries: number;
   // Hours a ticket in review or blocked may sit before it is reported as stuck. 0: off.
   staleHours: number;
   // Minutes one agent run of a stage may take. 0: no limit.
@@ -134,6 +138,7 @@ function formFrom(raw: JsonObject, defaults: Config): SettingsForm {
     builder: agentForm(raw.builder, { type: defaults.builder.type, model: defaults.builder.model }),
     reviewer: agentForm(raw.reviewer, { type: defaults.reviewer.type, model: defaults.reviewer.model }),
     maxSlots: typeof raw.maxSlots === "number" ? raw.maxSlots : defaults.maxSlots,
+    maxConflictRetries: typeof raw.maxConflictRetries === "number" ? raw.maxConflictRetries : defaults.maxConflictRetries,
     staleHours: typeof raw.staleHours === "number" ? raw.staleHours : defaults.staleHours,
     stageTimeoutMinutes: typeof raw.stageTimeoutMinutes === "number" ? raw.stageTimeoutMinutes : defaults.stageTimeoutMinutes,
     ticketSections: texts(raw.ticketSections, []),
@@ -147,7 +152,7 @@ function formFrom(raw: JsonObject, defaults: Config): SettingsForm {
 
 const EDITED_PATHS = new Set([
   "board.type", "board.dir", "board.repos", "board.trustedAuthors",
-  "builder.type", "builder.model", "reviewer.type", "reviewer.model", "maxSlots", "staleHours", "stageTimeoutMinutes",
+  "builder.type", "builder.model", "reviewer.type", "reviewer.model", "maxSlots", "maxConflictRetries", "staleHours", "stageTimeoutMinutes",
   "ticketSections", "gatePaths", "notify.service", "notify.chatId",
 ]);
 
@@ -223,6 +228,9 @@ export function validateEdit(edit: SettingsForm, current: SettingsForm, root: st
   const issues: Issue[] = [];
   if (!Number.isInteger(edit.maxSlots) || edit.maxSlots < 1 || edit.maxSlots > MAX_SLOTS_LIMIT) {
     issues.push(issue(CheckLevel.Fail, "maxSlots", `a whole number from 1 to ${MAX_SLOTS_LIMIT}`));
+  }
+  if (!Number.isInteger(edit.maxConflictRetries) || edit.maxConflictRetries < 0 || edit.maxConflictRetries > MAX_CONFLICT_RETRIES) {
+    issues.push(issue(CheckLevel.Fail, "maxConflictRetries", `a whole number from 0 (none) to ${MAX_CONFLICT_RETRIES}`));
   }
   if (!Number.isInteger(edit.staleHours) || edit.staleHours < 0 || edit.staleHours > MAX_STALE_HOURS) {
     issues.push(issue(CheckLevel.Fail, "staleHours", `a whole number of hours from 0 (off) to ${MAX_STALE_HOURS}`));
@@ -325,6 +333,7 @@ export function applyEdit(raw: JsonObject, edit: SettingsForm, current: Settings
     if (edit[key].model !== current[key].model) set([key, "model"], edit[key].model);
   }
   if (edit.maxSlots !== current.maxSlots) set(["maxSlots"], edit.maxSlots);
+  if (edit.maxConflictRetries !== current.maxConflictRetries) set(["maxConflictRetries"], edit.maxConflictRetries);
   if (edit.staleHours !== current.staleHours) set(["staleHours"], edit.staleHours);
   if (edit.stageTimeoutMinutes !== current.stageTimeoutMinutes) set(["stageTimeoutMinutes"], edit.stageTimeoutMinutes);
   if (!sameList(edit.ticketSections, current.ticketSections)) set(["ticketSections"], edit.ticketSections);

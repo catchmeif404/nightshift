@@ -1,11 +1,16 @@
 import { existsSync, realpathSync, renameSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 import { Brand } from "./brand.js";
 import { Config, ProjectConfig } from "./config.js";
-import { GitHubState } from "./enums.js";
+import { GitHubState, Mergeable } from "./enums.js";
 import { run } from "./exec.js";
 import { safeId } from "./state.js";
+
+// GitHub may still be working out a pull request's mergeable field right after a push.
+const MERGEABLE_ATTEMPTS = 3;
+const MERGEABLE_PAUSE_MS = 2000;
 
 export class GitError extends Error {}
 
@@ -147,11 +152,41 @@ export function gateHits(globs: string[], files: string[]): GateHit[] {
     .filter((hit) => hit.files.length > 0);
 }
 
+// The base branch as the worktree sees it: origin's copy when the repository has an origin.
+export async function baseRef(config: Config, project: ProjectConfig): Promise<string> {
+  return (await succeeds(config, project.repoPath, ["remote", "get-url", "origin"])) ? `origin/${project.baseBranch}` : project.baseBranch;
+}
+
+// What GitHub says about the pull request right now. GitHub works the field out lazily, so UNKNOWN is asked again a few times.
+export async function pullRequestMergeable(config: Config, url: string, pauseMs: number = MERGEABLE_PAUSE_MS): Promise<Mergeable> {
+  let state = Mergeable.Unknown;
+  for (let attempt = 0; attempt < MERGEABLE_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) await sleep(pauseMs);
+    const result = await run(config.tools.gh, ["pr", "view", url, "--json", "mergeable", "-q", ".mergeable"], config.root);
+    const word = result.stdout.trim();
+    state = result.code === 0 ? (Object.values(Mergeable).find((m) => m === word) ?? Mergeable.Unknown) : Mergeable.Unknown;
+    if (state !== Mergeable.Unknown) return state;
+  }
+  return state;
+}
+
+// Files that would conflict if the base branch were merged into the worktree's branch now (git merge-tree, nothing is touched).
+// Empty when there is no conflict or git cannot tell (an old git without --write-tree): the developer then finds them itself.
+export async function conflictFiles(config: Config, project: ProjectConfig, tree: Worktree): Promise<string[]> {
+  const base = await baseRef(config, project);
+  if (base.startsWith("origin/")) await run(config.tools.git, ["fetch", "--quiet", "origin", project.baseBranch], tree.path);
+  const out = await run(config.tools.git, ["merge-tree", "--write-tree", "--name-only", "--no-messages", "-z", base, "HEAD"], tree.path);
+  if (out.code !== 1) return [];
+  // "<tree oid>\0<file>\0<file>\0\0<messages>": the names end at the first empty entry.
+  const parts = out.stdout.split("\0").slice(1);
+  const end = parts.indexOf("");
+  return (end < 0 ? parts : parts.slice(0, end)).filter((f) => f !== "");
+}
+
 // Files the ticket's branch changed against the base branch (since the point it forked), committed or not.
 // Throws GitError when git cannot tell: the caller must not read that as "nothing changed".
 export async function changedFiles(config: Config, project: ProjectConfig, tree: Worktree): Promise<string[]> {
-  const hasOrigin = await succeeds(config, project.repoPath, ["remote", "get-url", "origin"]);
-  const base = hasOrigin ? `origin/${project.baseBranch}` : project.baseBranch;
+  const base = await baseRef(config, project);
   const fork = await git(config, tree.path, ["merge-base", base, "HEAD"]);
   const out = await run(config.tools.git, ["diff", "--name-only", "--no-renames", "-z", fork], tree.path);
   if (out.code !== 0) throw new GitError(`git diff ${fork}: ${out.stderr.trim()}`);

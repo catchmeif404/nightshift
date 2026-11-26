@@ -34,6 +34,7 @@ function settled(ticket: string, hoursAgo: number, over: Partial<SettledRecord> 
     reviewerFiles: 0,
     reviewerAdded: 0,
     reviewerRemoved: 0,
+    conflictRetries: 0,
     note: "",
     ...over,
   };

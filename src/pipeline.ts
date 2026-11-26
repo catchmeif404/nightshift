@@ -5,7 +5,9 @@ import { Board, Ticket } from "./board/board.js";
 import { Config, ProjectConfig, hasProject, projectNamed } from "./config.js";
 import {
   BuildResult,
+  ConflictResult,
   GitHubState,
+  Mergeable,
   JournalKind,
   NotifyEvent,
   PublishMode,
@@ -21,11 +23,11 @@ import {
 } from "./enums.js";
 import { Brand } from "./brand.js";
 import { exec, execShell, run } from "./exec.js";
-import { DiffSize, GitError, NO_DIFF, Worktree, changedFiles, diffSince, ensureWorktree, gateHits, gitCommonDir, headCommit, mergePullRequest, pullRequestState, removeWorktree, worktreeFor } from "./git.js";
+import { DiffSize, GitError, NO_DIFF, Worktree, baseRef, changedFiles, conflictFiles, diffSince, ensureWorktree, gateHits, gitCommonDir, headCommit, mergePullRequest, pullRequestMergeable, pullRequestState, removeWorktree, worktreeFor } from "./git.js";
 import { Logger, clip, mask, oneLine } from "./log.js";
 import { sendNotification, wants } from "./notify.js";
 import { Messages, messagesFor } from "./messages.js";
-import { RESUME_PROMPT, StageContext, buildPrompt, releasePrompt, reviewPrompt } from "./prompts.js";
+import { RESUME_PROMPT, StageContext, buildPrompt, conflictPrompt, releasePrompt, reviewPrompt } from "./prompts.js";
 import { Slots, StatePaths, TicketState, UsageLimits } from "./state.js";
 import { detectLimit } from "./limits.js";
 import { StageUsage, UsageLog, readSessionUsage, reviewerEdits, totalUsage, usageNote, weighted } from "./usage.js";
@@ -76,9 +78,20 @@ export function parseReleaseLine(line: string): Array<ParsedLine<ReleaseResult>>
   return kind === undefined ? [] : [{ kind, value }];
 }
 
+export function parseConflictLine(line: string): Array<ParsedLine<ConflictResult>> {
+  const { head, value } = splitLine(line);
+  const kind = Object.values(ConflictResult).find((k) => k === head);
+  return kind === undefined ? [] : [{ kind, value }];
+}
+
 export function parseVerdict(line: string): Verdict[] {
   const word = line.trim();
   return Object.values(Verdict).filter((v) => v === word);
+}
+
+// A passed ticket either settles or goes back to the developer to resolve a merge conflict.
+enum MergeRetry {
+  Conflict = "conflict",
 }
 
 // Which built-in notification a settled ticket triggers; reasons not listed send nothing.
@@ -186,6 +199,7 @@ export class TicketPipeline {
         reviewerFiles: edits.files,
         reviewerAdded: edits.added,
         reviewerRemoved: edits.removed,
+        conflictRetries: this.conflictRetries(),
         note: clip(oneLine(mask(note)), 300),
       });
     } catch (error) {
@@ -261,6 +275,8 @@ export class TicketPipeline {
       handoffFile: this.state.path(StateFile.Handoff),
       handoffText: "",
       changedFiles: [],
+      baseRef: "",
+      conflictFiles: [],
     };
   }
 
@@ -327,6 +343,12 @@ export class TicketPipeline {
         stage = Stage.Review;
       }
 
+      if (stage === Stage.Conflict) {
+        const unresolved = await this.resolveConflict(project, tree, round, rules);
+        if (unresolved !== undefined) return unresolved;
+        stage = Stage.Review;
+      }
+
       const result = this.state.read(StateFile.Result);
       const resultKind = this.state.read(StateFile.ResultKind);
       if (!this.state.has(StateFile.Verdict)) {
@@ -363,7 +385,12 @@ export class TicketPipeline {
         case Verdict.Pass: {
           // A PASS is only a verdict until the runner's own check agrees.
           const failure = await this.runCheck(project, tree);
-          if (failure === undefined) return this.passed(project, tree, resultKind, result, review);
+          if (failure === undefined) {
+            const outcome = await this.passed(project, tree, resultKind, result, review, round);
+            if (outcome !== MergeRetry.Conflict) return outcome;
+            stage = Stage.Conflict;
+            continue;
+          }
           if (!lastRound) {
             this.state.write(StateFile.Review, `${review}\n\n${this.say.checkFailedNotes(failure.command, failure.timeoutMinutes, failure.output)}`.trim());
             this.sendBack(round);
@@ -464,13 +491,13 @@ export class TicketPipeline {
     return this.settle(TicketStatus.Blocked, SettleReason.NeedsHuman, note);
   }
 
-  private async passed(project: ProjectConfig, tree: Worktree, kind: string, result: string, review: string): Promise<TicketOutcome> {
+  private async passed(project: ProjectConfig, tree: Worktree, kind: string, result: string, review: string, round: number): Promise<TicketOutcome | MergeRetry> {
     const gated = await this.gatedByPaths(project, tree, result, review);
     if (gated !== undefined) return gated;
     if (kind === BuildResult.PullRequest && this.r.config.autoMerge) {
       const error = await mergePullRequest(this.r.config, result);
       if (error !== "") {
-        return this.settle(TicketStatus.Review, SettleReason.MergeFailed, this.say.mergeFailed(clip(oneLine(error), 300), result, review));
+        return this.mergeFailed(project, tree, result, review, round, error);
       }
       if ((await pullRequestState(this.r.config, result)) === GitHubState.Merged) {
         await removeWorktree(this.r.config, project, tree);
@@ -484,6 +511,64 @@ export class TicketPipeline {
     }
     const where = project.publish === PublishMode.Branch && kind === BuildResult.Branch ? this.say.branch(result) : result;
     return this.settle(TicketStatus.Review, SettleReason.ReadyToMerge, this.say.readyToMerge(where, review));
+  }
+
+  // The merge failed. A conflict (asked of GitHub, not read from gh's wording) goes back to the developer while
+  // maxConflictRetries lasts; anything else, and a conflict once the retries are used up, waits in review.
+  private async mergeFailed(project: ProjectConfig, tree: Worktree, result: string, review: string, round: number, error: string): Promise<TicketOutcome | MergeRetry> {
+    const max = this.r.config.maxConflictRetries;
+    const cause = clip(oneLine(error), 300);
+    if (max <= 0 || (await pullRequestMergeable(this.r.config, result)) !== Mergeable.Conflicting) {
+      return this.settle(TicketStatus.Review, SettleReason.MergeFailed, this.say.mergeFailed(cause, result, review));
+    }
+    const used = this.conflictRetries();
+    const files = await this.conflictFilesOf(project, tree);
+    if (used >= max) {
+      return this.settle(TicketStatus.Review, SettleReason.MergeFailed, this.say.mergeConflicted(cause, files, used, result, review));
+    }
+    this.state.write(StateFile.ConflictRetries, String(used + 1));
+    this.state.write(StateFile.ConflictFiles, files.join("\n"));
+    this.state.remove(StateFile.Conflict, StateFile.Verdict, StateFile.ReviewBase);
+    this.state.nextStage(Stage.Conflict, round);
+    this.log(`merge conflict: sending the developer back (${used + 1}/${max}): ${clip(oneLine(files.join(", ")), 200)}`);
+    await this.r.board.addNote(this.ticket.id, this.say.conflictSentBack(used + 1, max, files));
+    return MergeRetry.Conflict;
+  }
+
+  private conflictRetries(): number {
+    return Number.parseInt(this.state.read(StateFile.ConflictRetries), 10) || 0;
+  }
+
+  // Files that conflict with the base branch. A git failure leaves the list empty: the developer then finds them itself.
+  private async conflictFilesOf(project: ProjectConfig, tree: Worktree): Promise<string[]> {
+    try {
+      return await conflictFiles(this.r.config, project, tree);
+    } catch (error) {
+      this.log(`conflict files unknown (${clip(oneLine(errorText(error)), 200)})`);
+      return [];
+    }
+  }
+
+  // The conflict stage: the developer merges the base branch in and resolves the conflicts. Returns an outcome when the
+  // ticket left the runner's hands (or paused); nothing when the review should run again.
+  private async resolveConflict(project: ProjectConfig, tree: Worktree, round: number, rules: string): Promise<TicketOutcome | undefined> {
+    if (!this.state.has(StateFile.Conflict)) {
+      const ctx = this.context(project, tree, round, rules, StateFile.Conflict);
+      ctx.baseRef = await baseRef(this.r.config, project);
+      ctx.conflictFiles = this.state.read(StateFile.ConflictFiles).split("\n").filter((f) => f !== "");
+      const outcome = await this.runStage(Stage.Conflict, round, this.r.builder, this.r.config.builder.model, conflictPrompt(ctx), tree);
+      if (outcome !== StageOutcome.Finished) return this.pausedOrSettled(outcome);
+    }
+    const fix = parseConflictLine(this.state.firstLine(StateFile.Conflict))[0];
+    if (fix === undefined) return this.reject(StateFile.Conflict, "conflict run left no result or an unrecognized one");
+    if (fix.kind === ConflictResult.Blocked) {
+      const files = this.state.read(StateFile.ConflictFiles).split("\n").filter((f) => f !== "");
+      const reason = this.say.conflictUnresolved(fix.value || this.say.noReason);
+      return this.settle(TicketStatus.Review, SettleReason.MergeFailed, this.say.mergeConflicted(reason, files, this.conflictRetries(), this.state.read(StateFile.Result), this.state.read(StateFile.Review)));
+    }
+    this.state.remove(StateFile.Conflict, StateFile.Verdict, StateFile.ReviewBase);
+    this.state.nextStage(Stage.Review, round);
+    return undefined;
   }
 
   // A post-merge check is evidence for the ticket note only; it never undoes a merge.

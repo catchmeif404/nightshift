@@ -58,7 +58,7 @@ var STR = {
     tickets: "Tickets", waiting: "Waiting because", log: "Recent log", board: "Board", noTickets: "none",
     settings: "Settings", testCommand: "Runner check command (empty: off)", projects: "Projects: repository path", boardH: "Board", boardType: "Board type", boardDir: "Ticket folder (inside the config root)",
     repos: "GitHub repositories (owner/name, one per line)", trusted: "Trusted GitHub logins (one per line)",
-    builder: "Developer", reviewer: "Reviewer", agentType: "Executor", model: "Model (empty: the executor's default)", maxSlots: "Concurrent workers (1-16)", staleHours: "Stuck-ticket alert after (hours in review or blocked, 0 = off)", stageTimeout: "Stage time limit (minutes per agent run, 0 = no limit)",
+    builder: "Developer", reviewer: "Reviewer", agentType: "Executor", model: "Model (empty: the executor's default)", maxSlots: "Concurrent workers (1-16)", maxConflictRetries: "Merge-conflict retries per ticket (developer runs again to resolve it, 0 = go to review at once)", staleHours: "Stuck-ticket alert after (hours in review or blocked, 0 = off)", stageTimeout: "Stage time limit (minutes per agent run, 0 = no limit)",
     extras: "Ticket form, gated paths, notifications", sections: "Ticket form: required labels (one per line, empty = off)",
     gates: "Gated paths: globs that always need a human (one per line, empty = off)", notifyService: "Chat notifications", notifyOff: "none (off)",
     chatId: "Telegram chat id (Telegram only)", notifyHint: "The bot token or webhook URL is never set here: export the environment variable named in the file where the runner runs.",
@@ -81,7 +81,7 @@ var STR = {
     tickets: "티켓", waiting: "대기 원인", log: "최근 로그", board: "보드", noTickets: "없음",
     settings: "설정", testCommand: "러너 확인 명령 (비우면 끔)", projects: "프로젝트: 저장소 경로", boardH: "보드", boardType: "보드 종류", boardDir: "티켓 폴더 (설정 root 안)",
     repos: "GitHub 저장소 (owner/name, 한 줄에 하나)", trusted: "신뢰할 GitHub 로그인 (한 줄에 하나)",
-    builder: "개발자", reviewer: "검토자", agentType: "실행기", model: "모델 (비우면 실행기 기본값)", maxSlots: "동시 작업 수 (1-16)", staleHours: "멈춘 티켓 알림 기준 (리뷰·막힘 상태로 머문 시간, 0 = 끔)", stageTimeout: "단계 시간 제한 (에이전트 한 번 실행당 분, 0 = 제한 없음)",
+    builder: "개발자", reviewer: "검토자", agentType: "실행기", model: "모델 (비우면 실행기 기본값)", maxSlots: "동시 작업 수 (1-16)", maxConflictRetries: "머지 충돌 재시도 (티켓당 개발자가 다시 돌아 충돌을 풂, 0 = 바로 리뷰로)", staleHours: "멈춘 티켓 알림 기준 (리뷰·막힘 상태로 머문 시간, 0 = 끔)", stageTimeout: "단계 시간 제한 (에이전트 한 번 실행당 분, 0 = 제한 없음)",
     extras: "티켓 양식, 경로 승인, 알림", sections: "티켓 양식: 필수 항목 이름 (한 줄에 하나, 비우면 꺼짐)",
     gates: "경로 승인: 항상 사람이 봐야 하는 글롭 (한 줄에 하나, 비우면 꺼짐)", notifyService: "채팅 알림", notifyOff: "없음 (꺼짐)",
     chatId: "Telegram 채팅 ID (Telegram만)", notifyHint: "봇 토큰이나 웹훅 URL은 여기서 정하지 않습니다. 파일에 적힌 환경변수를 러너가 도는 곳에서 export 하세요.",
@@ -230,6 +230,7 @@ function renderSettings(v) {
   });
   box.append(h("div", { class: "grid" },
     field("maxSlots", t("maxSlots"), h("input", { type: "number", min: "1", max: "16", value: f.maxSlots }), "maxSlots"),
+    field("maxConflictRetries", t("maxConflictRetries"), h("input", { type: "number", min: "0", max: "5", step: "1", value: f.maxConflictRetries }), "maxConflictRetries"),
     field("staleHours", t("staleHours"), h("input", { type: "number", min: "0", step: "1", value: f.staleHours }), "staleHours"),
     field("stageTimeoutMinutes", t("stageTimeout"), h("input", { type: "number", min: "0", step: "1", value: f.stageTimeoutMinutes }), "stageTimeoutMinutes")));
   box.append(h("h3", {}, t("extras")));
@@ -256,6 +257,7 @@ function collect() {
     builder: { type: $("builderType").value, model: $("builderModel").value.trim() },
     reviewer: { type: $("reviewerType").value, model: $("reviewerModel").value.trim() },
     maxSlots: Number($("maxSlots").value),
+    maxConflictRetries: Number($("maxConflictRetries").value),
     staleHours: Number($("staleHours").value),
     stageTimeoutMinutes: Number($("stageTimeoutMinutes").value),
     ticketSections: lines($("ticketSections").value),

@@ -106,6 +106,17 @@ With `"autoMerge": true` nightshift merges a passed pull request itself (`gh pr 
 the issue and runs `postMergeCommand`. A pull request that cannot be merged (conflict, failing required checks) stays
 in `review` with the reason. Leave `autoMerge` off until you have watched it for a while.
 
+**Merge conflicts.** When the merge fails, nightshift asks GitHub for the pull request's `mergeable` state (it does not
+rely on `gh`'s wording). If it is `CONFLICTING` and the ticket has retries left (`maxConflictRetries`, default `1`,
+counted apart from `maxRework`; `0` goes to `review` at once as before), the developer runs once more in the same
+worktree. Its prompt lists the conflicting files and asks it to merge the latest base branch in (no rebase, no force
+push), resolve the conflicts and push. The review then runs again, then `testCommand` (a failure there means no merge),
+then `gatePaths` is judged on the files changed after the resolution, then the merge is tried again. Other failures
+(permissions, required checks) are never retried. When the retries are used up, or the developer reports it cannot
+resolve the conflict, the ticket stays in `review` (merge-failed) and the note names the conflicting files. Each retry adds a
+ticket note ("re-fitted after merge conflict 1x (limit 1) ..."), and `nightshift report` and the journal show
+"re-fitted after merge conflict N×".
+
 ## Running continuously
 
 `nightshift run` starts what is ready and exits; workers keep going in the background. To have new tickets picked up

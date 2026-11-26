@@ -6,6 +6,15 @@ All notable changes to `@catchmeif404/nightshift` are listed here, newest first.
 
 ### Added
 
+- **A merge conflict is re-fitted and retried instead of stopping in review (TK-492).** With `autoMerge`, when `gh pr
+  merge` fails, nightshift asks GitHub for the pull request's `mergeable` state (not `gh`'s wording). On a conflict the
+  developer runs once more in the same worktree (new `conflict` stage; the prompt lists the conflicting files) to merge
+  the latest base branch in and resolve them; then review, `testCommand` and `gatePaths` (judged on the files changed
+  after the resolution) run again and the merge is retried. New config key `maxConflictRetries` (default `1`, `0` =
+  straight to `review` as before; counted apart from `maxRework`; also in the console settings). When the retries are used
+  up the ticket stays in `review` (merge-failed) and the note names the conflicting files. Other merge failures are never
+  retried. The ticket note, `nightshift report` and the journal show "re-fitted after merge conflict N×" (EN/KO).
+  Journal lines gain `conflictRetries`.
 - **`nightshift clean`, and `doctor` shows what it could free (TK-491).** Lists what is left over and, with `--apply`,
   deletes it (default is a dry run that deletes nothing): the worktree of a `done` ticket (only when nothing is
   uncommitted; the branch stays), folders under `worktrees` that git does not know, and the results and work files of
