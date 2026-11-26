@@ -53,7 +53,7 @@ It grew out of the runner that builds our own products, and it now runs them. It
 **225 tickets** through build and review in its first 12 days; **84%** passed review on the first round
 (the pass is the AI reviewer's verdict, not a human's).
 
-> Status: early (0.1). Agents: **Claude Code** (default) and **Codex**, in either role, mixed as you like.
+> Status: early (0.3). Agents: **Claude Code** (default) and **Codex**, in either role, mixed as you like.
 > Boards: **local markdown** (default), **GitHub Issues**, **Notion**, and any other tracker through a small script.
 
 **Docs:** [Install](docs/INSTALL.md) · [Getting started (10 minutes)](docs/GETTING-STARTED.md) · [Usage and troubleshooting](docs/USAGE.md)
@@ -201,7 +201,8 @@ This writes the config, creates the `nightshift:*` labels and trusts the signed-
 | `humanGates` | all five | `money`, `legal`, `destructive-data`, `outward-facing`, `product-direction` |
 | `ticketSections` | `[]` | labels such as `["Deliverable","Check","Out of scope"]`; a ticket body without a `Label: text` line for each is blocked before it runs, and the prompts list them |
 | `gatePaths` | `[]` | globs such as `["db/migration/**", "**/*.sql"]`; if the change against the base branch touches a file matching one, a passing review becomes `NEEDS_HUMAN` and nothing is merged, even with `autoMerge` |
-| `notify` | off | built-in Telegram / Slack / Discord messages: `service`, `events` (`review`, `blocked`, `merged`), env-var names `botTokenEnv` / `webhookUrlEnv` (never the secret), `chatId`; see [Usage](docs/USAGE.md) |
+| `notify` | off | built-in Telegram / Slack / Discord messages: `service`, `events` (`review`, `blocked`, `merged`, `daily-report`, `stale`; default all five), env-var names `botTokenEnv` / `webhookUrlEnv` (never the secret), `chatId`; see [Usage](docs/USAGE.md) |
+| `env` | `{}` | environment variables for the service, the workers and the agent, `git` and `gh` they start, e.g. `{"GH_CONFIG_DIR": "..."}`; never put secrets here (see [running continuously](docs/USAGE.md#running-continuously)) |
 | `notifyCommand` | none | gets one message as its last argument when a ticket is blocked |
 | `workerDoneCommand` | none | shell command run each time a worker finishes |
 | `language` | `en` | language of the notes on tickets: `en` or `ko` |
@@ -249,7 +250,7 @@ nightshift is an independent project and is not affiliated with Anthropic, OpenA
 ## Be with us
 
 > [!TIP]
-> It's early (0.1). Trying it and telling us where it breaks is the most useful thing you can do right now.
+> It's early (0.3). Trying it and telling us where it breaks is the most useful thing you can do right now.
 >
 > <table>
 > <tr><td width="140"><a href="https://github.com/catchmeif404/nightshift/issues"><img alt="Open an issue" src="https://img.shields.io/github/issues/catchmeif404/nightshift?label=Issues&logo=github&style=flat-square&labelColor=black&color=2f6beb"></a></td><td>Where it breaks, what you need, how you run it. Every issue is read.</td></tr>

@@ -123,7 +123,7 @@ nightshift service uninstall
 에이전트·`git`·`gh` 의 실행 환경에 합쳐 넣습니다. 비밀 값은 넣지 마세요: 이 파일과 서비스 파일은 평문입니다. 토큰은 `gh`
 로그인이나 `tokenEnv` / `botTokenEnv` / `webhookUrlEnv` 가 가리키는 환경 변수에 두세요.
 
-**시작 전 점검**: `publish: "pull-request"` 인 프로젝트는 `doctor` 가 `origin` 이 있는지, 지금 활성인 `gh` 계정이 그 저장소에
+**시작 전 점검**: `publish: "pr"` 인 프로젝트는 `doctor` 가 `origin` 이 있는지, 지금 활성인 `gh` 계정이 그 저장소에
 push 할 수 있는지(`gh api repos/<owner>/<repo>` 의 `permissions.push`)를 확인합니다. `publish: "branch"` 는 원격이 없어도
 됩니다. 배차도 프로젝트 워커를 시작하기 직전에 같은 점검을 합니다. 실패하면 개발을 시작하지 않고 그 프로젝트의 ready
 티켓은 그대로 둡니다. 사유는 로그에 남고, `notifyCommand` 와 채팅 알림(`blocked` 이벤트)으로 한 번만 갑니다. 문제가 풀렸다가

@@ -1,6 +1,6 @@
 {
   "name": "@catchmeif404/nightshift",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "An unattended dev queue: tickets go in, one model builds, another reviews, and only human calls are left for you.",
   "keywords": [
     "claude-code",
@@ -33,7 +33,8 @@
     "docs/*.md",
     "docs/ko",
     "docs/images/*.svg",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=20"
