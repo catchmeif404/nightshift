@@ -75,6 +75,8 @@ export interface Config {
   reviewer: AgentConfig;
   maxSlots: number;
   maxRework: number;
+  // Extra developer runs that merge the base branch in and resolve a conflict which stopped autoMerge. Counted apart from maxRework. 0: go to review at once.
+  maxConflictRetries: number;
   maxStageTries: number;
   maxBatches: number;
   resumeCooldownMinutes: number;
@@ -354,6 +356,7 @@ export function parseConfig(raw: unknown, root: string): Config {
     reviewer: agent(optObject(top, "reviewer", "config"), "reviewer", "opus", root),
     maxSlots: num(top, "maxSlots", 3, "config"),
     maxRework: num(top, "maxRework", 1, "config"),
+    maxConflictRetries: num(top, "maxConflictRetries", 1, "config"),
     maxStageTries: num(top, "maxStageTries", 3, "config"),
     maxBatches: num(top, "maxBatches", 5, "config"),
     resumeCooldownMinutes: num(top, "resumeCooldownMinutes", 15, "config"),

@@ -18,6 +18,8 @@ export interface ReportWords {
   sent: string;
   // The "reviewer edit +12/-3" mark on a ticket row.
   reviewerEdit(added: number, removed: number): string;
+  // "Re-fitted after merge conflicts N times" on a report row.
+  conflictRetries(count: number): string;
   // The stuck-ticket section: its heading, one row and the second line of the chat notice.
   staleHeader(count: number, hours: number): string;
   staleRow(project: string, ticket: string, title: string, status: string, stuck: string): string;
@@ -40,6 +42,12 @@ export interface Messages {
   gatePaths(hits: GateHit[], result: string, review: string): string;
   gatePathsUnknown(error: string, result: string): string;
   mergeFailed(error: string, result: string, review: string): string;
+  // The merge failed on a conflict and the retries are used up (or the developer could not resolve it). `used` retries were made.
+  mergeConflicted(error: string, files: string[], used: number, result: string, review: string): string;
+  // Note on the ticket when the developer is sent back to resolve a merge conflict. `retry` of `max`.
+  conflictSentBack(retry: number, max: number, files: string[]): string;
+  // The developer's conflict run said it could not resolve it.
+  conflictUnresolved(reason: string): string;
   merged(result: string, review: string, postMerge: string): string;
   docAccepted(result: string, review: string): string;
   readyToMerge(where: string, review: string): string;
@@ -71,6 +79,10 @@ export interface Messages {
 
 function hitList(hits: GateHit[]): string {
   return hits.map((h) => `${h.glob} -> ${h.files.join(", ")}`).join("; ");
+}
+
+function fileList(files: string[]): string {
+  return files.length === 0 ? "?" : files.join(", ");
 }
 
 function withReview(review: string, label: string): string {
@@ -112,6 +124,7 @@ const REPORT_EN: ReportWords = {
   sendNothing: "nothing to send with: set notify.service or notifyCommand in the config.",
   sent: "report sent.",
   reviewerEdit: (added, removed) => `reviewer edit +${added}/-${removed}`,
+  conflictRetries: (count) => `re-fitted after merge conflict ${count}x`,
   staleHeader: (count, hours) => `Stuck tickets (${count}): in review or blocked for over ${hours}h`,
   staleRow: (project, ticket, title, status, stuck) => `- [${project}] ${ticket} ${title} - ${status} · stuck ${stuck}`,
   staleNotice: (status, stuck, reason) => `${status} for ${stuck}${reason === "" ? "" : `: ${reason}`}`,
@@ -136,6 +149,7 @@ const REPORT_KO: ReportWords = {
   sendNothing: "보낼 곳이 없습니다: 설정에 notify.service 또는 notifyCommand 를 넣으세요.",
   sent: "보고를 보냈습니다.",
   reviewerEdit: (added, removed) => `검토자 수정 +${added}/-${removed}`,
+  conflictRetries: (count) => `충돌로 다시 맞춤 ${count}회`,
   staleHeader: (count, hours) => `멈춘 티켓 (${count}): ${hours}시간 넘게 리뷰 또는 막힘 상태`,
   staleRow: (project, ticket, title, status, stuck) => `- [${project}] ${ticket} ${title} - ${status} · 멈춘 지 ${stuck}`,
   staleNotice: (status, stuck, reason) => `${status} 상태로 ${stuck} 동안 멈춤${reason === "" ? "" : `: ${reason}`}`,
@@ -161,6 +175,10 @@ const english: Messages = {
   gatePaths: (hits, result, review) => `review passed, but the change touches gated paths, so a human must look before merging (${result}). Matched: ${hitList(hits)}.${withReview(review, "Review")}`,
   gatePathsUnknown: (e, result) => `could not list the changed files to check gatePaths, so a human must look before merging (${result}): ${e}`,
   mergeFailed: (e, result, review) => `review passed but the merge failed (${e}): ${result}.${withReview(review, "Review")}`,
+  mergeConflicted: (e, files, used, result, review) =>
+    `review passed but the merge failed on a conflict (${e}); re-fitted after merge conflict ${used}x and it still conflicts. Conflicting files: ${fileList(files)}: ${result}.${withReview(review, "Review")}`,
+  conflictSentBack: (retry, max, files) => `re-fitted after merge conflict ${retry}x (limit ${max}): the developer is sent back to merge the base branch in. Conflicting files: ${fileList(files)}.`,
+  conflictUnresolved: (reason) => `the developer could not resolve the merge conflict: ${reason}`,
   merged: (result, review, post) => `merged ${result}.${withReview(review, "Review")}${post}`,
   docAccepted: (result, review) => `document accepted: ${result}.${withReview(review, "Review")}`,
   readyToMerge: (where, review) => `review passed, ready for you to merge: ${where}.${withReview(review, "Review")}`,
@@ -217,6 +235,10 @@ const korean: Messages = {
   gatePaths: (hits, result, review) => `검토는 통과했지만 지정 경로(gatePaths)가 바뀌어 머지 전에 사람이 봐야 함 (${result}). 맞은 글롭 -> 파일: ${hitList(hits)}.${withReview(review, "검토")}`,
   gatePathsUnknown: (e, result) => `바뀐 파일 목록을 얻지 못해 gatePaths를 검사할 수 없음. 머지 전에 사람이 봐야 함 (${result}): ${e}`,
   mergeFailed: (e, result, review) => `검토는 통과했지만 머지 실패 (${e}): ${result}.${withReview(review, "검토")}`,
+  mergeConflicted: (e, files, used, result, review) =>
+    `검토는 통과했지만 충돌로 머지 실패 (${e}). 충돌로 다시 맞춤 ${used}회 했지만 여전히 충돌합니다. 충돌 파일: ${fileList(files)}: ${result}.${withReview(review, "검토")}`,
+  conflictSentBack: (retry, max, files) => `충돌로 다시 맞춤 ${retry}회 (최대 ${max}회): 개발자를 다시 돌려 기준 브랜치를 합치게 함. 충돌 파일: ${fileList(files)}.`,
+  conflictUnresolved: (reason) => `개발자가 머지 충돌을 풀지 못함: ${reason}`,
   merged: (result, review, post) => `머지함: ${result}.${withReview(review, "검토")}${post}`,
   docAccepted: (result, review) => `문서 결과 통과: ${result}.${withReview(review, "검토")}`,
   readyToMerge: (where, review) => `검토 통과, 머지만 남음: ${where}.${withReview(review, "검토")}`,

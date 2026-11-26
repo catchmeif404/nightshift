@@ -36,6 +36,8 @@ function context(overrides: Partial<StageContext> = {}): StageContext {
     handoffFile: "/s/t-1.handoff",
     handoffText: "",
     changedFiles: [],
+    baseRef: "main",
+    conflictFiles: [],
     ...overrides,
   };
 }

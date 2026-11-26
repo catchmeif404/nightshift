@@ -215,12 +215,12 @@ interface UsageWords {
 
 const WORDS: Record<NoteLanguage, UsageWords> = {
   [NoteLanguage.English]: {
-    stage: { [Stage.Build]: "build", [Stage.Review]: "review", [Stage.Release]: "release" },
+    stage: { [Stage.Build]: "build", [Stage.Review]: "review", [Stage.Conflict]: "conflict", [Stage.Release]: "release" },
     total: "total",
     unknown: "tokens unknown",
   },
   [NoteLanguage.Korean]: {
-    stage: { [Stage.Build]: "개발", [Stage.Review]: "검토", [Stage.Release]: "출시" },
+    stage: { [Stage.Build]: "개발", [Stage.Review]: "검토", [Stage.Conflict]: "충돌", [Stage.Release]: "출시" },
     total: "합계",
     unknown: "토큰 알 수 없음",
   },
