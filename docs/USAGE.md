@@ -130,7 +130,7 @@ reinstall (never edit the service file by hand). `run`, `work` and `daemon` also
 agent, `git` and `gh` they start. Do not put secrets here: the file and the service file are plain text. Keep tokens in
 the `gh` login, or in an environment variable named by `tokenEnv` / `botTokenEnv` / `webhookUrlEnv`.
 
-**Checks before starting**: for a project with `publish: "pull-request"`, `doctor` checks that `origin` exists and
+**Checks before starting**: for a project with `publish: "pr"`, `doctor` checks that `origin` exists and
 that the active `gh` account can push to that repository (`gh api repos/<owner>/<repo>`, `permissions.push`). A project
 with `publish: "branch"` needs no remote. The dispatch runs the same check right before it starts a project's worker.
 If it fails, no work starts and the project's ready tickets stay as they are. The reason goes to the log and, once, to

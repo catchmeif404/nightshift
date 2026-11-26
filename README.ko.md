@@ -51,7 +51,7 @@ nightshift는 내 컴퓨터에서 도는 무인 개발 큐입니다. 보드(마�
 우리 제품을 만드는 러너에서 나왔고, 지금은 그 러너 자리를 대신해 우리 제품을 만들고 있습니다. 이전 bash 러너는 처음
 12일 동안 **티켓 225개**를 만들고 검토했고, **84%**가 1회차 검토를 통과했습니다(통과는 AI 검토자의 판정입니다).
 
-> 상태: 초기(0.1). 에이전트: **Claude Code**(기본)와 **Codex**, 두 역할 어디에나, 섞어서도.
+> 상태: 초기(0.3). 에이전트: **Claude Code**(기본)와 **Codex**, 두 역할 어디에나, 섞어서도.
 > 보드: **로컬 마크다운**(기본), **GitHub Issues**, **Notion**, 그 밖의 트래커는 작은 스크립트로.
 
 **문서:** [설치](docs/ko/INSTALL.md) · [처음 시작하기 (10분)](docs/ko/GETTING-STARTED.md) · [사용법·문제 해결](docs/ko/USAGE.md)
@@ -174,7 +174,7 @@ Notion은 내장 보드가 있습니다([설정](docs/ko/USAGE.md#notion을-보�
 사유(`needs-human`, `merged`, `cut-off` 등)를 보고 결정 요청 페이지를 여는 식으로 트래커 쪽 동작을 붙일 수 있습니다.
 `language: "ko"`로 두면 러너가 티켓에 남기는 메모가 한국어가 됩니다.
 
-설정 키 전체는 [영어 README](README.md#config-nightshiftjson)에 있습니다. 티켓 본문에 `결과물:`, `확인 방법:` 같은 항목을 꼭 넣게 하려면 `ticketSections`를 쓰세요(기본 꺼짐, [설명](docs/ko/USAGE.md)). 정해진 경로(예: `db/migration/**`)가 바뀌면 검토 결과와 상관없이 사람에게 넘기려면 `gatePaths`를 쓰세요(기본 꺼짐, 같은 문서). 실험 옵션 `reviewHandoff`(기본 꺼짐)를 켜면 개발자가 변경 요약·바뀐 파일·테스트 결과를 인계 파일로 남기고 검토자가 이를 받아 처음부터 다시 둘러보지 않습니다. 설정만으로 Telegram·Slack·Discord 알림을 켜려면 `notify`를 쓰세요(기본 꺼짐, 비밀값은 환경변수 이름만, 같은 문서).
+설정 키 전체는 [영어 README](README.md#config-nightshiftjson)에 있습니다. 티켓 본문에 `결과물:`, `확인 방법:` 같은 항목을 꼭 넣게 하려면 `ticketSections`를 쓰세요(기본 꺼짐, [설명](docs/ko/USAGE.md)). 정해진 경로(예: `db/migration/**`)가 바뀌면 검토 결과와 상관없이 사람에게 넘기려면 `gatePaths`를 쓰세요(기본 꺼짐, 같은 문서). 실험 옵션 `reviewHandoff`(기본 꺼짐)를 켜면 개발자가 변경 요약·바뀐 파일·테스트 결과를 인계 파일로 남기고 검토자가 이를 받아 처음부터 다시 둘러보지 않습니다. 프로젝트별 `testCommand`·`testTimeoutMinutes`, 멈춘 티켓을 알리는 `staleHours`, 한 번의 에이전트 실행 시간을 제한하는 `stageTimeoutMinutes`, 서비스와 작업자에 넘기는 `env`도 같은 표와 [사용법](docs/ko/USAGE.md)에 있습니다. 설정만으로 Telegram·Slack·Discord 알림을 켜려면 `notify`를 쓰세요(기본 꺼짐, 비밀값은 환경변수 이름만, 같은 문서).
 
 ## 안전
 
@@ -195,7 +195,7 @@ nightshift는 독립 프로젝트이며 Anthropic, OpenAI, Nous Research와 관�
 ## 함께해요
 
 > [!TIP]
-> 아직 0.1입니다. 써 보시고 어디서 막히는지 알려 주시는 게 지금 가장 큰 도움이 됩니다.
+> 아직 0.3입니다. 써 보시고 어디서 막히는지 알려 주시는 게 지금 가장 큰 도움이 됩니다.
 >
 > <table>
 > <tr><td width="140"><a href="https://github.com/catchmeif404/nightshift/issues"><img alt="Open an issue" src="https://img.shields.io/github/issues/catchmeif404/nightshift?label=Issues&logo=github&style=flat-square&labelColor=black&color=2f6beb"></a></td><td>어디서 막혔는지, 뭐가 필요한지, 어떻게 쓰고 계신지. 이슈는 전부 읽습니다.</td></tr>
