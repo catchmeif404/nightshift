@@ -307,7 +307,34 @@ exceeded". Time spent waiting for a usage limit is never counted: the wait happe
 with a usage limit message is not counted as a try. The limit is per run, not per ticket. With `0` nothing changes: no
 timer, and the agent runs as before.
 
+Whatever the limit, when an agent run ends the runner kills the processes it left running in the run's process group
+(a dev server the agent started, a background job) and logs how many. This happens after the run's result files are
+written, for `command` agents, Codex and Claude Code alike.
+
 Both can be changed in `nightshift ui` (Settings).
+
+## Cleaning up (`nightshift clean`)
+
+```sh
+nightshift clean            # dry run: lists, deletes nothing
+nightshift clean --apply    # deletes what the dry run listed
+```
+
+It lists, and with `--apply` deletes:
+
+- the worktree of a `done` ticket, only when git sees nothing uncommitted in it (the branch stays);
+- folders under `worktrees` that git does not know as a worktree (build leftovers, folders the runner moved aside as
+  `<id>.old-<time>`);
+- files and folders in `results` and `work` that belong to a `done` ticket (the name starts with the ticket id) and
+  are older than `keepDays` (default `14`), such as screenshots and videos an agent left. The runner's own files
+  (`<id>.build`, `.review`, `.verdict`, ...) stay.
+
+Anything that belongs to a `blocked`, `review`, `working` or `ready` ticket is never deleted, and a worktree with
+uncommitted changes is kept and listed. `nightshift doctor` shows how many folders git does not know and how much
+space `clean` could free.
+
+If a ticket's worktree path holds a folder that git does not know, the runner does not use it: it moves it aside
+(`<id>.old-<time>`, never deleting it), makes a new worktree and logs one line. `clean` can remove the moved folder later.
 
 ## Codex instead of (or with) Claude Code
 

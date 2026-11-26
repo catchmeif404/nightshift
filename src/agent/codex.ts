@@ -107,6 +107,6 @@ export class CodexAgent implements Agent {
       writeFileSync(this.mapping(request.sessionId), parsed.threadId);
     }
     const summary = parsed.messages.length > 0 ? parsed.messages.join("\n") : result.stdout.slice(-2000);
-    return { exitCode: result.code, output: `${summary}${result.stderr === "" ? "" : `\n${result.stderr.slice(-1000)}`}`, timedOut: result.timedOut };
+    return { exitCode: result.code, output: `${summary}${result.stderr === "" ? "" : `\n${result.stderr.slice(-1000)}`}`, timedOut: result.timedOut, cleaned: result.cleaned };
   }
 }

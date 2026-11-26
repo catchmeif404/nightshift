@@ -42,6 +42,6 @@ export class ClaudeCodeAgent implements Agent {
       ...session,
     ];
     const result = await execTimed(this.bin, args, { cwd: request.cwd, env: agentEnv({}), input: "" }, request.timeoutMinutes);
-    return { exitCode: result.code, output: `${result.stdout}${result.stderr === "" ? "" : `\n${result.stderr}`}`, timedOut: result.timedOut };
+    return { exitCode: result.code, output: `${result.stdout}${result.stderr === "" ? "" : `\n${result.stderr}`}`, timedOut: result.timedOut, cleaned: result.cleaned };
   }
 }

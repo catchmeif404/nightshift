@@ -6,6 +6,7 @@ import { boardLabels } from "./board/github.js";
 import { LocalMarkdownBoard } from "./board/localMarkdown.js";
 import { Brand } from "./brand.js";
 import { Config, ConfigError, TELEGRAM_CHAT_ID_PATTERN, configPath, hasProject, loadConfig } from "./config.js";
+import { CleanKind, CleanPlan, applyClean, formatBytes, planClean, totalBytes } from "./clean.js";
 import { dispatch, missingSections, openRunner, sectionsTemplate, work } from "./dispatch.js";
 import {
   AgentType, BoardType, CheckLevel, DEFAULT_GATE_PATHS, GATE_PATHS_DEFAULT_KEYWORD, NotifyService, PublishMode, SECTION_PRESET_LABELS, SectionPreset, TicketKind, TicketStatus,
@@ -260,6 +261,32 @@ export async function status(config: Config): Promise<void> {
   }
 }
 
+// Lists what is left over (finished tickets' worktrees, folders git does not know, old results and work files) and,
+// with apply, removes it. Blocked and review tickets' files are never touched. Returns the exit code.
+export async function clean(config: Config, apply: boolean): Promise<number> {
+  const runner = openRunner(config);
+  const plan = await planClean(config, runner.board, Date.now(), runner.paths);
+  for (const item of plan.items) console.log(`${apply ? "remove" : "would remove"}  ${item.kind}  ${formatBytes(item.bytes)}  ${item.path}${item.ticket === "" ? "" : `  (${item.ticket})`}`);
+  for (const kept of plan.kept) console.log(`keep  ${kept.path}  (${kept.why})`);
+  if (!apply) {
+    console.log(`${plan.items.length} item(s), ${formatBytes(totalBytes(plan.items))} could be removed (results and work files of done tickets after ${plan.keepDays} days). Nothing was deleted: run "${Brand.name} clean --apply" to remove them.`);
+    return 0;
+  }
+  const outcome = await applyClean(config, plan);
+  for (const failed of outcome.failed) console.error(`FAILED  ${failed.path}: ${failed.why}`);
+  runner.log.line(`clean: removed ${outcome.removed.length} item(s), ${formatBytes(totalBytes(outcome.removed))}; ${outcome.failed.length} failed`);
+  console.log(`removed ${outcome.removed.length} item(s), ${formatBytes(totalBytes(outcome.removed))}.`);
+  return outcome.failed.length === 0 ? 0 : 1;
+}
+
+export function cleanCheck(plan: CleanPlan): Check {
+  const strays = plan.items.filter((i) => i.kind === CleanKind.Stray).length;
+  return {
+    level: strays === 0 ? CheckLevel.Ok : CheckLevel.Warn,
+    what: `${strays} folder(s) under worktrees that git does not know; "${Brand.name} clean" could free ${formatBytes(totalBytes(plan.items))}`,
+  };
+}
+
 export interface ReportOptions {
   since: string;
   json: boolean;
@@ -378,6 +405,12 @@ export async function configChecks(config: Config, root: string): Promise<Check[
     });
   }
   checks.push(...(await dependencyChecks(config)));
+  try {
+    const runner = openRunner(config);
+    checks.push(cleanCheck(await planClean(config, runner.board, Date.now(), runner.paths)));
+  } catch (error) {
+    checks.push({ level: CheckLevel.Warn, what: `clean: could not tell what is left over (${error instanceof Error ? error.message : String(error)})` });
+  }
   if (config.autoMerge) checks.push({ level: CheckLevel.Warn, what: "autoMerge is on: passed pull requests merge without you" });
   return checks;
 }

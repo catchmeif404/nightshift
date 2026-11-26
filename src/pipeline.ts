@@ -298,7 +298,7 @@ export class TicketPipeline {
 
     let tree: Worktree;
     try {
-      tree = await ensureWorktree(this.r.config, project, worktreeFor(this.r.paths.worktrees, this.ticket.id));
+      tree = await ensureWorktree(this.r.config, project, worktreeFor(this.r.paths.worktrees, this.ticket.id), (line) => this.log(line));
     } catch (error) {
       return this.settle(TicketStatus.Blocked, SettleReason.Misconfigured, this.say.worktreeFailed(errorText(error)));
     }
@@ -552,6 +552,7 @@ export class TicketPipeline {
       timeoutMinutes: this.r.config.stageTimeoutMinutes,
     });
     clearInterval(heartbeat);
+    this.log(`${stage} r${round}: cleaned up ${result.cleaned} leftover process(es) of the run`);
     this.log(`${stage} r${round}: exit ${result.exitCode}: ${tail(result.output, 600)}`);
     if (result.exitCode !== 0) {
       const limit = detectLimit(result.output, Date.now(), this.r.config.usageLimitWaitMinutes)[0];

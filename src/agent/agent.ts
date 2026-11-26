@@ -17,6 +17,8 @@ export interface AgentResult {
   output: string;
   // The run was killed for passing the request's time limit.
   timedOut: boolean;
+  // Processes the run left running that the runner killed after it ended (0: none).
+  cleaned: number;
 }
 
 // One coding agent CLI. Each stage is one run; a cut-off run is resumed in the same session.
